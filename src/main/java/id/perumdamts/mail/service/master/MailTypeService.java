@@ -7,6 +7,8 @@ import id.perumdamts.mail.domain.entity.MailType;
 import id.perumdamts.mail.repository.jpa.MailCategoryRepository;
 import id.perumdamts.mail.repository.jpa.MailTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,19 +16,13 @@ import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
+@Slf4j
 public class MailTypeService {
 
     private final MailTypeRepository repository;
     private final MailCategoryRepository categoryRepository;
     private final MailTypeMapper mapper;
-
-    public MailTypeService(MailTypeRepository repository,
-                           MailCategoryRepository categoryRepository,
-                           MailTypeMapper mapper) {
-        this.repository = repository;
-        this.categoryRepository = categoryRepository;
-        this.mapper = mapper;
-    }
 
     public List<MailTypeResponse> findAll() {
         return repository.findAll().stream()

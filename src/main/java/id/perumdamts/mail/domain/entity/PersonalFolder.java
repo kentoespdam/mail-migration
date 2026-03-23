@@ -2,6 +2,10 @@ package id.perumdamts.mail.domain.entity;
 
 import id.perumdamts.mail.domain.enums.RecordStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
@@ -13,6 +17,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "mail_folder")
 @SQLRestriction("folder_status != 3")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class PersonalFolder {
 
     @Id
@@ -27,7 +35,7 @@ public class PersonalFolder {
     private Integer ownerId;
 
     @Column(name = "folder_icon_cls", length = 45)
-    private String iconClass;
+    private String iconClsFolder;
 
     @Column(name = "folder_name", nullable = false, length = 45)
     private String name;
@@ -39,71 +47,48 @@ public class PersonalFolder {
     @Column(name = "folder_created_date")
     private LocalDateTime createdDate;
 
-    protected PersonalFolder() {}
-
     public PersonalFolder(Integer ownerId, Integer parentFolderId, String name) {
         this.ownerId = ownerId;
         this.parentFolderId = parentFolderId;
         this.name = name.trim();
-        this.iconClass = "folder";
-        this.status = RecordStatus.ACTIVE;
+        this.iconClsFolder = "folder";
         this.createdDate = LocalDateTime.now();
     }
 
     // ── Domain Methods ──
 
-    /** Apakah folder ini adalah folder sistem (tidak bisa dimodifikasi user)? */
+    /**
+     * Apakah folder ini adalah folder sistem (tidak bisa dimodifikasi user)?
+     */
     public boolean isSystemFolder() {
         return this.ownerId != null && this.ownerId == 0;
     }
 
-    /** Apakah folder ini dimiliki oleh user tertentu? */
+    /**
+     * Apakah folder ini dimiliki oleh user tertentu?
+     */
     public boolean isOwnedBy(Integer userId) {
         return this.ownerId.equals(userId);
     }
 
-    /** Rename folder */
+    /**
+     * Rename folder
+     */
     public void rename(String newName) {
         this.name = newName.trim();
     }
 
-    /** Soft delete — pindah ke status INACTIVE (folder_status=3) */
+    /**
+     * Soft delete — pindah ke status INACTIVE (folder_status=3)
+     */
     public void softDelete() {
         this.status = RecordStatus.INACTIVE;
     }
 
-    /** Apakah folder ini sudah di-trash (soft deleted)? */
+    /**
+     * Apakah folder ini sudah di-trash (soft deleted)?
+     */
     public boolean isDeleted() {
         return this.status == RecordStatus.INACTIVE;
-    }
-
-    // ── Getters ──
-
-    public Integer getId() {
-        return id;
-    }
-
-    public Integer getParentFolderId() {
-        return parentFolderId;
-    }
-
-    public Integer getOwnerId() {
-        return ownerId;
-    }
-
-    public String getIconClass() {
-        return iconClass;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public RecordStatus getStatus() {
-        return status;
-    }
-
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
     }
 }

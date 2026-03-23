@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-/**
+/*
  * Konfigurasi AppWrite self-hosted.
  *
  * <p>Semua property dibaca dari prefix {@code appwrite.*} di application.yml.
@@ -27,38 +27,38 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "appwrite")
 public record AppWriteProperties(
 
-        /** Base URL AppWrite self-hosted, contoh: http://192.168.230.254:82 */
+        /* Base URL AppWrite self-hosted, contoh: http://192.168.230.254:82 */
         @NotBlank String endpoint,
 
-        /** Project ID AppWrite. */
+        /* Project ID AppWrite. */
         @NotBlank String projectId,
 
-        /**
+        /*
          * API key server-to-server (hanya untuk admin call seperti list users).
          * Untuk validasi user JWT tidak dibutuhkan — cukup X-Appwrite-JWT header.
          */
         String apiKey,
 
-        /**
+        /*
          * Versi response format AppWrite yang di-request.
          * default: "1.0.0"
          */
         @NotNull String responseFormat,
 
-        /** Nama cache Redis untuk token yang sudah divalidasi. */
+        /* Nama cache Redis untuk token yang sudah divalidasi. */
         @NotBlank String tokenCacheName,
 
-        /**
+        /*
          * Panjang prefix token yang dijadikan Redis cache key.
          * Cukup 20 karakter pertama JWT — unik dan tidak menyimpan full token.
          */
         int tokenCacheKeyLength,
 
-        /** TTL cache token dalam menit. */
+        /* TTL cache token dalam menit. */
         int tokenCacheTtlMinutes
 
 ) {
-    /** Default values via compact constructor. */
+    /* Default values via compact constructor. */
     public AppWriteProperties {
         if (responseFormat == null || responseFormat.isBlank()) {
             responseFormat = "1.0.0";

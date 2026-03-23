@@ -11,6 +11,6 @@ public interface MailFolderMapper {
     @Mapping(target = "system", expression = "java(entity.isSystemFolder())")
     @Mapping(target = "unread", expression = "java(0L)")
     @Mapping(target = "total", expression = "java(0L)")
-    @Mapping(source = "iconClass", target = "iconClass")
+    @Mapping(source = "iconClsFolder", target = "iconCls")
     MailFolderResponse toResponse(PersonalFolder entity);
 }

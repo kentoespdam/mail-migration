@@ -7,6 +7,7 @@ import id.perumdamts.mail.domain.enums.CirculationType;
 import id.perumdamts.mail.integration.hr.BatchIdsRequest;
 import id.perumdamts.mail.integration.hr.EmployeeDto;
 import id.perumdamts.mail.integration.hr.HrServiceClient;
+import id.perumdamts.mail.repository.jooq.RecipientQueryRepository;
 import id.perumdamts.mail.repository.jpa.MailRecipientRepository;
 import id.perumdamts.mail.repository.jpa.MailRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,15 +29,18 @@ public class MailRecipientService {
     private final MailRepository mailRepository;
     private final HrServiceClient hrServiceClient;
     private final RecipientMapper recipientMapper;
+    private final RecipientQueryRepository recipientQueryRepository;
 
     public MailRecipientService(MailRecipientRepository recipientRepository,
                                  MailRepository mailRepository,
                                  HrServiceClient hrServiceClient,
-                                 RecipientMapper recipientMapper) {
+                                 RecipientMapper recipientMapper,
+                                 RecipientQueryRepository recipientQueryRepository) {
         this.recipientRepository = recipientRepository;
         this.mailRepository = mailRepository;
         this.hrServiceClient = hrServiceClient;
         this.recipientMapper = recipientMapper;
+        this.recipientQueryRepository = recipientQueryRepository;
     }
 
     public List<RecipientResponse> getRecipients(Integer mailId) {
@@ -58,17 +62,15 @@ public class MailRecipientService {
             throw new IllegalArgumentException("Recipient already exists for this mail");
         }
 
-        var recipient = new MailRecipient(mail, userId, request.empId(), circulationType);
-        recipient.setEmpName(emp.nama());
-        if (emp.jabatanNama() != null) {
-            recipient.setPosName(emp.jabatanNama());
-        }
-
+        var recipient = createRecipientFromEmployee(mail, emp, circulationType);
         return recipientMapper.toResponse(recipientRepository.save(recipient));
     }
 
+    /**
+     * Batch add recipients with per-item success/fail reporting (fix B14: silent failure).
+     */
     @Transactional
-    public List<RecipientResponse> addBatch(Integer mailId, RecipientBatchRequest request) {
+    public BatchRecipientResponse addBatch(Integer mailId, RecipientBatchRequest request) {
         Mail mail = getMailOrThrow(mailId);
         CirculationType circulationType = CirculationType.fromDbValue(request.circulation());
         Set<Integer> existingUserIds = recipientRepository.findUserIdsByMailId(mailId);
@@ -81,25 +83,30 @@ public class MailRecipientService {
                 .collect(Collectors.toMap(EmployeeDto::id, Function.identity()));
 
         List<MailRecipient> toSave = new ArrayList<>();
+        List<BatchRecipientResponse.FailedRecipient> failed = new ArrayList<>();
+
         for (Integer empId : request.empIds()) {
             EmployeeDto emp = empMap.get(empId.longValue());
-            if (emp == null) continue;
+            if (emp == null) {
+                failed.add(new BatchRecipientResponse.FailedRecipient(empId, "Employee not found in HR Service"));
+                continue;
+            }
 
             Integer userId = emp.id().intValue();
-            if (existingUserIds.contains(userId)) continue;
-
-            var recipient = new MailRecipient(mail, userId, empId, circulationType);
-            recipient.setEmpName(emp.nama());
-            if (emp.jabatanNama() != null) {
-                recipient.setPosName(emp.jabatanNama());
+            if (existingUserIds.contains(userId)) {
+                failed.add(new BatchRecipientResponse.FailedRecipient(empId, "Recipient already exists"));
+                continue;
             }
-            toSave.add(recipient);
+
+            toSave.add(createRecipientFromEmployee(mail, emp, circulationType));
             existingUserIds.add(userId);
         }
 
-        return recipientRepository.saveAll(toSave).stream()
+        List<RecipientResponse> succeeded = recipientRepository.saveAll(toSave).stream()
                 .map(recipientMapper::toResponse)
                 .toList();
+
+        return BatchRecipientResponse.of(succeeded, failed, request.empIds().size());
     }
 
     @Transactional
@@ -123,6 +130,9 @@ public class MailRecipientService {
         return recipientMapper.toResponse(recipientRepository.save(recipient));
     }
 
+    /**
+     * Copy recipients from a reference mail for reply (excludes current user).
+     */
     @Transactional
     public List<RecipientResponse> copyFrom(Integer mailId, Integer refMailId, Integer currentUserId) {
         Mail mail = getMailOrThrow(mailId);
@@ -136,6 +146,7 @@ public class MailRecipientService {
                     var nr = new MailRecipient(mail, r.getUserId(), r.getEmpId(), CirculationType.REPLY);
                     nr.setEmpName(r.getEmpName());
                     nr.setPosName(r.getPosName());
+                    nr.setPosId(r.getPosId());
                     return nr;
                 })
                 .toList();
@@ -145,19 +156,47 @@ public class MailRecipientService {
                 .toList();
     }
 
+    /**
+     * Copy all distinct recipients from entire thread (reply-all).
+     * Uses JOOQ to find distinct recipients across all mails in the thread.
+     */
     @Transactional
     public List<RecipientResponse> copyThread(Integer mailId, Integer refMailId, Integer currentUserId) {
         Mail mail = getMailOrThrow(mailId);
         Set<Integer> existingUserIds = recipientRepository.findUserIdsByMailId(mailId);
 
-        // Get all recipients from all mails in the thread
         Mail refMail = getMailOrThrow(refMailId);
         Integer rootId = refMail.getRootMail() != null ? refMail.getRootMail().getId() : refMailId;
 
-        // Query all recipients in thread (via JOOQ would be better, but keeping it simple)
-        // For now, use the ref mail's recipients + walk up might be complex
-        // Simplified: copy from refMailId like copyFrom but with REPLY circulation
-        return copyFrom(mailId, refMailId, currentUserId);
+        var threadRecipients = recipientQueryRepository.findDistinctThreadRecipients(rootId);
+
+        List<MailRecipient> toSave = threadRecipients.stream()
+                .filter(r -> !r.userId().equals(currentUserId))
+                .filter(r -> !existingUserIds.contains(r.userId()))
+                .map(r -> {
+                    var nr = new MailRecipient(mail, r.userId(), r.empId(), CirculationType.REPLY);
+                    nr.setEmpName(r.empName());
+                    nr.setPosName(r.posName());
+                    nr.setPosId(r.posId());
+                    return nr;
+                })
+                .toList();
+
+        return recipientRepository.saveAll(toSave).stream()
+                .map(recipientMapper::toResponse)
+                .toList();
+    }
+
+    private MailRecipient createRecipientFromEmployee(Mail mail, EmployeeDto emp, CirculationType circulationType) {
+        var recipient = new MailRecipient(mail, emp.id().intValue(), emp.id().intValue(), circulationType);
+        recipient.setEmpName(emp.nama());
+        if (emp.jabatanId() != null) {
+            recipient.setPosId(emp.jabatanId().intValue());
+        }
+        if (emp.jabatanNama() != null) {
+            recipient.setPosName(emp.jabatanNama());
+        }
+        return recipient;
     }
 
     private Mail getMailOrThrow(Integer mailId) {

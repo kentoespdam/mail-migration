@@ -26,10 +26,12 @@ repositories {
 // Dependency Management — Spring Cloud BOM (untuk OpenFeign)
 // ──────────────────────────────────────────────────────────────────────────────
 extra["springCloudVersion"] = "2025.1.1"
+extra["springAiVersion"] = "2.0.0-M1"
 
 dependencyManagement {
     imports {
         mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+        mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
     }
 }
 
@@ -73,6 +75,12 @@ dependencies {
     // == OpenFeign — HR Service ==
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
+    // == MCP Server (SSE over WebMVC) ==
+    implementation("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
+
+    // == OpenAPI (Swagger UI) ==
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2")
+
     // == Actuator ==
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
@@ -82,6 +90,13 @@ dependencies {
 
     // == Configuration Metadata ==
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+    // == Lombok ==
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+
+    // == Lombok MapStruct Binding — agar MapStruct bisa akses getter/setter Lombok ==
+    annotationProcessor("org.projectlombok:lombok-mapstruct-binding:0.2.0")
 
     // == Dev Tools ==
     developmentOnly("org.springframework.boot:spring-boot-devtools")

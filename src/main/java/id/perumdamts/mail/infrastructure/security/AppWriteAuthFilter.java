@@ -5,6 +5,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -36,24 +37,18 @@ public class AppWriteAuthFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(AppWriteAuthFilter.class);
     private static final String BEARER_PREFIX = "Bearer ";
-    private static final String APPWRITE_JWT_HEADER = "X-Appwrite-JWT";
-    private static final String APPWRITE_PROJECT_HEADER = "X-Appwrite-Project";
-    private static final String APPWRITE_RESPONSE_FORMAT_HEADER = "X-Appwrite-Response-Format";
-    private static final String ACCOUNT_ENDPOINT = "/v1/account";
 
-    private final AppWriteProperties props;
     private final AppWriteTokenValidator tokenValidator;
 
     public AppWriteAuthFilter(AppWriteProperties props,
                               AppWriteTokenValidator tokenValidator) {
-        this.props = props;
         this.tokenValidator = tokenValidator;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String token = extractBearerToken(request);
         if (token == null) {
@@ -63,8 +58,8 @@ public class AppWriteAuthFilter extends OncePerRequestFilter {
 
         try {
             // Validasi token (dengan Redis cache TTL 5 menit)
-            AppWriteUser user = tokenValidator.validateToken(token);
-            MailPrincipal principal = MailPrincipal.from(user);
+            CachedUserInfo cachedUser = tokenValidator.validateToken(token);
+            MailPrincipal principal = cachedUser.toMailPrincipal();
 
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());

@@ -3,6 +3,10 @@ package id.perumdamts.mail.domain.entity;
 import id.perumdamts.mail.domain.enums.ReadStatus;
 import id.perumdamts.mail.domain.enums.SystemFolder;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +15,10 @@ import java.time.LocalDateTime;
         @Index(name = "idx_ut_user_folder", columnList = "user_id, folder_id"),
         @Index(name = "idx_ut_user_mail", columnList = "user_id, tm_id")
 })
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class UserTask {
 
     @Id
@@ -38,8 +46,6 @@ public class UserTask {
 
     @Column(name = "mail_created_date")
     private LocalDateTime mailCreatedDate;
-
-    protected UserTask() {}
 
     public UserTask(Integer userId, Integer mailId, int folderId) {
         this.userId = userId;
@@ -94,24 +100,4 @@ public class UserTask {
     public boolean isPurged() {
         return this.folderId == SystemFolder.PURGED.getId();
     }
-
-    // ── Getters & Setters ──
-
-    public Long getId() { return id; }
-
-    public Integer getUserId() { return userId; }
-
-    public Integer getMailId() { return mailId; }
-
-    public Integer getFolderId() { return folderId; }
-    public void setFolderId(Integer folderId) { this.folderId = folderId; }
-
-    public Integer getReadStatus() { return readStatus; }
-
-    public LocalDateTime getReadDate() { return readDate; }
-
-    public Integer getRestoreFolderId() { return restoreFolderId; }
-
-    public LocalDateTime getMailCreatedDate() { return mailCreatedDate; }
-    public void setMailCreatedDate(LocalDateTime mailCreatedDate) { this.mailCreatedDate = mailCreatedDate; }
 }

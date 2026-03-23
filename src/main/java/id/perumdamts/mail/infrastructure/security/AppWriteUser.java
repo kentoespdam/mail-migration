@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
-/**
+/*
  * Response body dari AppWrite GET /v1/account.
  *
  * <p>PERHATIAN: roles ada di {@code prefs.roles}, BUKAN di field {@code labels}.
@@ -14,7 +14,7 @@ import java.util.List;
  */
 public record AppWriteUser(
 
-        /** User ID AppWrite — sama dengan pegawaiId di HR Service. */
+        /* User ID AppWrite — sama dengan pegawaiId di HR Service. */
         @JsonProperty("$id") String id,
 
         String name,
@@ -25,17 +25,17 @@ public record AppWriteUser(
         AppWritePrefs prefs
 
 ) {
-    /** Convenience method — null-safe role accessor. */
+    /* Convenience method — null-safe role accessor. */
     public List<String> getRoles() {
         return prefs != null ? prefs.roles() : List.of();
     }
 
-    /** true jika user memiliki role ADMIN. */
+    /* true jika user memiliki role ADMIN. */
     public boolean isAdmin() {
         return getRoles().contains(AppWriteRole.ADMIN.getValue());
     }
 
-    /** true jika user memiliki role SYSTEM. */
+    /* true jika user memiliki role SYSTEM. */
     public boolean isSystem() {
         return getRoles().contains(AppWriteRole.SYSTEM.getValue());
     }

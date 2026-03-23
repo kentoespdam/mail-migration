@@ -4,6 +4,8 @@ import id.perumdamts.mail.api.dto.master.MailTypeRequest;
 import id.perumdamts.mail.api.dto.master.MailTypeResponse;
 import id.perumdamts.mail.service.master.MailTypeService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,13 +14,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/mail-types")
+@RequiredArgsConstructor
+@Slf4j
 public class MailTypeController {
 
     private final MailTypeService service;
-
-    public MailTypeController(MailTypeService service) {
-        this.service = service;
-    }
 
     @GetMapping
     public List<MailTypeResponse> findAll() {

@@ -235,7 +235,7 @@ public class MailFolderService {
                 folder.getParentFolderId(),
                 folder.getOwnerId(),
                 folder.getName(),
-                folder.getIconClass(),
+                folder.getIconClsFolder(),
                 false,
                 counter != null ? counter.unread() : 0L,
                 counter != null ? counter.total() : 0L
@@ -248,7 +248,7 @@ public class MailFolderService {
         if (!folder.isOwnedBy(userId)) {
             throw new IllegalStateException("Folder " + folderId + " is not owned by user " + userId);
         }
-        return (PersonalFolder) folder;
+        return folder;
     }
 
     private void validateFolderAccess(Integer userId, Integer folderId) {

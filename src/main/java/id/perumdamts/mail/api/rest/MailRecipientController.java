@@ -1,5 +1,6 @@
 package id.perumdamts.mail.api.rest;
 
+import id.perumdamts.mail.api.dto.recipient.BatchRecipientResponse;
 import id.perumdamts.mail.api.dto.recipient.RecipientBatchRequest;
 import id.perumdamts.mail.api.dto.recipient.RecipientNotifPatchRequest;
 import id.perumdamts.mail.api.dto.recipient.RecipientRequest;
@@ -44,7 +45,7 @@ public class MailRecipientController {
     }
 
     @PostMapping("/batch")
-    public ResponseEntity<List<RecipientResponse>> addBatch(
+    public ResponseEntity<BatchRecipientResponse> addBatch(
             @PathVariable Integer mailId,
             @Valid @RequestBody RecipientBatchRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)

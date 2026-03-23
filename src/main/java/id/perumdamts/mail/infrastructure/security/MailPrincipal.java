@@ -39,6 +39,17 @@ public record MailPrincipal(
         return new MailPrincipal(user.id(), user.name(), user.email(), grantedAuthorities);
     }
 
+    /**
+     * Factory method — konversi {@link CachedUserInfo} ke {@link MailPrincipal}.
+     * Dipakai saat data diambil dari Redis cache.
+     */
+    public static MailPrincipal fromCachedInfo(CachedUserInfo info) {
+        List<SimpleGrantedAuthority> grantedAuthorities = info.roles().stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                .toList();
+        return new MailPrincipal(info.userId(), info.name(), info.email(), grantedAuthorities);
+    }
+
     // ── UserDetails ───────────────────────────────────────────────────────────
 
     @Override

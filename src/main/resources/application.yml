@@ -18,7 +18,7 @@ spring:
 
   # ── DataSource ──
   datasource:
-    url: jdbc:mariadb://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:smartoffice_mail}?useUnicode=true&characterEncoding=utf8mb4&createDatabaseIfNotExist=true
+    url: jdbc:mariadb://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:smartoffice_mail}?useUnicode=true&characterEncoding=utf8mb4&createDatabaseIfNotExist=true
     username: ${DB_USER:mail_user}
     password: ${DB_PASSWORD:mail_password}
     driver-class-name: org.mariadb.jdbc.Driver
@@ -60,6 +60,13 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
 
+  # ── MCP Server ──
+  ai:
+    mcp:
+      server:
+        name: mail-service-mcp
+        version: 1.0.0
+
   # ── Servlet (file upload) ──
   servlet:
     multipart:
@@ -87,6 +94,9 @@ app:
     inbox-sort-ascending: false
     default-mail-type-id: 1
     default-mail-category-id: 1
+  # ── Storage ──
+  storage:
+    base-path: ${STORAGE_BASE_PATH:/data/attachments}
 
 # ── HR Service (OpenFeign) ──
 hr:

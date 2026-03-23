@@ -83,6 +83,7 @@ CREATE TABLE `mail` (
   `m_tgl_surat_masuk` date DEFAULT NULL,
   `m_tujuan_surat_keluar` varchar(128) DEFAULT NULL,
   `m_penerima_surat_keluar` varchar(128) DEFAULT NULL,
+  `m_updated_date` datetime DEFAULT NULL,
   PRIMARY KEY (`m_id`),
   KEY `m_root_id` (`m_root_id`),
   KEY `m_parent_id` (`m_parent_id`),
@@ -321,7 +322,27 @@ CREATE TABLE `print_log` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 20. ATTACHMENTS
+-- 20. SYS_USER_TASK
+-- ============================================================
+DROP TABLE IF EXISTS `sys_user_task`;
+CREATE TABLE `sys_user_task` (
+  `user_task_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) DEFAULT NULL,
+  `tm_id` int(11) DEFAULT NULL,
+  `folder_id` int(11) DEFAULT NULL,
+  `read_status` int(11) DEFAULT NULL,
+  `read_date` datetime DEFAULT NULL,
+  `restore_folder_id` int(11) DEFAULT NULL,
+  `mail_created_date` datetime DEFAULT NULL,
+  PRIMARY KEY (`user_task_id`),
+  KEY `idx_ut_user_folder` (`user_id`, `folder_id`),
+  KEY `idx_ut_user_mail` (`user_id`, `tm_id`),
+  KEY `tm_id_idx` (`tm_id`),
+  KEY `folder_id_idx` (`folder_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 22. ATTACHMENTS
 -- ============================================================
 DROP TABLE IF EXISTS `attachments`;
 CREATE TABLE `attachments` (
@@ -346,7 +367,7 @@ CREATE TABLE `attachments` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 21. ATTACHMENT_DOWNLOAD_HISTORY
+-- 23. ATTACHMENT_DOWNLOAD_HISTORY
 -- ============================================================
 DROP TABLE IF EXISTS `attachment_download_history`;
 CREATE TABLE `attachment_download_history` (

@@ -1,5 +1,7 @@
 package id.perumdamts.mail.service.mail;
 
+import id.perumdamts.mail.api.dto.mail.MailReportRequest;
+import id.perumdamts.mail.api.dto.mail.MailReportResponse;
 import id.perumdamts.mail.api.dto.mail.MailSearchRequest;
 import id.perumdamts.mail.api.dto.mail.MailSummaryResponse;
 import id.perumdamts.mail.repository.jooq.MailQueryRepository;
@@ -24,5 +26,9 @@ public class MailQueryService {
 
     public List<MailSummaryResponse> search(MailSearchRequest request) {
         return mailQueryRepository.searchMails(request);
+    }
+
+    public List<MailReportResponse> getReport(MailReportRequest request) {
+        return mailQueryRepository.getReport(request);
     }
 }

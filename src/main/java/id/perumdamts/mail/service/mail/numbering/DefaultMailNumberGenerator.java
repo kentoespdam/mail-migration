@@ -37,15 +37,13 @@ public class DefaultMailNumberGenerator implements MailNumberGenerator {
             categoryCode = mail.getMailCategory().getCode();
         }
 
-        String result = template
+        return template
                 .replace("#seq#", String.valueOf(sequence))
                 .replace("#org_code#", tenantConfig.officeCode())
                 .replace("#m_cat#", categoryCode)
                 .replace("#MR#", "MR")
                 .replace("#YYYY#", now.format(DateTimeFormatter.ofPattern("yyyy")))
                 .replace("#MM#", now.format(DateTimeFormatter.ofPattern("MM")));
-
-        return result;
     }
 
     private String getFormatTemplate(String refCode) {

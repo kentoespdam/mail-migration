@@ -11,7 +11,7 @@ public record MailFolderResponse(
         Integer parentFolderId,
         Integer ownerId,
         String name,
-        String iconClass,
+        String iconCls,
         boolean system,
         Long unread,
         Long total

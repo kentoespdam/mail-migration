@@ -10,6 +10,6 @@ public interface MailCategoryMapper {
 
     @Mapping(source = "mailType.id", target = "mailTypeId")
     @Mapping(source = "mailType.name", target = "mailTypeName")
-    @Mapping(source = "status.dbValue", target = "status")
+    @Mapping(source = "status", target = "status")
     MailCategoryResponse toResponse(MailCategory entity);
 }

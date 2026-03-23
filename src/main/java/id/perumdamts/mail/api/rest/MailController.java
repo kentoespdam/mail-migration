@@ -1,6 +1,12 @@
 package id.perumdamts.mail.api.rest;
 
-import id.perumdamts.mail.api.dto.mail.*;
+import id.perumdamts.mail.api.dto.mail.MailCreateRequest;
+import id.perumdamts.mail.api.dto.mail.MailReportRequest;
+import id.perumdamts.mail.api.dto.mail.MailReportResponse;
+import id.perumdamts.mail.api.dto.mail.MailResponse;
+import id.perumdamts.mail.api.dto.mail.MailSearchRequest;
+import id.perumdamts.mail.api.dto.mail.MailSummaryResponse;
+import id.perumdamts.mail.api.dto.mail.MailUpdateRequest;
 import id.perumdamts.mail.infrastructure.security.MailPrincipal;
 import id.perumdamts.mail.service.mail.MailCommandService;
 import id.perumdamts.mail.service.mail.MailQueryService;
@@ -79,5 +85,10 @@ public class MailController {
     @GetMapping("/search")
     public List<MailSummaryResponse> search(MailSearchRequest request) {
         return queryService.search(request);
+    }
+
+    @GetMapping("/report")
+    public List<MailReportResponse> report(MailReportRequest request) {
+        return queryService.getReport(request);
     }
 }

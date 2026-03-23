@@ -1,11 +1,19 @@
 package id.perumdamts.mail;
 
+import id.perumdamts.mail.api.mcp.FolderTools;
+import id.perumdamts.mail.api.mcp.MailTools;
+import id.perumdamts.mail.api.mcp.MasterDataTools;
+import id.perumdamts.mail.api.mcp.RecipientTools;
 import id.perumdamts.mail.config.AppWriteProperties;
+import id.perumdamts.mail.config.StorageProperties;
 import id.perumdamts.mail.config.TenantConfig;
+import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
@@ -20,12 +28,22 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * <p>{@code @EnableCaching} dan {@code @EnableScheduling} dikonfigurasi di class config masing-masing.
  */
 @SpringBootApplication
-@EnableConfigurationProperties({AppWriteProperties.class, TenantConfig.class})
+@EnableConfigurationProperties({AppWriteProperties.class, TenantConfig.class, StorageProperties.class})
 @EnableFeignClients(basePackages = "id.perumdamts.mail.integration")
 @EnableAsync
 public class MailServiceApplication {
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         SpringApplication.run(MailServiceApplication.class, args);
+    }
+
+    @Bean
+    ToolCallbackProvider mcpTools(MailTools mailTools,
+                                  FolderTools folderTools,
+                                  RecipientTools recipientTools,
+                                  MasterDataTools masterDataTools) {
+        return MethodToolCallbackProvider.builder()
+                .toolObjects(mailTools, folderTools, recipientTools, masterDataTools)
+                .build();
     }
 }

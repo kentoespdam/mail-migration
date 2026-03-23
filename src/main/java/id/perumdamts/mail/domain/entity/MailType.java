@@ -2,6 +2,9 @@ package id.perumdamts.mail.domain.entity;
 
 import id.perumdamts.mail.domain.enums.RecordStatus;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
 /**
@@ -17,6 +20,9 @@ import org.hibernate.annotations.SQLRestriction;
 @Entity
 @Table(name = "mail_type")
 @SQLRestriction("mail_type_status != 3")
+@NoArgsConstructor
+@Getter
+@Setter
 public class MailType {
 
     @Id
@@ -33,23 +39,22 @@ public class MailType {
     @Column(name = "mail_type_status", nullable = false)
     private Integer status = 1;
 
-    protected MailType() {}
-
     public MailType(String name) {
         this.name = name;
         this.status = 1;
     }
 
-    // ── Getters & Setters ──
+    public MailType(Integer id, String name, Integer status) {
+        this.id = id;
+        this.name = name;
+        this.status = status;
+    }
 
-    public Integer getId() { return id; }
+    public boolean isActive() {
+        return status != null && status == 1;
+    }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public Integer getStatus() { return status; }
-
-    public boolean isActive() { return status != null && status == 1; }
-
-    public void markDeleted() { this.status = 3; }
+    public void markDeleted() {
+        this.status = 3;
+    }
 }

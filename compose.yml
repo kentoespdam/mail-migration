@@ -20,7 +20,7 @@ services:
       MARIADB_USER: mail_user
       MARIADB_PASSWORD: mail_password
     ports:
-      - "3307:3306"
+      - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./docker/mariadb/init:/docker-entrypoint-initdb.d:ro  # optional init scripts

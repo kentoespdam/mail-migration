@@ -1,6 +1,10 @@
 package id.perumdamts.mail.domain.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
@@ -8,6 +12,10 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "mail_folder")
 @SQLRestriction("folder_status = 1")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class MailFolder {
 
     @Id
@@ -22,7 +30,7 @@ public class MailFolder {
     private Integer ownerId = 0;
 
     @Column(name = "folder_icon_cls", length = 45)
-    private String iconClass = "email";
+    private String iconClsfolder = "email";
 
     @Column(name = "folder_name", nullable = false, length = 45)
     private String name;
@@ -32,8 +40,6 @@ public class MailFolder {
 
     @Column(name = "folder_created_date")
     private LocalDateTime createdDate;
-
-    protected MailFolder() {}
 
     public MailFolder(Integer ownerId, Integer parentFolderId, String name) {
         this.ownerId = ownerId;
@@ -64,20 +70,4 @@ public class MailFolder {
     public void softDelete() {
         this.status = 3;
     }
-
-    // ── Getters ──
-
-    public Integer getId() { return id; }
-
-    public Integer getParentFolderId() { return parentFolderId; }
-
-    public Integer getOwnerId() { return ownerId; }
-
-    public String getIconClass() { return iconClass; }
-
-    public String getName() { return name; }
-
-    public Integer getStatus() { return status; }
-
-    public LocalDateTime getCreatedDate() { return createdDate; }
 }

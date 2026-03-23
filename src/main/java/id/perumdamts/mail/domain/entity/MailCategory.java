@@ -1,7 +1,12 @@
 package id.perumdamts.mail.domain.entity;
 
+import id.perumdamts.mail.domain.converter.CategoryStatusConverter;
 import id.perumdamts.mail.domain.enums.CategoryStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -18,6 +23,10 @@ import org.hibernate.annotations.SQLRestriction;
         @UniqueConstraint(name = "uq_category_type_code", columnNames = {"mail_type_id", "mcat_code"})
 })
 @SQLRestriction("mcat_status != 'Deleted'")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class MailCategory {
 
     @Id
@@ -35,7 +44,7 @@ public class MailCategory {
     @Column(name = "mcat_name", nullable = false, length = 64)
     private String name;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = CategoryStatusConverter.class)
     @Column(name = "mcat_status", nullable = false)
     private CategoryStatus status = CategoryStatus.ENABLED;
 
@@ -45,40 +54,25 @@ public class MailCategory {
     @Formula("CONCAT(mcat_code, ' - ', mcat_name)")
     private String codeName;
 
-    protected MailCategory() {}
-
     public MailCategory(MailType mailType, String code, String name) {
         this.mailType = mailType;
         this.code = code;
         this.name = name;
-        this.status = CategoryStatus.ENABLED;
     }
 
-    // ── Getters & Setters ──
+    public boolean isActive() {
+        return status == CategoryStatus.ENABLED;
+    }
 
-    public Integer getId() { return id; }
+    public void markDeleted() {
+        this.status = CategoryStatus.DELETED;
+    }
 
-    public MailType getMailType() { return mailType; }
-    public void setMailType(MailType mailType) { this.mailType = mailType; }
+    public void disable() {
+        this.status = CategoryStatus.DISABLED;
+    }
 
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public CategoryStatus getStatus() { return status; }
-
-    public Integer getSort() { return sort; }
-    public void setSort(Integer sort) { this.sort = sort; }
-
-    public String getCodeName() { return codeName; }
-
-    public boolean isActive() { return status == CategoryStatus.ENABLED; }
-
-    public void markDeleted() { this.status = CategoryStatus.DELETED; }
-
-    public void disable() { this.status = CategoryStatus.DISABLED; }
-
-    public void enable() { this.status = CategoryStatus.ENABLED; }
+    public void enable() {
+        this.status = CategoryStatus.ENABLED;
+    }
 }

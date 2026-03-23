@@ -9,5 +9,8 @@ public record RecipientResponse(
         Integer circulation,
         String circulationName,
         Integer emailNotif,
-        Integer smsNotif
+        Integer smsNotif,
+        Boolean notified,
+        Boolean read,
+        Integer folderPosition
 ) {}

@@ -4,6 +4,8 @@ import id.perumdamts.mail.api.dto.master.MailCategoryRequest;
 import id.perumdamts.mail.api.dto.master.MailCategoryResponse;
 import id.perumdamts.mail.service.master.MailCategoryService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,13 +14,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/mail-categories")
+@RequiredArgsConstructor
+@Slf4j
 public class MailCategoryController {
 
     private final MailCategoryService service;
-
-    public MailCategoryController(MailCategoryService service) {
-        this.service = service;
-    }
 
     @GetMapping
     public List<MailCategoryResponse> findAll(

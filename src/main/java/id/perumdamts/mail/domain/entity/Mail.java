@@ -2,12 +2,20 @@ package id.perumdamts.mail.domain.entity;
 
 import id.perumdamts.mail.domain.enums.MailStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "mail")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class Mail {
 
     @Id
@@ -85,8 +93,6 @@ public class Mail {
     @Column(name = "m_penerima_surat_keluar", length = 200)
     private String penerimaSuratKeluar;
 
-    public Mail() {}
-
     // ── Domain Methods ──
 
     public MailStatus getMailStatus() {
@@ -104,75 +110,7 @@ public class Mail {
     public void send(String mailNumber) {
         this.mailNumber = mailNumber;
         this.status = MailStatus.SENT.getDbValue();
-        this.createdDate = LocalDateTime.now();
+        this.mailDate = LocalDate.now();
+        this.updatedDate = LocalDateTime.now();
     }
-
-    // ── Getters & Setters ──
-
-    public Integer getId() { return id; }
-
-    public String getMailNumber() { return mailNumber; }
-    public void setMailNumber(String mailNumber) { this.mailNumber = mailNumber; }
-
-    public LocalDate getMailDate() { return mailDate; }
-    public void setMailDate(LocalDate mailDate) { this.mailDate = mailDate; }
-
-    public MailType getMailType() { return mailType; }
-    public void setMailType(MailType mailType) { this.mailType = mailType; }
-
-    public MailCategory getMailCategory() { return mailCategory; }
-    public void setMailCategory(MailCategory mailCategory) { this.mailCategory = mailCategory; }
-
-    public String getSubject() { return subject; }
-    public void setSubject(String subject) { this.subject = subject; }
-
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
-
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
-
-    public LocalDate getMaxResponseDate() { return maxResponseDate; }
-    public void setMaxResponseDate(LocalDate maxResponseDate) { this.maxResponseDate = maxResponseDate; }
-
-    public Integer getStatus() { return status; }
-
-    public Mail getRootMail() { return rootMail; }
-    public void setRootMail(Mail rootMail) { this.rootMail = rootMail; }
-
-    public Mail getParentMail() { return parentMail; }
-    public void setParentMail(Mail parentMail) { this.parentMail = parentMail; }
-
-    public Integer getAttachmentQty() { return attachmentQty; }
-    public void setAttachmentQty(Integer attachmentQty) { this.attachmentQty = attachmentQty; }
-
-    public String getToStr() { return toStr; }
-    public void setToStr(String toStr) { this.toStr = toStr; }
-
-    public LocalDateTime getCreatedDate() { return createdDate; }
-    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
-
-    public LocalDateTime getUpdatedDate() { return updatedDate; }
-    public void setUpdatedDate(LocalDateTime updatedDate) { this.updatedDate = updatedDate; }
-
-    public Integer getCreatedBy() { return createdBy; }
-    public void setCreatedBy(Integer createdBy) { this.createdBy = createdBy; }
-
-    public String getCreatedByName() { return createdByName; }
-    public void setCreatedByName(String createdByName) { this.createdByName = createdByName; }
-
-    public String getNoSuratMasuk() { return noSuratMasuk; }
-    public void setNoSuratMasuk(String noSuratMasuk) { this.noSuratMasuk = noSuratMasuk; }
-
-    public String getAsalSuratMasuk() { return asalSuratMasuk; }
-    public void setAsalSuratMasuk(String asalSuratMasuk) { this.asalSuratMasuk = asalSuratMasuk; }
-
-    public String getTglSuratMasuk() { return tglSuratMasuk; }
-    public void setTglSuratMasuk(String tglSuratMasuk) { this.tglSuratMasuk = tglSuratMasuk; }
-
-    public String getTujuanSuratKeluar() { return tujuanSuratKeluar; }
-    public void setTujuanSuratKeluar(String tujuanSuratKeluar) { this.tujuanSuratKeluar = tujuanSuratKeluar; }
-
-    public String getPenerimaSuratKeluar() { return penerimaSuratKeluar; }
-    public void setPenerimaSuratKeluar(String penerimaSuratKeluar) { this.penerimaSuratKeluar = penerimaSuratKeluar; }
 }

@@ -1,5 +1,7 @@
 package id.perumdamts.mail.repository.jooq;
 
+import id.perumdamts.mail.api.dto.mail.MailReportRequest;
+import id.perumdamts.mail.api.dto.mail.MailReportResponse;
 import id.perumdamts.mail.api.dto.mail.MailSearchRequest;
 import id.perumdamts.mail.api.dto.mail.MailSummaryResponse;
 import org.jooq.Condition;
@@ -132,5 +134,41 @@ public class MailQueryRepository {
                 .and(field("m.m_status").gt(0))
                 .orderBy(field("m.m_created_date").asc())
                 .fetchInto(MailSummaryResponse.class);
+    }
+
+    public List<MailReportResponse> getReport(MailReportRequest request) {
+        Condition condition = field("m.m_status").eq(1);
+
+        if (request.mailTypeId() != null) {
+            condition = condition.and(field("m.m_type").eq(request.mailTypeId()));
+        }
+        if (request.mailCategoryId() != null) {
+            condition = condition.and(field("m.m_category").eq(request.mailCategoryId()));
+        }
+        if (request.startDate() != null && request.endDate() != null) {
+            condition = condition.and(field("m.m_date").between(request.startDate(), request.endDate()));
+        }
+
+        return dsl.select(
+                        field("mt.mail_type").as("mailTypeName"),
+                        field("mc.mcat_name").as("mailCategoryName"),
+                        count().as("totalMails"),
+                        count(
+                                case_()
+                                        .when(field("ut.read_status").eq(1), inline(1))
+                        ).as("totalRead"),
+                        count(
+                                case_()
+                                        .when(field("ut.read_status").eq(0), inline(1))
+                        ).as("totalUnread")
+                )
+                .from(table("mail").as("m"))
+                .join(table("sys_user_task").as("ut")).on(field("ut.tm_id").eq(field("m.m_id")))
+                .leftJoin(table("mail_type").as("mt")).on(field("mt.mail_type_id").eq(field("m.m_type")))
+                .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("m.m_category")))
+                .where(condition)
+                .groupBy(field("mt.mail_type"), field("mc.mcat_name"))
+                .orderBy(field("mt.mail_type"), field("mc.mcat_name"))
+                .fetchInto(MailReportResponse.class);
     }
 }

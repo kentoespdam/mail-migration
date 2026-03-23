@@ -9,5 +9,7 @@ import org.mapstruct.MappingConstants;
 public interface RecipientMapper {
 
     @Mapping(target = "circulationName", expression = "java(entity.getCirculationType().name())")
+    @Mapping(target = "notified", expression = "java(entity.isNotified())")
+    @Mapping(target = "read", expression = "java(entity.isRead())")
     RecipientResponse toResponse(MailRecipient entity);
 }
