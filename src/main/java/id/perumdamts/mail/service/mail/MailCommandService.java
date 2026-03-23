@@ -1,24 +1,26 @@
 package id.perumdamts.mail.service.mail;
 
-import id.perumdamts.mail.api.dto.mail.MailCreateRequest;
-import id.perumdamts.mail.api.dto.mail.MailMapper;
-import id.perumdamts.mail.api.dto.mail.MailResponse;
-import id.perumdamts.mail.api.dto.mail.MailUpdateRequest;
+import id.perumdamts.mail.api.dto.mail.*;
+import id.perumdamts.mail.api.dto.recipient.RecipientBatchRequest;
 import id.perumdamts.mail.domain.entity.Mail;
 import id.perumdamts.mail.domain.entity.MailRecipient;
 import id.perumdamts.mail.domain.entity.UserTask;
-import id.perumdamts.mail.domain.enums.SystemFolder;
-import id.perumdamts.mail.domain.event.MailSentEvent;
+import id.perumdamts.mail.domain.enums.CirculationType;
 import id.perumdamts.mail.infrastructure.security.MailPrincipal;
+import id.perumdamts.mail.integration.hr.BatchIdsRequest;
+import id.perumdamts.mail.integration.hr.EmployeeDto;
+import id.perumdamts.mail.integration.hr.HrServiceClient;
 import id.perumdamts.mail.repository.jpa.*;
-import id.perumdamts.mail.service.mail.numbering.MailNumberGenerator;
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -29,26 +31,26 @@ public class MailCommandService {
     private final MailCategoryRepository mailCategoryRepository;
     private final MailRecipientRepository recipientRepository;
     private final UserTaskRepository userTaskRepository;
-    private final MailNumberGenerator mailNumberGenerator;
-    private final ApplicationEventPublisher eventPublisher;
     private final MailMapper mailMapper;
+    private final MailSendService mailSendService;
+    private final HrServiceClient hrServiceClient;
 
     public MailCommandService(MailRepository mailRepository,
                                MailTypeRepository mailTypeRepository,
                                MailCategoryRepository mailCategoryRepository,
                                MailRecipientRepository recipientRepository,
                                UserTaskRepository userTaskRepository,
-                               MailNumberGenerator mailNumberGenerator,
-                               ApplicationEventPublisher eventPublisher,
-                               MailMapper mailMapper) {
+                               MailMapper mailMapper,
+                               MailSendService mailSendService,
+                               HrServiceClient hrServiceClient) {
         this.mailRepository = mailRepository;
         this.mailTypeRepository = mailTypeRepository;
         this.mailCategoryRepository = mailCategoryRepository;
         this.recipientRepository = recipientRepository;
         this.userTaskRepository = userTaskRepository;
-        this.mailNumberGenerator = mailNumberGenerator;
-        this.eventPublisher = eventPublisher;
         this.mailMapper = mailMapper;
+        this.mailSendService = mailSendService;
+        this.hrServiceClient = hrServiceClient;
     }
 
     @Transactional
@@ -112,54 +114,39 @@ public class MailCommandService {
 
     @Transactional
     public MailResponse send(Integer mailId, MailPrincipal principal) {
-        var mail = getMailOrThrow(mailId);
-        if (!mail.isDraft()) {
-            throw new IllegalStateException("Mail already sent");
-        }
-
-        List<MailRecipient> recipients = recipientRepository.findByMailId(mailId);
-        if (recipients.isEmpty()) {
-            throw new IllegalArgumentException("Cannot send mail without recipients");
-        }
-
-        // Generate mail number
-        String mailNumber = mailNumberGenerator.generate(mail);
-        mail.send(mailNumber);
-
-        // Build toStr
-        String toStr = recipients.stream()
-                .map(r -> r.getEmpName() != null ? r.getEmpName() : "User#" + r.getUserId())
-                .reduce((a, b) -> a + ", " + b)
-                .orElse("");
-        mail.setToStr(toStr);
-
-        mailRepository.save(mail);
-
-        // Create inbox UserTask per recipient
-        Integer senderId = Integer.parseInt(principal.userId());
-        List<UserTask> inboxTasks = recipients.stream()
-                .map(r -> UserTask.inbox(r.getUserId(), mailId))
-                .toList();
-        userTaskRepository.saveAll(inboxTasks);
-
-        // Move sender's task from DRAFT to SENT
-        userTaskRepository.updateFolder(senderId, mailId,
-                SystemFolder.DRAFT.getId(), SystemFolder.SENT.getId());
-
-        // If reply: move parent to READ for sender
-        if (mail.getParentMail() != null) {
-            userTaskRepository.updateFolder(senderId, mail.getParentMail().getId(),
-                    SystemFolder.INBOX.getId(), SystemFolder.READ.getId());
-        }
-
-        // Publish domain event
-        List<Integer> recipientUserIds = recipients.stream()
-                .map(MailRecipient::getUserId)
-                .toList();
-        eventPublisher.publishEvent(new MailSentEvent(
-                mailId, senderId, principal.name(), recipientUserIds));
-
+        Mail mail = mailSendService.send(mailId, principal);
         return mailMapper.toResponse(mail);
+    }
+
+    @Transactional
+    public MailResponse sendMail(MailSendRequest request, MailPrincipal principal) {
+        var mail = new Mail();
+        applyFields(mail, request);
+        mail.setCreatedBy(Integer.parseInt(principal.userId()));
+        mail.setCreatedByName(principal.name());
+        mail.setCreatedDate(LocalDateTime.now());
+
+        // Threading
+        if (request.rootMailId() != null && request.rootMailId() > 0) {
+            mail.setRootMail(mailRepository.getReferenceById(request.rootMailId()));
+            if (request.parentMailId() != null && request.parentMailId() > 0) {
+                mail.setParentMail(mailRepository.getReferenceById(request.parentMailId()));
+            }
+        }
+
+        mail = mailRepository.save(mail);
+
+        // Self-reference root if new mail
+        if (mail.getRootMail() == null) {
+            mail.setRootMail(mail);
+            mail = mailRepository.save(mail);
+        }
+
+        // Add recipients
+        addRecipients(mail, request.recipients(), principal);
+
+        // Send the mail
+        return send(mail.getId(), principal);
     }
 
     @Transactional
@@ -214,6 +201,75 @@ public class MailCommandService {
         mail.setTglSuratMasuk(request.tglSuratMasuk());
         mail.setTujuanSuratKeluar(request.tujuanSuratKeluar());
         mail.setPenerimaSuratKeluar(request.penerimaSuratKeluar());
+    }
+
+    private void applyFields(Mail mail, MailSendRequest request) {
+        mail.setSubject(request.subject());
+        mail.setContent(request.content());
+        mail.setNote(request.note());
+        mail.setMailDate(request.mailDate());
+        mail.setMaxResponseDate(request.maxResponseDate());
+        if (request.mailTypeId() != null) {
+            mail.setMailType(mailTypeRepository.getReferenceById(request.mailTypeId()));
+        }
+        if (request.mailCategoryId() != null) {
+            mail.setMailCategory(mailCategoryRepository.getReferenceById(request.mailCategoryId()));
+        }
+        mail.setNoSuratMasuk(request.noSuratMasuk());
+        mail.setAsalSuratMasuk(request.asalSuratMasuk());
+        mail.setTglSuratMasuk(request.tglSuratMasuk());
+        mail.setTujuanSuratKeluar(request.tujuanSuratKeluar());
+        mail.setPenerimaSuratKeluar(request.penerimaSuratKeluar());
+    }
+
+    private void addRecipients(Mail mail, List<RecipientBatchRequest> recipientRequests, MailPrincipal principal) {
+        Integer currentUserId = Integer.parseInt(principal.userId());
+        List<MailRecipient> toSave = new ArrayList<>();
+
+        for (RecipientBatchRequest batchRequest : recipientRequests) {
+            CirculationType circulationType = CirculationType.fromDbValue(batchRequest.circulation());
+            List<Long> empIdLongs = batchRequest.empIds().stream().map(Integer::longValue).toList();
+            
+            List<EmployeeDto> employees = hrServiceClient.getBatchEmployees(
+                    new BatchIdsRequest(empIdLongs));
+            
+            Map<Long, EmployeeDto> empMap = employees.stream()
+                    .collect(Collectors.toMap(EmployeeDto::id, Function.identity()));
+
+            for (Integer empId : batchRequest.empIds()) {
+                EmployeeDto emp = empMap.get(empId.longValue());
+                if (emp == null) {
+                    continue; // Skip not found employees
+                }
+
+                Integer userId = emp.id().intValue();
+                if (userId.equals(currentUserId)) {
+                    continue; // Skip sender
+                }
+
+                // Check if recipient already exists
+                if (recipientRepository.existsByMailIdAndUserId(mail.getId(), userId)) {
+                    continue;
+                }
+
+                var recipient = createRecipientFromEmployee(mail, emp, circulationType);
+                toSave.add(recipient);
+            }
+        }
+
+        recipientRepository.saveAll(toSave);
+    }
+
+    private MailRecipient createRecipientFromEmployee(Mail mail, EmployeeDto emp, CirculationType circulationType) {
+        var recipient = new MailRecipient(mail, emp.id().intValue(), emp.id().intValue(), circulationType);
+        recipient.setEmpName(emp.nama());
+        if (emp.jabatanId() != null) {
+            recipient.setPosId(emp.jabatanId().intValue());
+        }
+        if (emp.jabatanNama() != null) {
+            recipient.setPosName(emp.jabatanNama());
+        }
+        return recipient;
     }
 
     private Mail getMailOrThrow(Integer mailId) {

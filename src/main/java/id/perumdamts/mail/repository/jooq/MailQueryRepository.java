@@ -125,11 +125,17 @@ public class MailQueryRepository {
                         field("m.m_attachment_qty").as("attachmentQty"),
                         field("m.m_created_date").as("createdDate"),
                         field("mt.mail_type").as("mailTypeName"),
-                        field("mc.mcat_name").as("mailCategoryName")
+                        field("mc.mcat_name").as("mailCategoryName"),
+                        inline("N/A").as("circulationName"),
+                        field("ut.restore_folder_id").as("restoreFolderId"),
+                        inline("").as("restoreFolderName"),
+                        field("m.m_root_id").as("rootMailId"),
+                        field("m.m_parent_id").as("parentMailId")
                 )
                 .from(table("mail").as("m"))
                 .leftJoin(table("mail_type").as("mt")).on(field("mt.mail_type_id").eq(field("m.m_type")))
                 .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("m.m_category")))
+                .leftJoin(table("sys_user_task").as("ut")).on(field("ut.tm_id").eq(field("m.m_id")))
                 .where(field("m.m_root_id").eq(rootId))
                 .and(field("m.m_status").gt(0))
                 .orderBy(field("m.m_created_date").asc())

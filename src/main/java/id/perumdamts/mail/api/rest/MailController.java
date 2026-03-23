@@ -1,12 +1,6 @@
 package id.perumdamts.mail.api.rest;
 
-import id.perumdamts.mail.api.dto.mail.MailCreateRequest;
-import id.perumdamts.mail.api.dto.mail.MailReportRequest;
-import id.perumdamts.mail.api.dto.mail.MailReportResponse;
-import id.perumdamts.mail.api.dto.mail.MailResponse;
-import id.perumdamts.mail.api.dto.mail.MailSearchRequest;
-import id.perumdamts.mail.api.dto.mail.MailSummaryResponse;
-import id.perumdamts.mail.api.dto.mail.MailUpdateRequest;
+import id.perumdamts.mail.api.dto.mail.*;
 import id.perumdamts.mail.infrastructure.security.MailPrincipal;
 import id.perumdamts.mail.service.mail.MailCommandService;
 import id.perumdamts.mail.service.mail.MailQueryService;
@@ -36,6 +30,14 @@ public class MailController {
             @Valid @RequestBody MailCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(commandService.createDraft(request, principal));
+    }
+
+    @PostMapping("/send")
+    public ResponseEntity<MailResponse> sendMail(
+            @AuthenticationPrincipal MailPrincipal principal,
+            @Valid @RequestBody MailSendRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(commandService.sendMail(request, principal));
     }
 
     @PutMapping("/{id}")

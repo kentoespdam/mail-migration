@@ -18,5 +18,7 @@ public record MailSummaryResponse(
         String mailCategoryName,
         String circulationName,
         Integer restoreFolderId,
-        String restoreFolderName
+        String restoreFolderName,
+        Integer rootMailId,
+        Integer parentMailId
 ) {}

@@ -52,7 +52,8 @@ public class OpenApiConfig {
                 .pathsToMatch(
                         "/api/v1/mails/**",
                         "/api/v1/mail/**",
-                        "/api/v1/attachments/**"
+                        "/api/v1/attachments/**",
+                        "/api/v1/archives/**"
                 )
                 .build();
     }
