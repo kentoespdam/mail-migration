@@ -1,0 +1,35 @@
+/.env
+
+# Gradle
+.gradle/
+build/
+gradle-app.setting
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# Spring Boot
+*.log
+*.tmp
+.DS_Store
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+target/
+.settings/
+.project
+.classpath
+.springBeans
+.sts4-cache
+bin/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+application-local.properties
+application-local.yml
+application-dev.properties
+application-dev.yml

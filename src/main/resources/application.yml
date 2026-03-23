@@ -1,0 +1,111 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: mail-service
+
+  # ── Flyway ──
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    validate-on-migrate: false
+    clean-disabled: true
+    out-of-order: false
+    encoding: UTF-8
+
+  # ── DataSource ──
+  datasource:
+    url: jdbc:mariadb://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:smartoffice_mail}?useUnicode=true&characterEncoding=utf8mb4&createDatabaseIfNotExist=true
+    username: ${DB_USER:mail_user}
+    password: ${DB_PASSWORD:mail_password}
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:20}
+      minimum-idle: 5
+      connection-timeout: 10000
+
+  # ── JPA / Hibernate ──
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+
+  docker:
+    compose:
+      enabled: true
+
+  # ── Redis ──
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2s
+
+  # ── Cache ──
+  cache:
+    type: redis
+
+  # ── Jackson ──
+  jackson:
+    default-property-inclusion: non_null
+#    serialization:
+#      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+  # ── Servlet (file upload) ──
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 50MB
+
+# ── AppWrite ──
+appwrite:
+  endpoint: ${APPWRITE_ENDPOINT:http://192.168.230.254:82}
+  project-id: ${APPWRITE_PROJECT_ID:65cd62cc3385d8434a53}
+  api-key: ${APPWRITE_API_KEY:}
+  response-format: "1.0.0"
+  token-cache-name: appwrite-tokens
+  token-cache-key-length: 20
+  token-cache-ttl-minutes: 5
+
+# ── Tenant ──
+app:
+  tenant:
+    code: ${TENANT_CODE:PERUMDAM_TS}
+    display-name: ${TENANT_DISPLAY_NAME:Perumdam Tirta Satria}
+    office-code: ${TENANT_OFFICE_CODE:BMS}
+    mail-number-format-ref: mail_number_format_bms
+    archive-number-format-ref: ma_number_format_bms
+    inbox-sort-ascending: false
+    default-mail-type-id: 1
+    default-mail-category-id: 1
+
+# ── HR Service (OpenFeign) ──
+hr:
+  service:
+    url: ${HR_SERVICE_URL:http://192.168.1.214:8080}
+
+# ── Actuator ──
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ── Logging ──
+logging:
+  level:
+    id.perumdamts.mail: ${LOG_LEVEL:DEBUG}
+    org.jooq: INFO
+    org.springframework.security: INFO

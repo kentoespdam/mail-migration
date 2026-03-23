@@ -1,0 +1,103 @@
+import org.springframework.boot.gradle.tasks.bundling.BootJar
+
+plugins {
+    java
+    id("org.springframework.boot") version "4.0.4"
+    id("io.spring.dependency-management") version "1.1.7"
+}
+
+group = "id.perumdamts"
+version = "1.0.0-SNAPSHOT"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Repositories
+// ──────────────────────────────────────────────────────────────────────────────
+repositories {
+    mavenCentral()
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Dependency Management — Spring Cloud BOM (untuk OpenFeign)
+// ──────────────────────────────────────────────────────────────────────────────
+extra["springCloudVersion"] = "2025.1.1"
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+    }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Dependencies
+// ──────────────────────────────────────────────────────────────────────────────
+val jooqVersion    = "3.20.1"
+val mapstructVersion = "1.6.3"
+val flywayVersion  = "11.3.0"
+
+dependencies {
+
+    // == Web ==
+    implementation("org.springframework.boot:spring-boot-starter-web")
+
+    // == Security ==
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // == Bean Validation ==
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+
+    // == JPA ==
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    runtimeOnly("org.mariadb.jdbc:mariadb-java-client")
+
+    // == Flyway (MariaDB / MySQL dialect) ==
+    implementation("org.springframework.boot:spring-boot-starter-flyway")
+    implementation("org.flywaydb:flyway-mysql:${flywayVersion}")
+
+    // == JOOQ ==
+    implementation("org.springframework.boot:spring-boot-starter-jooq")
+    implementation("org.jooq:jooq:${jooqVersion}")
+
+    // == Redis Cache ==
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+
+    // == WebFlux — WebClient untuk AppWrite REST call ==
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    // == OpenFeign — HR Service ==
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+
+    // == Actuator ==
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    // == MapStruct ==
+    implementation("org.mapstruct:mapstruct:${mapstructVersion}")
+    annotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
+
+    // == Configuration Metadata ==
+    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+
+    // == Dev Tools ==
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+
+    // == Test ==
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.security:spring-security-test")
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Tasks
+// ──────────────────────────────────────────────────────────────────────────────
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
+tasks.named<BootJar>("bootJar") {
+    archiveFileName.set("mail-service.jar")
+}
