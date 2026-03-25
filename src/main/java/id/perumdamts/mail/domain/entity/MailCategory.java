@@ -35,7 +35,8 @@ public class MailCategory {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mail_type_id", nullable = false)
+    @JoinColumn(name = "mail_type_id", nullable = false,
+                foreignKey = @ForeignKey(name = "fk_mcat_mail_type"))
     private MailType mailType;
 
     @Column(name = "mcat_code", nullable = false, length = 32)

@@ -1,11 +1,13 @@
 package id.perumdamts.mail.api.rest;
 
+import id.perumdamts.mail.api.dto.master.MailTypeLookup;
 import id.perumdamts.mail.api.dto.master.MailTypeRequest;
 import id.perumdamts.mail.api.dto.master.MailTypeResponse;
 import id.perumdamts.mail.service.master.MailTypeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,14 +17,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/mail-types")
 @RequiredArgsConstructor
-@Slf4j
 public class MailTypeController {
 
     private final MailTypeService service;
 
     @GetMapping
-    public List<MailTypeResponse> findAll() {
-        return service.findAll();
+    public Page<MailTypeResponse> findAll(
+            @RequestParam(required = false) String search,
+            Pageable pageable) {
+        return service.findAll(search, pageable);
+    }
+
+    @GetMapping("/lookup")
+    public List<MailTypeLookup> lookup() {
+        return service.lookup();
     }
 
     @GetMapping("/{id}")

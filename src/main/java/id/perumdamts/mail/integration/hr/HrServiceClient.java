@@ -10,7 +10,8 @@ import java.util.Optional;
 @FeignClient(
         name = "hr-service",
         url = "${hr.service.url}",
-        fallback = HrServiceClientFallback.class
+        fallback = HrServiceClientFallback.class,
+        configuration = HrServiceConfig.class
 )
 public interface HrServiceClient {
 
@@ -25,7 +26,7 @@ public interface HrServiceClient {
     Optional<EmployeeRingkasanDto> getRingkasan(@PathVariable Long id);
 
     @PostMapping("/pegawai/batch-by-ids")
-    List<EmployeeDto> getBatchEmployees(@RequestBody BatchIdsRequest request);
+    EmployeeResponse getBatchEmployees(@RequestBody BatchIdsRequest request);
 
     @GetMapping("/pegawai")
     PageResponse<EmployeeDto> searchEmployees(

@@ -1,10 +1,6 @@
 package id.perumdamts.mail.api.mcp;
 
-import id.perumdamts.mail.api.dto.mail.MailCreateRequest;
-import id.perumdamts.mail.api.dto.mail.MailSearchRequest;
-import id.perumdamts.mail.api.dto.mail.MailSummaryResponse;
-import id.perumdamts.mail.api.dto.mail.MailUpdateRequest;
-import id.perumdamts.mail.api.dto.mail.MailResponse;
+import id.perumdamts.mail.api.dto.mail.*;
 import id.perumdamts.mail.infrastructure.security.MailPrincipal;
 import id.perumdamts.mail.service.mail.MailCommandService;
 import id.perumdamts.mail.service.mail.MailQueryService;

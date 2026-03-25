@@ -7,19 +7,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
-/**
- * Entity untuk tabel {@code mail_type}.
- *
- * <p>Legacy schema: status 1=Active, 3=Deleted (int).
- * Di entity baru kita map ke {@link RecordStatus} enum string
- * karena Flyway V5 sudah mengubah kolom ke varchar/enum.
- *
- * <p>Composite PK legacy {@code (mail_type_id, mail_type)} diabaikan —
- * kita pakai {@code mail_type_id} saja sebagai PK karena auto-increment.
- */
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "mail_type")
-@SQLRestriction("mail_type_status != 3")
+@SQLRestriction("mail_type_status != 'DELETED'")
 @NoArgsConstructor
 @Getter
 @Setter
@@ -33,28 +26,22 @@ public class MailType {
     @Column(name = "mail_type", nullable = false, length = 32)
     private String name;
 
-    /**
-     * Legacy: 1 = Active, 3 = Deleted.
-     */
+    @Enumerated(EnumType.STRING)
     @Column(name = "mail_type_status", nullable = false)
-    private Integer status = 1;
+    private RecordStatus status = RecordStatus.ACTIVE;
+
+    @OneToMany(mappedBy = "mailType", fetch = FetchType.LAZY)
+    private List<MailCategory> categories = new ArrayList<>();
 
     public MailType(String name) {
         this.name = name;
-        this.status = 1;
-    }
-
-    public MailType(Integer id, String name, Integer status) {
-        this.id = id;
-        this.name = name;
-        this.status = status;
     }
 
     public boolean isActive() {
-        return status != null && status == 1;
+        return status == RecordStatus.ACTIVE;
     }
 
     public void markDeleted() {
-        this.status = 3;
+        this.status = RecordStatus.DELETED;
     }
 }

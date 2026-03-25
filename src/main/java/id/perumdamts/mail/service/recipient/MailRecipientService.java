@@ -6,6 +6,7 @@ import id.perumdamts.mail.domain.entity.MailRecipient;
 import id.perumdamts.mail.domain.enums.CirculationType;
 import id.perumdamts.mail.integration.hr.BatchIdsRequest;
 import id.perumdamts.mail.integration.hr.EmployeeDto;
+import id.perumdamts.mail.integration.hr.EmployeeResponse;
 import id.perumdamts.mail.integration.hr.HrServiceClient;
 import id.perumdamts.mail.repository.jooq.RecipientQueryRepository;
 import id.perumdamts.mail.repository.jpa.MailRecipientRepository;
@@ -76,8 +77,9 @@ public class MailRecipientService {
         Set<Integer> existingUserIds = recipientRepository.findUserIdsByMailId(mailId);
 
         List<Long> empIdLongs = request.empIds().stream().map(Integer::longValue).toList();
-        List<EmployeeDto> employees = hrServiceClient.getBatchEmployees(
+        EmployeeResponse response = hrServiceClient.getBatchEmployees(
                 new BatchIdsRequest(empIdLongs));
+        List<EmployeeDto> employees = response.getData();
 
         Map<Long, EmployeeDto> empMap = employees.stream()
                 .collect(Collectors.toMap(EmployeeDto::id, Function.identity()));

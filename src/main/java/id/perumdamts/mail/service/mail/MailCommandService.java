@@ -9,6 +9,7 @@ import id.perumdamts.mail.domain.enums.CirculationType;
 import id.perumdamts.mail.infrastructure.security.MailPrincipal;
 import id.perumdamts.mail.integration.hr.BatchIdsRequest;
 import id.perumdamts.mail.integration.hr.EmployeeDto;
+import id.perumdamts.mail.integration.hr.EmployeeResponse;
 import id.perumdamts.mail.integration.hr.HrServiceClient;
 import id.perumdamts.mail.repository.jpa.*;
 import jakarta.persistence.EntityNotFoundException;
@@ -229,10 +230,11 @@ public class MailCommandService {
         for (RecipientBatchRequest batchRequest : recipientRequests) {
             CirculationType circulationType = CirculationType.fromDbValue(batchRequest.circulation());
             List<Long> empIdLongs = batchRequest.empIds().stream().map(Integer::longValue).toList();
-            
-            List<EmployeeDto> employees = hrServiceClient.getBatchEmployees(
+
+            EmployeeResponse response = hrServiceClient.getBatchEmployees(
                     new BatchIdsRequest(empIdLongs));
-            
+            List<EmployeeDto> employees = response.getData();
+
             Map<Long, EmployeeDto> empMap = employees.stream()
                     .collect(Collectors.toMap(EmployeeDto::id, Function.identity()));
 

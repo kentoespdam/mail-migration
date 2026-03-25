@@ -1,10 +1,6 @@
 package id.perumdamts.mail.api.rest;
 
-import id.perumdamts.mail.api.dto.recipient.BatchRecipientResponse;
-import id.perumdamts.mail.api.dto.recipient.RecipientBatchRequest;
-import id.perumdamts.mail.api.dto.recipient.RecipientNotifPatchRequest;
-import id.perumdamts.mail.api.dto.recipient.RecipientRequest;
-import id.perumdamts.mail.api.dto.recipient.RecipientResponse;
+import id.perumdamts.mail.api.dto.recipient.*;
 import id.perumdamts.mail.infrastructure.security.MailPrincipal;
 import id.perumdamts.mail.service.recipient.MailRecipientService;
 import jakarta.validation.Valid;

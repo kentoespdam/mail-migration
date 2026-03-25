@@ -1,7 +1,7 @@
 package id.perumdamts.mail.api.mcp;
 
 import id.perumdamts.mail.api.dto.master.MailCategoryResponse;
-import id.perumdamts.mail.api.dto.master.MailTypeResponse;
+import id.perumdamts.mail.api.dto.master.MailTypeLookup;
 import id.perumdamts.mail.api.dto.master.QuickMessageResponse;
 import id.perumdamts.mail.service.master.MailCategoryService;
 import id.perumdamts.mail.service.master.MailTypeService;
@@ -28,8 +28,8 @@ public class MasterDataTools {
     }
 
     @Tool(description = "List all mail types (e.g., Surat Masuk, Surat Keluar, Nota Dinas)")
-    public List<MailTypeResponse> listMailTypes() {
-        return mailTypeService.findAll();
+    public List<MailTypeLookup> listMailTypes() {
+        return mailTypeService.lookup();
     }
 
     @Tool(description = "List mail categories for a specific mail type")

@@ -36,9 +36,9 @@ public class HrServiceClientFallback implements HrServiceClient {
     }
 
     @Override
-    public List<EmployeeDto> getBatchEmployees(BatchIdsRequest request) {
-        log.warn("HR Service unavailable — getBatchEmployees({} ids)", request.ids().size());
-        return List.of();
+    public EmployeeResponse getBatchEmployees(BatchIdsRequest request) {
+        log.warn("HR Service unavailable or returned error — getBatchEmployees({} ids)", request.ids().size());
+        return new EmployeeResponse(List.of(), 503, "Service Unavailable", List.of(), "HR Service unavailable", null);
     }
 
     @Override

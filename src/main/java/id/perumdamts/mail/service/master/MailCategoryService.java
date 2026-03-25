@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Sort;
+
 import java.util.List;
 
 @Service
@@ -26,7 +28,7 @@ public class MailCategoryService {
     private final MailCategoryMapper mapper;
 
     public List<MailCategoryResponse> findAll() {
-        return repository.findAll().stream()
+        return repository.findAll(Sort.by(Sort.Direction.ASC, "code")).stream()
                 .map(mapper::toResponse)
                 .toList();
     }
@@ -45,8 +47,8 @@ public class MailCategoryService {
     public MailCategoryResponse create(MailCategoryRequest request) {
         MailType mailType = getMailTypeOrThrow(request.mailTypeId());
         if (repository.existsByMailTypeIdAndCode(request.mailTypeId(), request.code())) {
-            throw new IllegalArgumentException(
-                    "Category with code '" + request.code() + "' already exists for mail type " + request.mailTypeId());
+            throw new IllegalStateException(
+                    "Kode \"%s\" sudah terpakai. Silahkan gunakan kode yang lain.".formatted(request.code()));
         }
         var entity = new MailCategory(mailType, request.code(), request.name());
         if (request.sort() != null) entity.setSort(request.sort());
@@ -61,8 +63,8 @@ public class MailCategoryService {
         // Check unique constraint if code or type changed
         if (!entity.getMailType().getId().equals(request.mailTypeId()) || !entity.getCode().equals(request.code())) {
             if (repository.existsByMailTypeIdAndCode(request.mailTypeId(), request.code())) {
-                throw new IllegalArgumentException(
-                        "Category with code '" + request.code() + "' already exists for mail type " + request.mailTypeId());
+                throw new IllegalStateException(
+                        "Kode \"%s\" sudah terpakai. Silahkan gunakan kode yang lain.".formatted(request.code()));
             }
         }
 
