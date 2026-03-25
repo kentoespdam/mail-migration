@@ -4,6 +4,8 @@ import id.perumdamts.mail.api.dto.master.QuickMessageRequest;
 import id.perumdamts.mail.api.dto.master.QuickMessageResponse;
 import id.perumdamts.mail.service.master.QuickMessageService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,19 +22,27 @@ public class QuickMessageController {
         this.service = service;
     }
 
+    /**
+     * Lookup — semua pesan ACTIVE untuk dropdown/autocomplete di compose mail.
+     */
+    @GetMapping("/lookup")
+    public List<QuickMessageResponse> lookup() {
+        return service.lookup();
+    }
+
+    /**
+     * Paginated list — untuk admin panel (termasuk INACTIVE).
+     */
     @GetMapping
-    public List<QuickMessageResponse> findAll() {
-        return service.findAll();
+    public Page<QuickMessageResponse> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return service.findAll(PageRequest.of(page, size));
     }
 
     @GetMapping("/{id}")
     public QuickMessageResponse findById(@PathVariable Integer id) {
         return service.findById(id);
-    }
-
-    @GetMapping("/lookup")
-    public List<QuickMessageResponse> lookup() {
-        return service.lookup();
     }
 
     @PostMapping

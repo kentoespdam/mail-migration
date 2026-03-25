@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.time.LocalDateTime;
+
 /**
  * Entity untuk tabel {@code pesan_singkat}.
  *
@@ -35,8 +37,25 @@ public class QuickMessage {
     @Column(name = "status", nullable = false, length = 16)
     private RecordStatus status = RecordStatus.ACTIVE;
 
+    @Column(name = "created_date", updatable = false)
+    private LocalDateTime createdDate;
+
+    @Column(name = "updated_date")
+    private LocalDateTime updatedDate;
+
     public QuickMessage(String message) {
         this.message = message;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdDate = LocalDateTime.now();
+        this.updatedDate = this.createdDate;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedDate = LocalDateTime.now();
     }
 
     public boolean isActive() {

@@ -10,6 +10,8 @@ import id.perumdamts.mail.repository.jpa.QuickMessageRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,10 +29,12 @@ public class QuickMessageService {
         this.mapper = mapper;
     }
 
-    public List<QuickMessageResponse> findAll() {
-        return repository.findAll().stream()
-                .map(mapper::toResponse)
-                .toList();
+    /**
+     * Paginated list — untuk admin panel (termasuk INACTIVE, exclude DELETED via @SQLRestriction).
+     */
+    public Page<QuickMessageResponse> findAll(Pageable pageable) {
+        return repository.findAllByOrderByMessageAsc(pageable)
+                .map(mapper::toResponse);
     }
 
     public QuickMessageResponse findById(Integer id) {
@@ -38,12 +42,12 @@ public class QuickMessageService {
     }
 
     /**
-     * Lookup aktif saja — cached di Redis "tenantConfig" (TTL 6 jam).
-     * Dipakai untuk dropdown di frontend.
+     * Lookup aktif saja — cached di Redis (TTL 6 jam).
+     * Dipakai untuk dropdown di frontend. Sorted alphabetical.
      */
     @Cacheable(value = CacheConfig.CacheNames.TENANT_CONFIG, key = "'quickMessages'")
     public List<QuickMessageResponse> lookup() {
-        return repository.findAllByStatus(RecordStatus.ACTIVE).stream()
+        return repository.findAllByStatusOrderByMessageAsc(RecordStatus.ACTIVE).stream()
                 .map(mapper::toResponse)
                 .toList();
     }
@@ -51,7 +55,12 @@ public class QuickMessageService {
     @Transactional
     @CacheEvict(value = CacheConfig.CacheNames.TENANT_CONFIG, key = "'quickMessages'")
     public QuickMessageResponse create(QuickMessageRequest request) {
-        var entity = new QuickMessage(request.message());
+        String trimmed = request.message().trim();
+        if (repository.existsByMessage(trimmed)) {
+            throw new IllegalArgumentException(
+                    "Pesan '%s' sudah ada, silahkan gunakan pesan yang lain.".formatted(trimmed));
+        }
+        var entity = new QuickMessage(trimmed);
         return mapper.toResponse(repository.save(entity));
     }
 
@@ -59,7 +68,12 @@ public class QuickMessageService {
     @CacheEvict(value = CacheConfig.CacheNames.TENANT_CONFIG, key = "'quickMessages'")
     public QuickMessageResponse update(Integer id, QuickMessageRequest request) {
         var entity = getOrThrow(id);
-        entity.setMessage(request.message());
+        String trimmed = request.message().trim();
+        if (repository.existsByMessageAndIdNot(trimmed, id)) {
+            throw new IllegalArgumentException(
+                    "Pesan '%s' sudah ada, silahkan gunakan pesan yang lain.".formatted(trimmed));
+        }
+        entity.setMessage(trimmed);
         return mapper.toResponse(repository.save(entity));
     }
 
