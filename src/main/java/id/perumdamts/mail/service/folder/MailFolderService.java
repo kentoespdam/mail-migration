@@ -216,12 +216,12 @@ public class MailFolderService {
     // ── Private Helpers ──
 
     private MailFolderResponse fromSystemFolder(SystemFolder sf, FolderCountDto counter) {
-        Integer parentFolderId = (sf == SystemFolder.ROOT || sf == SystemFolder.PERSONAL_ROOT) ? 0 : 1;
+        Integer parentFolderId = sf.getParent() != null ? sf.getParent().getId() : 0;
         return new MailFolderResponse(
                 sf.getId(),
                 parentFolderId,
                 0,
-                sf.name(),
+                sf.getDisplayName(),
                 "email",
                 true,
                 counter != null ? counter.unread() : 0L,
@@ -252,25 +252,21 @@ public class MailFolderService {
     }
 
     private void validateFolderAccess(Integer userId, Integer folderId) {
-        // System folders
-        if (folderId <= SystemFolder.PERSONAL_ROOT.getId()) {
-            if (!isValidSystemFolder(folderId)) {
-                throw new IllegalArgumentException("Invalid system folder: " + folderId);
-            }
+        // System folders — valid jika ada di enum dan bukan PURGED
+        if (SystemFolder.findById(folderId).filter(sf -> sf != SystemFolder.PURGED).isPresent()) {
             return;
         }
         // Personal folders — harus owned by user
-        getOwnedPersonalFolder(userId, folderId);
-    }
-
-    private boolean isValidSystemFolder(Integer folderId) {
-        return Arrays.stream(SystemFolder.values())
-                .anyMatch(sf -> sf.getId() == folderId && sf != SystemFolder.PURGED);
+        if (SystemFolder.isPersonalFolder(folderId)) {
+            getOwnedPersonalFolder(userId, folderId);
+            return;
+        }
+        throw new IllegalArgumentException("Invalid folder: " + folderId);
     }
 
     private void validateParentFolder(Integer userId, Integer parentFolderId) {
         if (parentFolderId == SystemFolder.PERSONAL_ROOT.getId()) return;
-        if (parentFolderId > SystemFolder.PERSONAL_ROOT.getId()) {
+        if (SystemFolder.isPersonalFolder(parentFolderId)) {
             getOwnedPersonalFolder(userId, parentFolderId);
             return;
         }
@@ -278,12 +274,16 @@ public class MailFolderService {
     }
 
     private void validateTargetFolder(Integer userId, Integer targetFolderId) {
-        // System folders READ dan DELETED adalah target valid
-        if (targetFolderId == SystemFolder.READ.getId() || targetFolderId == SystemFolder.DELETED.getId()) {
-            return;
-        }
+        // System folders — hanya yang movable (READ, DELETED)
+        SystemFolder.findById(targetFolderId).ifPresent(sf -> {
+            if (!sf.isMovable()) {
+                throw new IllegalArgumentException("Invalid move target folder: " + targetFolderId);
+            }
+        });
+        if (SystemFolder.findById(targetFolderId).isPresent()) return;
+
         // Personal folders yang owned by user
-        if (targetFolderId > SystemFolder.PERSONAL_ROOT.getId()) {
+        if (SystemFolder.isPersonalFolder(targetFolderId)) {
             getOwnedPersonalFolder(userId, targetFolderId);
             return;
         }

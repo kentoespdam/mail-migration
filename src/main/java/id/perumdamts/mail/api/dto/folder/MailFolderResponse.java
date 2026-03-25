@@ -19,9 +19,9 @@ public record MailFolderResponse(
     public static MailFolderResponse fromSystemFolder(SystemFolder sf) {
         return new MailFolderResponse(
                 sf.getId(),
-                sf == SystemFolder.ROOT || sf == SystemFolder.PERSONAL_ROOT ? 0 : 1,
+                sf.getParent() != null ? sf.getParent().getId() : 0,
                 0,
-                sf.name(),
+                sf.getDisplayName(),
                 "email",
                 true,
                 0L,

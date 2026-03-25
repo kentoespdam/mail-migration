@@ -1,6 +1,5 @@
 package id.perumdamts.mail.domain.entity;
 
-import id.perumdamts.mail.domain.enums.RecordStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,16 +11,19 @@ import java.time.LocalDateTime;
 
 /**
  * Personal folder yang dibuat oleh user.
- * Menggunakan soft delete 2-level: Trash (folder DELETED=6) → Purge (hapus permanent).
+ * DB column {@code folder_status} adalah INT: 1=Active, 3=Deleted (soft).
  */
 @Entity
 @Table(name = "mail_folder")
-@SQLRestriction("folder_status != 3")
+@SQLRestriction("folder_status = 1")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 public class PersonalFolder {
+
+    private static final int STATUS_ACTIVE = 1;
+    private static final int STATUS_DELETED = 3;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,9 +42,8 @@ public class PersonalFolder {
     @Column(name = "folder_name", nullable = false, length = 45)
     private String name;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "folder_status", nullable = false)
-    private RecordStatus status = RecordStatus.ACTIVE;
+    private Integer status = STATUS_ACTIVE;
 
     @Column(name = "folder_created_date")
     private LocalDateTime createdDate;
@@ -52,43 +53,30 @@ public class PersonalFolder {
         this.parentFolderId = parentFolderId;
         this.name = name.trim();
         this.iconClsFolder = "folder";
+        this.status = STATUS_ACTIVE;
         this.createdDate = LocalDateTime.now();
     }
 
     // ── Domain Methods ──
 
-    /**
-     * Apakah folder ini adalah folder sistem (tidak bisa dimodifikasi user)?
-     */
     public boolean isSystemFolder() {
         return this.ownerId != null && this.ownerId == 0;
     }
 
-    /**
-     * Apakah folder ini dimiliki oleh user tertentu?
-     */
     public boolean isOwnedBy(Integer userId) {
         return this.ownerId.equals(userId);
     }
 
-    /**
-     * Rename folder
-     */
     public void rename(String newName) {
         this.name = newName.trim();
     }
 
-    /**
-     * Soft delete — pindah ke status INACTIVE (folder_status=3)
-     */
+    /** Soft delete — set folder_status=3 (DELETED) */
     public void softDelete() {
-        this.status = RecordStatus.INACTIVE;
+        this.status = STATUS_DELETED;
     }
 
-    /**
-     * Apakah folder ini sudah di-trash (soft deleted)?
-     */
     public boolean isDeleted() {
-        return this.status == RecordStatus.INACTIVE;
+        return this.status == STATUS_DELETED;
     }
 }
