@@ -18,4 +18,8 @@ public interface MailRecipientRepository extends JpaRepository<MailRecipient, Lo
 
     @Query("SELECT r.userId FROM MailRecipient r WHERE r.mail.id = :mailId")
     Set<Integer> findUserIdsByMailId(@Param("mailId") Integer mailId);
+
+    void deleteAllByMailIdAndIdIn(Integer mailId, List<Long> ids);
+
+    void deleteByMailId(Integer mailId);
 }

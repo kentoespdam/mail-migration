@@ -15,6 +15,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Mail Service — migrasi surat-menyurat dari PHP ke Spring Boot 4.
@@ -31,6 +32,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableConfigurationProperties({AppWriteProperties.class, TenantConfig.class, StorageProperties.class})
 @EnableFeignClients(basePackages = "id.perumdamts.mail.integration")
 @EnableAsync
+@EnableScheduling
 public class MailServiceApplication {
 
     static void main(String[] args) {

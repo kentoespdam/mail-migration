@@ -12,6 +12,7 @@ import id.perumdamts.mail.repository.jooq.RecipientQueryRepository;
 import id.perumdamts.mail.repository.jpa.MailRecipientRepository;
 import id.perumdamts.mail.repository.jpa.MailRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,8 +52,9 @@ public class MailRecipientService {
     }
 
     @Transactional
-    public RecipientResponse addRecipient(Integer mailId, RecipientRequest request) {
+    public RecipientResponse addRecipient(Integer mailId, RecipientRequest request, Integer currentUserId) {
         Mail mail = getMailOrThrow(mailId);
+        assertCanManageRecipients(mail, currentUserId);
         CirculationType circulationType = CirculationType.fromDbValue(request.circulation());
 
         EmployeeDto emp = hrServiceClient.getEmployee(request.empId().longValue())
@@ -71,8 +73,9 @@ public class MailRecipientService {
      * Batch add recipients with per-item success/fail reporting (fix B14: silent failure).
      */
     @Transactional
-    public BatchRecipientResponse addBatch(Integer mailId, RecipientBatchRequest request) {
+    public BatchRecipientResponse addBatch(Integer mailId, RecipientBatchRequest request, Integer currentUserId) {
         Mail mail = getMailOrThrow(mailId);
+        assertCanManageRecipients(mail, currentUserId);
         CirculationType circulationType = CirculationType.fromDbValue(request.circulation());
         Set<Integer> existingUserIds = recipientRepository.findUserIdsByMailId(mailId);
 
@@ -112,13 +115,24 @@ public class MailRecipientService {
     }
 
     @Transactional
-    public void deleteRecipient(Integer mailId, Long recipientId) {
+    public void deleteRecipient(Integer mailId, Long recipientId, Integer currentUserId) {
+        Mail mail = getMailOrThrow(mailId);
+        assertCanManageRecipients(mail, currentUserId);
         recipientRepository.deleteByMailIdAndId(mailId, recipientId);
     }
 
     @Transactional
+    public void deleteBatch(Integer mailId, List<Long> recipientIds, Integer currentUserId) {
+        Mail mail = getMailOrThrow(mailId);
+        assertCanManageRecipients(mail, currentUserId);
+        recipientRepository.deleteAllByMailIdAndIdIn(mailId, recipientIds);
+    }
+
+    @Transactional
     public RecipientResponse updateNotifFlags(Integer mailId, Long recipientId,
-                                               RecipientNotifPatchRequest request) {
+                                               RecipientNotifPatchRequest request,
+                                               Integer currentUserId) {
+        assertCanManageRecipients(getMailOrThrow(mailId), currentUserId);
         var recipient = recipientRepository.findById(recipientId)
                 .orElseThrow(() -> new EntityNotFoundException("Recipient not found: " + recipientId));
 
@@ -172,7 +186,12 @@ public class MailRecipientService {
 
         var threadRecipients = recipientQueryRepository.findDistinctThreadRecipients(rootId);
 
-        List<MailRecipient> toSave = threadRecipients.stream()
+        // Collect user IDs from thread recipients
+        Set<Integer> threadUserIds = threadRecipients.stream()
+                .map(RecipientQueryRepository.ThreadRecipientRow::userId)
+                .collect(Collectors.toSet());
+
+        List<MailRecipient> toSave = new ArrayList<>(threadRecipients.stream()
                 .filter(r -> !r.userId().equals(currentUserId))
                 .filter(r -> !existingUserIds.contains(r.userId()))
                 .map(r -> {
@@ -182,7 +201,19 @@ public class MailRecipientService {
                     nr.setPosId(r.posId());
                     return nr;
                 })
-                .toList();
+                .toList());
+
+        // Include root mail originator if not already in thread and not current user (analysis 1.6 step 4)
+        Mail rootMail = getMailOrThrow(rootId);
+        Integer originatorId = rootMail.getCreatedBy();
+        if (originatorId != null
+                && !originatorId.equals(currentUserId)
+                && !threadUserIds.contains(originatorId)
+                && !existingUserIds.contains(originatorId)) {
+            var originator = new MailRecipient(mail, originatorId, originatorId, CirculationType.REPLY);
+            originator.setEmpName(rootMail.getCreatedByName());
+            toSave.add(originator);
+        }
 
         return recipientRepository.saveAll(toSave).stream()
                 .map(recipientMapper::toResponse)
@@ -204,5 +235,11 @@ public class MailRecipientService {
     private Mail getMailOrThrow(Integer mailId) {
         return mailRepository.findById(mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
+    }
+
+    private void assertCanManageRecipients(Mail mail, Integer currentUserId) {
+        if (!mail.getCreatedBy().equals(currentUserId)) {
+            throw new AccessDeniedException("Only the mail creator can manage recipients");
+        }
     }
 }

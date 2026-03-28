@@ -39,7 +39,9 @@ public class OpenApiConfig {
                 .pathsToMatch(
                         "/api/v1/mail-types/**",
                         "/api/v1/mail-categories/**",
-                        "/api/v1/quick-messages/**"
+                        "/api/v1/quick-messages/**",
+                        "/api/v1/file-rules/**",
+                        "/api/v1/document-types/**"
                 )
                 .build();
     }
@@ -53,7 +55,8 @@ public class OpenApiConfig {
                         "/api/v1/mails/**",
                         "/api/v1/mail/**",
                         "/api/v1/attachments/**",
-                        "/api/v1/archives/**"
+                        "/api/v1/archives/**",
+                        "/api/v1/publications/**"
                 )
                 .build();
     }

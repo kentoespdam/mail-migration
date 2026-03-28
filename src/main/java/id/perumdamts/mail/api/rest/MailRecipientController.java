@@ -28,32 +28,47 @@ public class MailRecipientController {
 
     @PostMapping
     public ResponseEntity<RecipientResponse> addRecipient(
+            @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable Integer mailId,
             @Valid @RequestBody RecipientRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(recipientService.addRecipient(mailId, request));
+                .body(recipientService.addRecipient(mailId, request, parseUserId(principal)));
     }
 
     @DeleteMapping("/{rid}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteRecipient(@PathVariable Integer mailId, @PathVariable Long rid) {
-        recipientService.deleteRecipient(mailId, rid);
+    public void deleteRecipient(
+            @AuthenticationPrincipal MailPrincipal principal,
+            @PathVariable Integer mailId,
+            @PathVariable Long rid) {
+        recipientService.deleteRecipient(mailId, rid, parseUserId(principal));
+    }
+
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteBatch(
+            @AuthenticationPrincipal MailPrincipal principal,
+            @PathVariable Integer mailId,
+            @RequestBody RecipientDeleteBatchRequest request) {
+        recipientService.deleteBatch(mailId, request.ids(), parseUserId(principal));
     }
 
     @PostMapping("/batch")
     public ResponseEntity<BatchRecipientResponse> addBatch(
+            @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable Integer mailId,
             @Valid @RequestBody RecipientBatchRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(recipientService.addBatch(mailId, request));
+                .body(recipientService.addBatch(mailId, request, parseUserId(principal)));
     }
 
     @PatchMapping("/{rid}")
     public RecipientResponse updateNotifFlags(
+            @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable Integer mailId,
             @PathVariable Long rid,
             @Valid @RequestBody RecipientNotifPatchRequest request) {
-        return recipientService.updateNotifFlags(mailId, rid, request);
+        return recipientService.updateNotifFlags(mailId, rid, request, parseUserId(principal));
     }
 
     @PostMapping("/copy-from/{refId}")
@@ -61,7 +76,7 @@ public class MailRecipientController {
             @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable Integer mailId,
             @PathVariable Integer refId) {
-        return recipientService.copyFrom(mailId, refId, Integer.parseInt(principal.userId()));
+        return recipientService.copyFrom(mailId, refId, parseUserId(principal));
     }
 
     @PostMapping("/copy-thread/{refId}")
@@ -69,6 +84,10 @@ public class MailRecipientController {
             @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable Integer mailId,
             @PathVariable Integer refId) {
-        return recipientService.copyThread(mailId, refId, Integer.parseInt(principal.userId()));
+        return recipientService.copyThread(mailId, refId, parseUserId(principal));
+    }
+
+    private Integer parseUserId(MailPrincipal principal) {
+        return Integer.parseInt(principal.userId());
     }
 }

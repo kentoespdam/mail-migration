@@ -1,0 +1,117 @@
+services:
+  mail-be:
+    image: smartoffice-mail:latest
+    container_name: mail-backend
+    ports:
+      - "8081:8080"
+    env_file: .env
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mail-net
+
+  # ── MariaDB ─────────────────────────────────
+  mariadb:
+    image: mariadb:11.4
+    container_name: mail-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root_secret
+      MARIADB_DATABASE: smartoffice_mail
+      MARIADB_USER: mail_user
+      MARIADB_PASSWORD: mail_password
+    ports:
+      - "3308:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - ./docker/mariadb/init:/docker-entrypoint-initdb.d:ro  # optional init scripts
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-buffer-pool-size=256M
+      --max-connections=200
+    healthcheck:
+      test: [ "CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "mail_user", "-pmail_password" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - mail-net
+
+  # ── Redis ────────────────────────────────────
+  redis:
+    image: redis:7.4-alpine
+    container_name: mail-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: >
+      redis-server
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+      --requirepass redis_secret
+    healthcheck:
+      test: [ "CMD", "redis-cli", "-a", "redis_secret", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mail-net
+
+  # ── Mailhog (SMTP dev catcher) ────────────────
+  #  mailhog:
+  #    image: mailhog/mailhog:v1.0.1
+  #    container_name: mail-mailhog
+  #    restart: unless-stopped
+  #    ports:
+  #      - "1025:1025"    # SMTP
+  #      - "8025:8025"    # Web UI
+  #    networks:
+  #      - mail-net
+
+  # ── Adminer (DB GUI) ─────────────────────────
+  adminer:
+    image: adminer:4.8.1
+    container_name: mail-adminer
+    restart: unless-stopped
+    ports:
+      - "8181:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mariadb
+      ADMINER_DESIGN: pepa-linha-dark
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - mail-net
+
+  # ── Redis Commander (Redis GUI) ───────────────
+  redis-commander:
+    image: ghcr.io/joeferner/redis-commander:latest
+    container_name: mail-redis-ui
+    restart: unless-stopped
+    ports:
+      - "8282:8081"
+    environment:
+      REDIS_HOSTS: "local:redis:6379:0:redis_secret"
+    depends_on:
+      - redis
+    networks:
+      - mail-net
+
+# ─────────────────────────────────────────────
+volumes:
+  mariadb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  mail-net:
+    driver: bridge

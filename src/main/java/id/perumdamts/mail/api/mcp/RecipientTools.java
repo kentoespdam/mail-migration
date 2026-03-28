@@ -28,27 +28,30 @@ public class RecipientTools {
 
     @Tool(description = "Add a single recipient to a mail. Circulation types: 1=TO, 2=CC, 3=REPLY")
     public RecipientResponse addRecipient(
+            @ToolParam(description = "User ID of the caller") String userId,
             @ToolParam(description = "Mail ID") Integer mailId,
             @ToolParam(description = "Employee ID of the recipient") Integer employeeId,
             @ToolParam(description = "Circulation type: 1=TO, 2=CC, 3=REPLY") Integer circulationType) {
         var request = new RecipientRequest(employeeId, circulationType);
-        return recipientService.addRecipient(mailId, request);
+        return recipientService.addRecipient(mailId, request, Integer.parseInt(userId));
     }
 
     @Tool(description = "Add multiple recipients to a mail in batch")
     public BatchRecipientResponse addRecipientsBatch(
+            @ToolParam(description = "User ID of the caller") String userId,
             @ToolParam(description = "Mail ID") Integer mailId,
             @ToolParam(description = "List of employee IDs") List<Integer> employeeIds,
             @ToolParam(description = "Circulation type: 1=TO, 2=CC, 3=REPLY") Integer circulationType) {
         var request = new RecipientBatchRequest(employeeIds, circulationType);
-        return recipientService.addBatch(mailId, request);
+        return recipientService.addBatch(mailId, request, Integer.parseInt(userId));
     }
 
     @Tool(description = "Remove a recipient from a mail")
     public String deleteRecipient(
+            @ToolParam(description = "User ID of the caller") String userId,
             @ToolParam(description = "Mail ID") Integer mailId,
             @ToolParam(description = "Recipient ID to remove") Long recipientId) {
-        recipientService.deleteRecipient(mailId, recipientId);
+        recipientService.deleteRecipient(mailId, recipientId, Integer.parseInt(userId));
         return "Recipient " + recipientId + " removed from mail " + mailId;
     }
 }
