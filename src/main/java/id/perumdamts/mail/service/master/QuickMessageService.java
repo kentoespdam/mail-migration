@@ -1,12 +1,12 @@
 package id.perumdamts.mail.service.master;
 
-import id.perumdamts.mail.api.dto.master.QuickMessageMapper;
-import id.perumdamts.mail.api.dto.master.QuickMessageRequest;
-import id.perumdamts.mail.api.dto.master.QuickMessageResponse;
 import id.perumdamts.mail.config.CacheConfig;
-import id.perumdamts.mail.domain.entity.QuickMessage;
-import id.perumdamts.mail.domain.enums.RecordStatus;
-import id.perumdamts.mail.repository.jpa.QuickMessageRepository;
+import id.perumdamts.mail.dto.master.QuickMessageMapper;
+import id.perumdamts.mail.dto.master.QuickMessageRequest;
+import id.perumdamts.mail.dto.master.QuickMessageResponse;
+import id.perumdamts.mail.entity.master.QuickMessage;
+import id.perumdamts.mail.enums.RecordStatus;
+import id.perumdamts.mail.repository.master.jpa.QuickMessageRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;

@@ -1,19 +1,18 @@
 package id.perumdamts.mail.service.master;
 
-import id.perumdamts.mail.api.dto.master.MailCategoryMapper;
-import id.perumdamts.mail.api.dto.master.MailCategoryRequest;
-import id.perumdamts.mail.api.dto.master.MailCategoryResponse;
-import id.perumdamts.mail.domain.entity.MailCategory;
-import id.perumdamts.mail.domain.entity.MailType;
-import id.perumdamts.mail.repository.jpa.MailCategoryRepository;
-import id.perumdamts.mail.repository.jpa.MailTypeRepository;
+import id.perumdamts.mail.dto.master.MailCategoryMapper;
+import id.perumdamts.mail.dto.master.MailCategoryRequest;
+import id.perumdamts.mail.dto.master.MailCategoryResponse;
+import id.perumdamts.mail.entity.master.MailCategory;
+import id.perumdamts.mail.entity.master.MailType;
+import id.perumdamts.mail.repository.master.jpa.MailCategoryRepository;
+import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.data.domain.Sort;
 
 import java.util.List;
 

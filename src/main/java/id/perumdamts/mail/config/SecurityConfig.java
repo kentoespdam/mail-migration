@@ -1,6 +1,6 @@
 package id.perumdamts.mail.config;
 
-import id.perumdamts.mail.infrastructure.security.AppWriteAuthFilter;
+import id.perumdamts.mail.security.AppWriteAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;

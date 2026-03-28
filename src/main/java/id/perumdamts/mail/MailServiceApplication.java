@@ -1,12 +1,12 @@
 package id.perumdamts.mail;
 
-import id.perumdamts.mail.api.mcp.FolderTools;
-import id.perumdamts.mail.api.mcp.MailTools;
-import id.perumdamts.mail.api.mcp.MasterDataTools;
-import id.perumdamts.mail.api.mcp.RecipientTools;
 import id.perumdamts.mail.config.AppWriteProperties;
 import id.perumdamts.mail.config.StorageProperties;
 import id.perumdamts.mail.config.TenantConfig;
+import id.perumdamts.mail.mcp.FolderTools;
+import id.perumdamts.mail.mcp.MailTools;
+import id.perumdamts.mail.mcp.MasterDataTools;
+import id.perumdamts.mail.mcp.RecipientTools;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;

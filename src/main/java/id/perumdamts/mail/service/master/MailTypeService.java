@@ -1,14 +1,14 @@
 package id.perumdamts.mail.service.master;
 
-import id.perumdamts.mail.api.dto.master.MailTypeLookup;
-import id.perumdamts.mail.api.dto.master.MailTypeMapper;
-import id.perumdamts.mail.api.dto.master.MailTypeRequest;
-import id.perumdamts.mail.api.dto.master.MailTypeResponse;
-import id.perumdamts.mail.domain.entity.MailType;
-import id.perumdamts.mail.domain.enums.CategoryStatus;
-import id.perumdamts.mail.domain.enums.RecordStatus;
-import id.perumdamts.mail.repository.jpa.MailCategoryRepository;
-import id.perumdamts.mail.repository.jpa.MailTypeRepository;
+import id.perumdamts.mail.dto.master.MailTypeLookup;
+import id.perumdamts.mail.dto.master.MailTypeMapper;
+import id.perumdamts.mail.dto.master.MailTypeRequest;
+import id.perumdamts.mail.dto.master.MailTypeResponse;
+import id.perumdamts.mail.entity.master.MailType;
+import id.perumdamts.mail.enums.CategoryStatus;
+import id.perumdamts.mail.enums.RecordStatus;
+import id.perumdamts.mail.repository.master.jpa.MailCategoryRepository;
+import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
