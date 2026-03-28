@@ -1,6 +1,9 @@
 services:
   mail-be:
     image: smartoffice-mail:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: mail-backend
     ports:
       - "8081:8080"
@@ -27,7 +30,7 @@ services:
       - "3308:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
-      - ./docker/mariadb/init:/docker-entrypoint-initdb.d:ro  # optional init scripts
+#      - ./docker/mariadb/init:/docker-entrypoint-initdb.d:ro  # optional init scripts
     command: >
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci
@@ -76,34 +79,34 @@ services:
   #      - mail-net
 
   # ── Adminer (DB GUI) ─────────────────────────
-  adminer:
-    image: adminer:4.8.1
-    container_name: mail-adminer
-    restart: unless-stopped
-    ports:
-      - "8181:8080"
-    environment:
-      ADMINER_DEFAULT_SERVER: mariadb
-      ADMINER_DESIGN: pepa-linha-dark
-    depends_on:
-      mariadb:
-        condition: service_healthy
-    networks:
-      - mail-net
+#  adminer:
+#    image: adminer:4.8.1
+#    container_name: mail-adminer
+#    restart: unless-stopped
+#    ports:
+#      - "8181:8080"
+#    environment:
+#      ADMINER_DEFAULT_SERVER: mariadb
+#      ADMINER_DESIGN: pepa-linha-dark
+#    depends_on:
+#      mariadb:
+#        condition: service_healthy
+#    networks:
+#      - mail-net
 
   # ── Redis Commander (Redis GUI) ───────────────
-  redis-commander:
-    image: ghcr.io/joeferner/redis-commander:latest
-    container_name: mail-redis-ui
-    restart: unless-stopped
-    ports:
-      - "8282:8081"
-    environment:
-      REDIS_HOSTS: "local:redis:6379:0:redis_secret"
-    depends_on:
-      - redis
-    networks:
-      - mail-net
+#  redis-commander:
+#    image: ghcr.io/joeferner/redis-commander:latest
+#    container_name: mail-redis-ui
+#    restart: unless-stopped
+#    ports:
+#      - "8282:8081"
+#    environment:
+#      REDIS_HOSTS: "local:redis:6379:0:redis_secret"
+#    depends_on:
+#      - redis
+#    networks:
+#      - mail-net
 
 # ─────────────────────────────────────────────
 volumes:
