@@ -3,6 +3,7 @@ package id.perumdamts.mail.integration.hr;
 import feign.Response;
 import feign.RetryableException;
 import feign.codec.ErrorDecoder;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -10,7 +11,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 /**
  * Configuration for HR Service Feign client.
@@ -31,9 +31,6 @@ public class HrServiceConfig {
      * when HR service returns errors, preventing deserialization failures.
      */
     private static class HrServiceErrorDecoder implements ErrorDecoder {
-
-        private final ErrorDecoder defaultDecoder = new Default();
-
         @Override
         public Exception decode(String methodKey, Response response) {
             try {
@@ -56,7 +53,7 @@ public class HrServiceConfig {
                             reason,
                             response.request().httpMethod(),
                             null,
-                            new Date(System.currentTimeMillis() + 5000),
+                            System.currentTimeMillis() + 5000,
                             response.request()
                     );
                 }
@@ -74,6 +71,7 @@ public class HrServiceConfig {
     /**
      * Custom exception for HR Service errors.
      */
+    @Getter
     public static class HrServiceException extends RuntimeException {
         private final int statusCode;
 
@@ -82,8 +80,5 @@ public class HrServiceConfig {
             this.statusCode = statusCode;
         }
 
-        public int getStatusCode() {
-            return statusCode;
-        }
     }
 }
