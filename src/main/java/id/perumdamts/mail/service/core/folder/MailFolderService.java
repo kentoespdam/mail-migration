@@ -94,9 +94,11 @@ public class MailFolderService {
     }
 
     public List<MailSummaryResponse> getMailsInFolder(Integer userId, Integer folderId,
-                                                       int page, int size, boolean sortAsc) {
+                                                       int page, int size,
+                                                       String sortBy, String sortDir,
+                                                       String keyword) {
         validateFolderAccess(userId, folderId);
-        return mailQueryRepository.findMailsInFolder(userId, folderId, page * size, size, sortAsc);
+        return mailQueryRepository.findMailsInFolder(userId, folderId, page * size, size, sortBy, sortDir, keyword);
     }
 
     // ── Command Operations — Personal Folder CRUD ──

@@ -14,6 +14,8 @@ public interface QuickMessageRepository extends JpaRepository<QuickMessage, Inte
 
     Page<QuickMessage> findAllByOrderByMessageAsc(Pageable pageable);
 
+    Page<QuickMessage> findByMessageContainingIgnoreCaseOrderByMessageAsc(String message, Pageable pageable);
+
     boolean existsByMessage(String message);
 
     boolean existsByMessageAndIdNot(String message, Integer id);

@@ -22,11 +22,12 @@ public class MailCategoryController {
 
     @GetMapping
     public List<MailCategoryResponse> findAll(
-            @RequestParam(required = false) Integer mailTypeId) {
+            @RequestParam(required = false) Integer mailTypeId,
+            @RequestParam(required = false) String search) {
         if (mailTypeId != null) {
             return service.findByMailTypeId(mailTypeId);
         }
-        return service.findAll();
+        return service.findAll(search);
     }
 
     @GetMapping("/{id}")

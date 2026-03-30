@@ -96,10 +96,13 @@ public class MailFolderController {
             @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable Integer id,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String sortDir,
+            @RequestParam(required = false) String keyword) {
         return folderService.getMailsInFolder(
                 Integer.parseInt(principal.userId()), id, page, size,
-                tenantConfig.inboxSortAscending());
+                sortBy, sortDir, keyword);
     }
 
     /**

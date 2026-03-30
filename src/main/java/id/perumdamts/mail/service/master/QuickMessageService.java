@@ -32,7 +32,11 @@ public class QuickMessageService {
     /**
      * Paginated list — untuk admin panel (termasuk INACTIVE, exclude DELETED via @SQLRestriction).
      */
-    public Page<QuickMessageResponse> findAll(Pageable pageable) {
+    public Page<QuickMessageResponse> findAll(Pageable pageable, String search) {
+        if (search != null && !search.isBlank()) {
+            return repository.findByMessageContainingIgnoreCaseOrderByMessageAsc(search, pageable)
+                    .map(mapper::toResponse);
+        }
         return repository.findAllByOrderByMessageAsc(pageable)
                 .map(mapper::toResponse);
     }

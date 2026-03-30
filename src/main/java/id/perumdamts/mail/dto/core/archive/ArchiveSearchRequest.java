@@ -8,6 +8,9 @@ public record ArchiveSearchRequest(
         Short year,
         LocalDate startDate,
         LocalDate endDate,
+        String sortBy,
+        String sortDir,
+        Integer status,
         int page,
         int size
 ) {

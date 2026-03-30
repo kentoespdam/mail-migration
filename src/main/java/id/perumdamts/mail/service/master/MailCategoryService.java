@@ -26,10 +26,14 @@ public class MailCategoryService {
     private final MailTypeRepository mailTypeRepository;
     private final MailCategoryMapper mapper;
 
-    public List<MailCategoryResponse> findAll() {
-        return repository.findAll(Sort.by(Sort.Direction.ASC, "code")).stream()
-                .map(mapper::toResponse)
-                .toList();
+    public List<MailCategoryResponse> findAll(String search) {
+        var all = repository.findAll(Sort.by(Sort.Direction.ASC, "code")).stream();
+        if (search != null && !search.isBlank()) {
+            String kw = search.toLowerCase();
+            all = all.filter(c -> c.getName().toLowerCase().contains(kw)
+                    || c.getCode().toLowerCase().contains(kw));
+        }
+        return all.map(mapper::toResponse).toList();
     }
 
     public List<MailCategoryResponse> findByMailTypeId(Integer mailTypeId) {

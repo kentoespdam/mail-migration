@@ -20,5 +20,6 @@ public record MailSummaryResponse(
         Integer restoreFolderId,
         String restoreFolderName,
         Integer rootMailId,
-        Integer parentMailId
+        Integer parentMailId,
+        Long totalCount
 ) {}

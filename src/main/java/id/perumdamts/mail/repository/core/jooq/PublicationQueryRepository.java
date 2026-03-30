@@ -1,12 +1,15 @@
 package id.perumdamts.mail.repository.core.jooq;
 
+import id.perumdamts.mail.dto.common.SortParam;
 import id.perumdamts.mail.dto.core.publication.PublicationDto;
 import id.perumdamts.mail.dto.core.publication.PublicationFilter;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.SortField;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.jooq.impl.DSL.*;
@@ -15,6 +18,14 @@ import static org.jooq.impl.DSL.*;
 public class PublicationQueryRepository {
 
     private final DSLContext dsl;
+
+    private static final Map<String, String> PUB_ALLOWED_SORTS = Map.of(
+            "createdAt", "p.created_at",
+            "publishedDate", "p.published_date",
+            "title", "p.judul"
+    );
+
+    private static final String PUB_DEFAULT_SORT = "p.created_at";
 
     public PublicationQueryRepository(DSLContext dsl) {
         this.dsl = dsl;
@@ -36,6 +47,11 @@ public class PublicationQueryRepository {
         if (filter.typeId() != null) {
             condition = condition.and(field("p.type").eq(filter.typeId()));
         }
+        if (filter.startDate() != null && filter.endDate() != null) {
+            condition = condition.and(field("p.published_date").between(filter.startDate(), filter.endDate()));
+        }
+
+        SortField<?> sort = SortParam.resolve(filter.sortBy(), filter.sortDir(), PUB_ALLOWED_SORTS, PUB_DEFAULT_SORT);
 
         return dsl.select(
                         field("p.id").as("id"),
@@ -58,7 +74,7 @@ public class PublicationQueryRepository {
                 .from(table("area_publik").as("p"))
                 .leftJoin(table("jenis_dokumen").as("jd")).on(field("jd.id").eq(field("p.type")))
                 .where(condition)
-                .orderBy(field("p.created_at").desc())
+                .orderBy(sort)
                 .limit(limit)
                 .offset(offset)
                 .fetchInto(PublicationDto.class);

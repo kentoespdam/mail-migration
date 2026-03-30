@@ -31,7 +31,7 @@ public class MailTools {
 
         var request = new MailSearchRequest(
                 keyword, mailTypeId, mailCategoryId,
-                null, null,
+                null, null, null, null, null, null,
                 page != null ? page : 0,
                 size != null ? size : 20
         );

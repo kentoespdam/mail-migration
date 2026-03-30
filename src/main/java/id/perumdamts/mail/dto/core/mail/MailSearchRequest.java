@@ -8,6 +8,10 @@ public record MailSearchRequest(
         Integer mailCategoryId,
         LocalDate startDate,
         LocalDate endDate,
+        String sortBy,
+        String sortDir,
+        Boolean hasAttachment,
+        Integer senderId,
         int page,
         int size
 ) {

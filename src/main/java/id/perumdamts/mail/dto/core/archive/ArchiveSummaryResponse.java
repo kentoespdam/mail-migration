@@ -14,5 +14,6 @@ public record ArchiveSummaryResponse(
         String officeCode,
         Integer attachmentQty,
         LocalDateTime createdDate,
-        String createdByName
+        String createdByName,
+        Long totalCount
 ) {}

@@ -1,4 +1,5 @@
 import org.springframework.boot.gradle.tasks.bundling.BootJar
+import org.springframework.boot.gradle.tasks.run.BootRun
 
 plugins {
     java
@@ -115,4 +116,8 @@ tasks.withType<Test> {
 
 tasks.named<BootJar>("bootJar") {
     archiveFileName.set("mail-service.jar")
+}
+
+tasks.named<BootRun>("bootRun") {
+    jvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
 }

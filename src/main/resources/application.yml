@@ -2,6 +2,10 @@ server:
   port: ${SERVER_PORT:8081}
 
 spring:
+  threads:
+    virtual:
+      enabled: true
+
   application:
     name: mail-service
 
@@ -36,9 +40,9 @@ spring:
       hibernate:
         format_sql: true
 
-  docker:
-    compose:
-      enabled: true
+#  docker:
+#    compose:
+#      enabled: true
 
   # ── Redis ──
   data:

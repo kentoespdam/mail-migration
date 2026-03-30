@@ -43,7 +43,7 @@ public class FolderTools {
                 userId, folderId,
                 page != null ? page : 0,
                 size != null ? size : 20,
-                false
+                null, null, null
         );
     }
 

@@ -36,8 +36,9 @@ public class QuickMessageController {
     @GetMapping
     public Page<QuickMessageResponse> findAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return service.findAll(PageRequest.of(page, size));
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String search) {
+        return service.findAll(PageRequest.of(page, size), search);
     }
 
     @GetMapping("/{id}")
