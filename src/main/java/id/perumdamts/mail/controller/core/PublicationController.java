@@ -16,7 +16,7 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import id.perumdamts.mail.dto.common.PagedResponse;
 
 @RestController
 @RequestMapping("/api/v1/publications")
@@ -58,7 +58,7 @@ public class PublicationController {
     }
 
     @GetMapping
-    public List<PublicationDto> list(@ParameterObject PublicationParams params) {
+    public PagedResponse<PublicationDto> list(@ParameterObject PublicationParams params) {
         return queryService.list(params);
     }
 

@@ -162,14 +162,14 @@ public class MailQueryRepository {
     public List<MailReportResponse> getReport(MailReportRequest request) {
         Condition condition = field("m.m_status").eq(1);
 
-        if (request.mailTypeId() != null) {
-            condition = condition.and(field("m.m_type").eq(request.mailTypeId()));
+        if (request.getMailTypeId() != null) {
+            condition = condition.and(field("m.m_type").eq(request.getMailTypeId()));
         }
-        if (request.mailCategoryId() != null) {
-            condition = condition.and(field("m.m_category").eq(request.mailCategoryId()));
+        if (request.getMailCategoryId() != null) {
+            condition = condition.and(field("m.m_category").eq(request.getMailCategoryId()));
         }
-        if (request.startDate() != null && request.endDate() != null) {
-            condition = condition.and(field("m.m_date").between(request.startDate(), request.endDate()));
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            condition = condition.and(field("m.m_date").between(request.getStartDate(), request.getEndDate()));
         }
 
         return dsl.select(
@@ -183,7 +183,8 @@ public class MailQueryRepository {
                         count(
                                 case_()
                                         .when(field("ut.read_status").eq(0), inline(1))
-                        ).as("totalUnread")
+                        ).as("totalUnread"),
+                        count().over().as("totalCount")
                 )
                 .from(table("mail").as("m"))
                 .join(table("sys_user_task").as("ut")).on(field("ut.tm_id").eq(field("m.m_id")))
@@ -191,7 +192,9 @@ public class MailQueryRepository {
                 .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("m.m_category")))
                 .where(condition)
                 .groupBy(field("mt.mail_type"), field("mc.mcat_name"))
-                .orderBy(field("mt.mail_type"), field("mc.mcat_name"))
+                .orderBy(request.toSortField())
+                .limit(request.getSize())
+                .offset(request.offset())
                 .fetchInto(MailReportResponse.class);
     }
 }

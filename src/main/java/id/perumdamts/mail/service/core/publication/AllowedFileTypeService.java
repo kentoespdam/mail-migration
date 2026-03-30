@@ -3,11 +3,13 @@ package id.perumdamts.mail.service.core.publication;
 import id.perumdamts.mail.dto.core.publication.AllowedFileTypeDto;
 import id.perumdamts.mail.dto.core.publication.AllowedFileTypeRequest;
 import id.perumdamts.mail.dto.core.publication.PublicationMapper;
+import id.perumdamts.mail.dto.master.AllowedFileTypeParams;
 import id.perumdamts.mail.entity.master.AllowedFileType;
 import id.perumdamts.mail.repository.master.jpa.AllowedFileTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,10 +36,9 @@ public class AllowedFileTypeService {
                 .toList();
     }
 
-    public List<AllowedFileTypeDto> listAll() {
-        return repository.findAll().stream()
-                .map(mapper::toDto)
-                .toList();
+    public Page<AllowedFileTypeDto> findAll(AllowedFileTypeParams params) {
+        return repository.findAll(params.toSpecification(), params.toPageable())
+                .map(mapper::toDto);
     }
 
     @Transactional

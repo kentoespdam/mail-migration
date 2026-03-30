@@ -4,11 +4,12 @@ import id.perumdamts.mail.dto.master.MailTypeLookup;
 import id.perumdamts.mail.dto.master.MailTypeParams;
 import id.perumdamts.mail.dto.master.MailTypeRequest;
 import id.perumdamts.mail.dto.master.MailTypeResponse;
+import id.perumdamts.mail.infrastructure.sqids.SqidsHelper;
 import id.perumdamts.mail.service.master.MailTypeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.data.domain.Page;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,10 +22,11 @@ import java.util.List;
 public class MailTypeController {
 
     private final MailTypeService service;
+    private final SqidsHelper sqidsHelper;
 
     @GetMapping
-    public Page<MailTypeResponse> findAll(@ParameterObject MailTypeParams params) {
-        return service.findAll(params);
+    public PagedModel<MailTypeResponse> findAll(@ParameterObject MailTypeParams params) {
+        return new PagedModel<>(service.findAll(params));
     }
 
     @GetMapping("/lookup")
@@ -33,8 +35,8 @@ public class MailTypeController {
     }
 
     @GetMapping("/{id}")
-    public MailTypeResponse findById(@PathVariable Integer id) {
-        return service.findById(id);
+    public MailTypeResponse findById(@PathVariable String id) {
+        return service.findById(sqidsHelper.decode(id));
     }
 
     @PostMapping
@@ -43,13 +45,13 @@ public class MailTypeController {
     }
 
     @PutMapping("/{id}")
-    public MailTypeResponse update(@PathVariable Integer id, @Valid @RequestBody MailTypeRequest request) {
-        return service.update(id, request);
+    public MailTypeResponse update(@PathVariable String id, @Valid @RequestBody MailTypeRequest request) {
+        return service.update(sqidsHelper.decode(id), request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) {
-        service.delete(id);
+    public void delete(@PathVariable String id) {
+        service.delete(sqidsHelper.decode(id));
     }
 }

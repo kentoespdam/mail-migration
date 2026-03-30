@@ -1,5 +1,6 @@
 package id.perumdamts.mail.service.core.publication;
 
+import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.publication.PublicationDto;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.repository.core.jooq.PublicationQueryRepository;
@@ -19,8 +20,10 @@ public class PublicationQueryService {
         this.queryRepository = queryRepository;
     }
 
-    public List<PublicationDto> list(PublicationParams params) {
-        return queryRepository.findAll(params);
+    public PagedResponse<PublicationDto> list(PublicationParams params) {
+        List<PublicationDto> items = queryRepository.findAll(params);
+        long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
+        return PagedResponse.of(items, params, total);
     }
 
     public PublicationDto findById(Integer id) {

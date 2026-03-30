@@ -2,12 +2,13 @@ package id.perumdamts.mail.controller.master;
 
 import id.perumdamts.mail.dto.core.publication.DocumentTypeDto;
 import id.perumdamts.mail.dto.core.publication.PublicationMapper;
+import id.perumdamts.mail.dto.master.DocumentTypeParams;
 import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.web.PagedModel;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/document-types")
@@ -22,9 +23,7 @@ public class DocumentTypeController {
     }
 
     @GetMapping
-    public List<DocumentTypeDto> list() {
-        return repository.findByStatus(1).stream()
-                .map(mapper::toDto)
-                .toList();
+    public PagedModel<DocumentTypeDto> list(@ParameterObject DocumentTypeParams params) {
+        return new PagedModel<>(repository.findAll(params.toSpecification(), params.toPageable()).map(mapper::toDto));
     }
 }

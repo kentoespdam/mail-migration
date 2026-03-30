@@ -1,16 +1,18 @@
 package id.perumdamts.mail.controller.master;
 
+import id.perumdamts.mail.dto.master.MailCategoryParams;
 import id.perumdamts.mail.dto.master.MailCategoryRequest;
 import id.perumdamts.mail.dto.master.MailCategoryResponse;
+import id.perumdamts.mail.infrastructure.sqids.SqidsHelper;
 import id.perumdamts.mail.service.master.MailCategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/mail-categories")
@@ -19,20 +21,16 @@ import java.util.List;
 public class MailCategoryController {
 
     private final MailCategoryService service;
+    private final SqidsHelper sqidsHelper;
 
     @GetMapping
-    public List<MailCategoryResponse> findAll(
-            @RequestParam(required = false) Integer mailTypeId,
-            @RequestParam(required = false) String search) {
-        if (mailTypeId != null) {
-            return service.findByMailTypeId(mailTypeId);
-        }
-        return service.findAll(search);
+    public PagedModel<MailCategoryResponse> findAll(@ParameterObject MailCategoryParams params) {
+        return new PagedModel<>(service.findAll(params));
     }
 
     @GetMapping("/{id}")
-    public MailCategoryResponse findById(@PathVariable Integer id) {
-        return service.findById(id);
+    public MailCategoryResponse findById(@PathVariable String id) {
+        return service.findById(sqidsHelper.decode(id));
     }
 
     @PostMapping
@@ -41,13 +39,13 @@ public class MailCategoryController {
     }
 
     @PutMapping("/{id}")
-    public MailCategoryResponse update(@PathVariable Integer id, @Valid @RequestBody MailCategoryRequest request) {
-        return service.update(id, request);
+    public MailCategoryResponse update(@PathVariable String id, @Valid @RequestBody MailCategoryRequest request) {
+        return service.update(sqidsHelper.decode(id), request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) {
-        service.delete(id);
+    public void delete(@PathVariable String id) {
+        service.delete(sqidsHelper.decode(id));
     }
 }

@@ -1,6 +1,7 @@
 package id.perumdamts.mail.service.master;
 
 import id.perumdamts.mail.dto.master.MailCategoryMapper;
+import id.perumdamts.mail.dto.master.MailCategoryParams;
 import id.perumdamts.mail.dto.master.MailCategoryRequest;
 import id.perumdamts.mail.dto.master.MailCategoryResponse;
 import id.perumdamts.mail.entity.master.MailCategory;
@@ -10,11 +11,9 @@ import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,20 +25,8 @@ public class MailCategoryService {
     private final MailTypeRepository mailTypeRepository;
     private final MailCategoryMapper mapper;
 
-    public List<MailCategoryResponse> findAll(String search) {
-        var all = repository.findAll(Sort.by(Sort.Direction.ASC, "code")).stream();
-        if (search != null && !search.isBlank()) {
-            String kw = search.toLowerCase();
-            all = all.filter(c -> c.getName().toLowerCase().contains(kw)
-                    || c.getCode().toLowerCase().contains(kw));
-        }
-        return all.map(mapper::toResponse).toList();
-    }
-
-    public List<MailCategoryResponse> findByMailTypeId(Integer mailTypeId) {
-        return repository.findByMailTypeIdOrderBySortAsc(mailTypeId).stream()
-                .map(mapper::toResponse)
-                .toList();
+    public Page<MailCategoryResponse> findAll(MailCategoryParams params) {
+        return repository.findAll(params.toSpecification(), params.toPageable()).map(mapper::toResponse);
     }
 
     public MailCategoryResponse findById(Integer id) {

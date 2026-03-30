@@ -1,6 +1,7 @@
 package id.perumdamts.mail.service.core.archive;
 
 import id.perumdamts.mail.config.TenantConfig;
+import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.archive.ArchiveReportRequest;
 import id.perumdamts.mail.dto.core.archive.ArchiveReportResponse;
 import id.perumdamts.mail.dto.core.archive.ArchiveSearchRequest;
@@ -22,16 +23,22 @@ public class MailArchiveQueryService {
         this.tenantConfig = tenantConfig;
     }
 
-    public List<ArchiveSummaryResponse> findForAdmin(ArchiveSearchRequest request) {
-        return archiveQueryRepository.findForAdmin(request, tenantConfig.officeCode());
+    public PagedResponse<ArchiveSummaryResponse> findForAdmin(ArchiveSearchRequest request) {
+        List<ArchiveSummaryResponse> items = archiveQueryRepository.findForAdmin(request, tenantConfig.officeCode());
+        long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
+        return PagedResponse.of(items, request, total);
     }
 
-    public List<ArchiveSummaryResponse> searchWithAcl(ArchiveSearchRequest request,
-                                                       List<Integer> positionIds) {
-        return archiveQueryRepository.searchWithAcl(request, positionIds, tenantConfig.officeCode());
+    public PagedResponse<ArchiveSummaryResponse> searchWithAcl(ArchiveSearchRequest request,
+                                                                 List<Integer> positionIds) {
+        List<ArchiveSummaryResponse> items = archiveQueryRepository.searchWithAcl(request, positionIds, tenantConfig.officeCode());
+        long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
+        return PagedResponse.of(items, request, total);
     }
 
-    public List<ArchiveReportResponse> getReport(ArchiveReportRequest request) {
-        return archiveQueryRepository.getReport(request, tenantConfig.officeCode());
+    public PagedResponse<ArchiveReportResponse> getReport(ArchiveReportRequest request) {
+        List<ArchiveReportResponse> items = archiveQueryRepository.getReport(request, tenantConfig.officeCode());
+        long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
+        return PagedResponse.of(items, request, total);
     }
 }

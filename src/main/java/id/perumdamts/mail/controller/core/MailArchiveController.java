@@ -1,5 +1,6 @@
 package id.perumdamts.mail.controller.core;
 
+import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.archive.*;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.archive.MailArchiveCommandService;
@@ -59,12 +60,12 @@ public class MailArchiveController {
 
     @GetMapping("/search")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<ArchiveSummaryResponse> findForAdmin(ArchiveSearchRequest request) {
+    public PagedResponse<ArchiveSummaryResponse> findForAdmin(ArchiveSearchRequest request) {
         return queryService.findForAdmin(request);
     }
 
     @GetMapping
-    public List<ArchiveSummaryResponse> searchWithAcl(
+    public PagedResponse<ArchiveSummaryResponse> searchWithAcl(
             @AuthenticationPrincipal MailPrincipal principal,
             ArchiveSearchRequest request,
             @RequestParam List<Integer> positionIds) {
@@ -86,7 +87,7 @@ public class MailArchiveController {
 
     @GetMapping("/report")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<ArchiveReportResponse> report(ArchiveReportRequest request) {
+    public PagedResponse<ArchiveReportResponse> report(ArchiveReportRequest request) {
         return queryService.getReport(request);
     }
 }

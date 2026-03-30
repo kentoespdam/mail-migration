@@ -4,6 +4,7 @@ import id.perumdamts.mail.entity.core.Publication;
 import id.perumdamts.mail.repository.core.jpa.PublicationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Component
+@ConditionalOnProperty(name = "app.scheduler.publication-notif.enabled", havingValue = "true", matchIfMissing = false)
 public class PublicationNotifScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(PublicationNotifScheduler.class);

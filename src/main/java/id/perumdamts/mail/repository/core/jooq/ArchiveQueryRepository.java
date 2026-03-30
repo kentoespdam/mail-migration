@@ -102,14 +102,14 @@ public class ArchiveQueryRepository {
         Condition condition = field("a.ma_status").ne(3)
                 .and(field("a.ma_office_code").eq(officeCode));
 
-        if (request.categoryId() != null) {
-            condition = condition.and(field("a.ma_category").eq(request.categoryId()));
+        if (request.getCategoryId() != null) {
+            condition = condition.and(field("a.ma_category").eq(request.getCategoryId()));
         }
-        if (request.year() != null) {
-            condition = condition.and(field("a.ma_year").eq(request.year()));
+        if (request.getYear() != null) {
+            condition = condition.and(field("a.ma_year").eq(request.getYear()));
         }
-        if (request.startDate() != null && request.endDate() != null) {
-            condition = condition.and(field("a.ma_date").between(request.startDate(), request.endDate()));
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            condition = condition.and(field("a.ma_date").between(request.getStartDate(), request.getEndDate()));
         }
 
         return dsl.select(
@@ -117,13 +117,16 @@ public class ArchiveQueryRepository {
                         field("a.ma_year").as("year"),
                         count().as("totalArchives"),
                         count(case_().when(field("a.ma_status").eq(1), inline(1))).as("totalDraft"),
-                        count(case_().when(field("a.ma_status").eq(2), inline(1))).as("totalArchived")
+                        count(case_().when(field("a.ma_status").eq(2), inline(1))).as("totalArchived"),
+                        count().over().as("totalCount")
                 )
                 .from(table("mail_archive").as("a"))
                 .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("a.ma_category")))
                 .where(condition)
                 .groupBy(field("mc.mcat_name"), field("a.ma_year"))
-                .orderBy(field("a.ma_year").desc(), field("mc.mcat_name"))
+                .orderBy(request.toSortField())
+                .limit(request.getSize())
+                .offset(request.offset())
                 .fetchInto(ArchiveReportResponse.class);
     }
 

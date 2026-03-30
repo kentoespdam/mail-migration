@@ -91,6 +91,15 @@ app:
     inbox-sort-ascending: false
     default-mail-type-id: 1
     default-mail-category-id: 1
+  # ── Scheduler ──
+  scheduler:
+    publication-notif:
+      enabled: false
+  # ── Sqids ──
+  sqids:
+    alphabet: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+    min-length: 8
+    shuffle-key: ${SQIDS_SHUFFLE_KEY:m41l-s3rv1c3-k3y}
   # ── Storage ──
   storage:
     base-path: ${STORAGE_BASE_PATH:/data/attachments}

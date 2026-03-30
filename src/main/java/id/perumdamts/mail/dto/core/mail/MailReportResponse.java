@@ -5,5 +5,6 @@ public record MailReportResponse(
         String mailCategoryName,
         long totalMails,
         long totalRead,
-        long totalUnread
+        long totalUnread,
+        long totalCount
 ) {}

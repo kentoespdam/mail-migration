@@ -5,5 +5,6 @@ public record ArchiveReportResponse(
         Short year,
         long totalArchives,
         long totalDraft,
-        long totalArchived
+        long totalArchived,
+        long totalCount
 ) {}

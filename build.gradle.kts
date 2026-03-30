@@ -80,6 +80,9 @@ dependencies {
     // == Actuator ==
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
+    // == Sqids ==
+    implementation("org.sqids:sqids:0.1.0")
+
     // == MapStruct ==
     implementation("org.mapstruct:mapstruct:${mapstructVersion}")
     annotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
