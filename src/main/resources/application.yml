@@ -64,13 +64,6 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
 
-  # ── MCP Server ──
-  ai:
-    mcp:
-      server:
-        name: mail-service-mcp
-        version: 1.0.0
-
   # ── Servlet (file upload) ──
   servlet:
     multipart:

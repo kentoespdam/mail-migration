@@ -34,3 +34,4 @@ application-local.yml
 application-dev.properties
 application-dev.yml
 inspect/
+/.ollamassist/
