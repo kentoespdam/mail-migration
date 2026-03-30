@@ -80,6 +80,7 @@ public class AppWriteTokenValidator {
                         r -> Mono.error(new UnauthorizedException("Token invalid or expired")))
                 .bodyToMono(AppWriteUser.class)
                 .block();
+        assert user != null;
         log.debug("Token valid, user ID: {}", user.id());
 
         CachedUserInfo info = CachedUserInfo.from(user);

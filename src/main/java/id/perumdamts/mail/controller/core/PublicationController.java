@@ -2,7 +2,7 @@ package id.perumdamts.mail.controller.core;
 
 import id.perumdamts.mail.dto.core.publication.CreatePublicationRequest;
 import id.perumdamts.mail.dto.core.publication.PublicationDto;
-import id.perumdamts.mail.dto.core.publication.PublicationFilter;
+import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.dto.core.publication.UpdatePublicationRequest;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.publication.PublicationCommandService;
@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -57,10 +58,8 @@ public class PublicationController {
     }
 
     @GetMapping
-    public List<PublicationDto> list(PublicationFilter filter,
-                                     @RequestParam(defaultValue = "0") int offset,
-                                     @RequestParam(defaultValue = "20") int limit) {
-        return queryService.list(filter, offset, limit);
+    public List<PublicationDto> list(@ParameterObject PublicationParams params) {
+        return queryService.list(params);
     }
 
     @GetMapping("/{id}")

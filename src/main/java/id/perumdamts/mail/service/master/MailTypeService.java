@@ -2,6 +2,7 @@ package id.perumdamts.mail.service.master;
 
 import id.perumdamts.mail.dto.master.MailTypeLookup;
 import id.perumdamts.mail.dto.master.MailTypeMapper;
+import id.perumdamts.mail.dto.master.MailTypeParams;
 import id.perumdamts.mail.dto.master.MailTypeRequest;
 import id.perumdamts.mail.dto.master.MailTypeResponse;
 import id.perumdamts.mail.entity.master.MailType;
@@ -13,8 +14,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,9 +29,8 @@ public class MailTypeService {
     private final MailCategoryRepository categoryRepository;
     private final MailTypeMapper mapper;
 
-    public Page<MailTypeResponse> findAll(String search, Pageable pageable) {
-        Specification<MailType> spec = Specification.where(nameLike(search));
-        return repository.findAll(spec, pageable).map(mapper::toResponse);
+    public Page<MailTypeResponse> findAll(MailTypeParams params) {
+        return repository.findAll(params.toSpecification(), params.toPageable()).map(mapper::toResponse);
     }
 
     public List<MailTypeLookup> lookup() {
@@ -83,10 +81,4 @@ public class MailTypeService {
                 .orElseThrow(() -> new EntityNotFoundException("MailType not found: " + id));
     }
 
-    private static Specification<MailType> nameLike(String keyword) {
-        return (root, query, cb) ->
-                keyword == null || keyword.isBlank()
-                        ? null
-                        : cb.like(cb.lower(root.get("name")), "%" + keyword.toLowerCase() + "%");
-    }
 }

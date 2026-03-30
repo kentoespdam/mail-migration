@@ -20,6 +20,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,27 +61,23 @@ public class MailCommandService {
 
     @Transactional
     public MailResponse createDraft(MailCreateRequest request, MailPrincipal principal) {
-        var mail = new Mail();
-        applyFields(mail, request);
-        mail.setCreatedBy(Integer.parseInt(principal.userId()));
-        mail.setCreatedByName(principal.name());
-        mail.setCreatedDate(LocalDateTime.now());
-
-        // Threading
-        if (request.rootMailId() != null && request.rootMailId() > 0) {
-            mail.setRootMail(mailRepository.getReferenceById(request.rootMailId()));
-            if (request.parentMailId() != null && request.parentMailId() > 0) {
-                mail.setParentMail(mailRepository.getReferenceById(request.parentMailId()));
-            }
-        }
-
-        mail = mailRepository.save(mail);
-
-        // Self-reference root if new mail
-        if (mail.getRootMail() == null) {
-            mail.setRootMail(mail);
-            mail = mailRepository.save(mail);
-        }
+        var mail = createAndPersistMail(
+                request.subject(),
+                request.content(),
+                request.note(),
+                request.mailTypeId(),
+                request.mailCategoryId(),
+                request.mailDate(),
+                request.maxResponseDate(),
+                request.noSuratMasuk(),
+                request.asalSuratMasuk(),
+                request.tglSuratMasuk(),
+                request.tujuanSuratKeluar(),
+                request.penerimaSuratKeluar(),
+                request.rootMailId(),
+                request.parentMailId(),
+                principal
+        );
 
         // Create draft UserTask for sender
         userTaskRepository.save(UserTask.draft(Integer.parseInt(principal.userId()), mail.getId()));
@@ -125,27 +122,23 @@ public class MailCommandService {
 
     @Transactional
     public MailResponse sendMail(MailSendRequest request, MailPrincipal principal) {
-        var mail = new Mail();
-        applyFields(mail, request);
-        mail.setCreatedBy(Integer.parseInt(principal.userId()));
-        mail.setCreatedByName(principal.name());
-        mail.setCreatedDate(LocalDateTime.now());
-
-        // Threading
-        if (request.rootMailId() != null && request.rootMailId() > 0) {
-            mail.setRootMail(mailRepository.getReferenceById(request.rootMailId()));
-            if (request.parentMailId() != null && request.parentMailId() > 0) {
-                mail.setParentMail(mailRepository.getReferenceById(request.parentMailId()));
-            }
-        }
-
-        mail = mailRepository.save(mail);
-
-        // Self-reference root if new mail
-        if (mail.getRootMail() == null) {
-            mail.setRootMail(mail);
-            mail = mailRepository.save(mail);
-        }
+        var mail = createAndPersistMail(
+                request.subject(),
+                request.content(),
+                request.note(),
+                request.mailTypeId(),
+                request.mailCategoryId(),
+                request.mailDate(),
+                request.maxResponseDate(),
+                request.noSuratMasuk(),
+                request.asalSuratMasuk(),
+                request.tglSuratMasuk(),
+                request.tujuanSuratKeluar(),
+                request.penerimaSuratKeluar(),
+                request.rootMailId(),
+                request.parentMailId(),
+                principal
+        );
 
         // Add recipients
         addRecipients(mail, request.recipients(), principal);
@@ -189,42 +182,58 @@ public class MailCommandService {
         userTaskRepository.save(task);
     }
 
-    private void applyFields(Mail mail, MailCreateRequest request) {
-        mail.setSubject(request.subject());
-        mail.setContent(request.content());
-        mail.setNote(request.note());
-        mail.setMailDate(request.mailDate());
-        mail.setMaxResponseDate(request.maxResponseDate());
-        if (request.mailTypeId() != null) {
-            mail.setMailType(mailTypeRepository.getReferenceById(request.mailTypeId()));
+    private Mail createAndPersistMail(String subject,
+                                      String content,
+                                      String note,
+                                      Integer mailTypeId,
+                                      Integer mailCategoryId,
+                                      LocalDate mailDate,
+                                      LocalDate maxResponseDate,
+                                      String noSuratMasuk,
+                                      String asalSuratMasuk,
+                                      String tglSuratMasuk,
+                                      String tujuanSuratKeluar,
+                                      String penerimaSuratKeluar,
+                                      Integer rootMailId,
+                                      Integer parentMailId,
+                                      MailPrincipal principal) {
+        var mail = new Mail();
+        mail.setSubject(subject);
+        mail.setContent(content);
+        mail.setNote(note);
+        mail.setMailDate(mailDate);
+        mail.setMaxResponseDate(maxResponseDate);
+        if (mailTypeId != null) {
+            mail.setMailType(mailTypeRepository.getReferenceById(mailTypeId));
         }
-        if (request.mailCategoryId() != null) {
-            mail.setMailCategory(mailCategoryRepository.getReferenceById(request.mailCategoryId()));
+        if (mailCategoryId != null) {
+            mail.setMailCategory(mailCategoryRepository.getReferenceById(mailCategoryId));
         }
-        mail.setNoSuratMasuk(request.noSuratMasuk());
-        mail.setAsalSuratMasuk(request.asalSuratMasuk());
-        mail.setTglSuratMasuk(request.tglSuratMasuk());
-        mail.setTujuanSuratKeluar(request.tujuanSuratKeluar());
-        mail.setPenerimaSuratKeluar(request.penerimaSuratKeluar());
-    }
+        mail.setNoSuratMasuk(noSuratMasuk);
+        mail.setAsalSuratMasuk(asalSuratMasuk);
+        mail.setTglSuratMasuk(tglSuratMasuk);
+        mail.setTujuanSuratKeluar(tujuanSuratKeluar);
+        mail.setPenerimaSuratKeluar(penerimaSuratKeluar);
 
-    private void applyFields(Mail mail, MailSendRequest request) {
-        mail.setSubject(request.subject());
-        mail.setContent(request.content());
-        mail.setNote(request.note());
-        mail.setMailDate(request.mailDate());
-        mail.setMaxResponseDate(request.maxResponseDate());
-        if (request.mailTypeId() != null) {
-            mail.setMailType(mailTypeRepository.getReferenceById(request.mailTypeId()));
+        mail.setCreatedBy(Integer.parseInt(principal.userId()));
+        mail.setCreatedByName(principal.name());
+        mail.setCreatedDate(LocalDateTime.now());
+
+        if (rootMailId != null && rootMailId > 0) {
+            mail.setRootMail(mailRepository.getReferenceById(rootMailId));
+            if (parentMailId != null && parentMailId > 0) {
+                mail.setParentMail(mailRepository.getReferenceById(parentMailId));
+            }
         }
-        if (request.mailCategoryId() != null) {
-            mail.setMailCategory(mailCategoryRepository.getReferenceById(request.mailCategoryId()));
+
+        mail = mailRepository.save(mail);
+
+        if (mail.getRootMail() == null) {
+            mail.setRootMail(mail);
+            mail = mailRepository.save(mail);
         }
-        mail.setNoSuratMasuk(request.noSuratMasuk());
-        mail.setAsalSuratMasuk(request.asalSuratMasuk());
-        mail.setTglSuratMasuk(request.tglSuratMasuk());
-        mail.setTujuanSuratKeluar(request.tujuanSuratKeluar());
-        mail.setPenerimaSuratKeluar(request.penerimaSuratKeluar());
+
+        return mail;
     }
 
     private void addRecipients(Mail mail, List<RecipientBatchRequest> recipientRequests, MailPrincipal principal) {

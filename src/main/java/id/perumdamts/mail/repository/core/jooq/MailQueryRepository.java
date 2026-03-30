@@ -1,6 +1,5 @@
 package id.perumdamts.mail.repository.core.jooq;
 
-import id.perumdamts.mail.dto.common.SortParam;
 import id.perumdamts.mail.dto.core.mail.MailReportRequest;
 import id.perumdamts.mail.dto.core.mail.MailReportResponse;
 import id.perumdamts.mail.dto.core.mail.MailSearchRequest;
@@ -11,7 +10,6 @@ import org.jooq.SortField;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.jooq.impl.DSL.*;
 
@@ -20,23 +18,13 @@ public class MailQueryRepository {
 
     private final DSLContext dsl;
 
-    private static final Map<String, String> MAIL_ALLOWED_SORTS = Map.of(
-            "createdDate", "m.m_created_date",
-            "mailDate", "m.m_date",
-            "subject", "m.m_subject",
-            "mailNumber", "m.m_no"
-    );
-
-    private static final String MAIL_DEFAULT_SORT = "m.m_created_date";
-
     public MailQueryRepository(DSLContext dsl) {
         this.dsl = dsl;
     }
 
     public List<MailSummaryResponse> findMailsInFolder(Integer userId, Integer folderId,
                                                        int offset, int limit,
-                                                       String sortBy, String sortDir,
-                                                       String keyword) {
+                                                       SortField<?> sort, String keyword) {
         Condition condition = field("ut.user_id").eq(userId)
                 .and(field("ut.folder_id").eq(folderId));
 
@@ -49,8 +37,6 @@ public class MailQueryRepository {
                             .or(field("m.m_to_str").likeIgnoreCase(kw))
             );
         }
-
-        SortField<?> sort = SortParam.resolve(sortBy, sortDir, MAIL_ALLOWED_SORTS, MAIL_DEFAULT_SORT);
 
         return dsl.select(
                         field("m.m_id").as("id"),
@@ -83,8 +69,8 @@ public class MailQueryRepository {
         Condition condition = field("m.m_status").eq(1)
                 .and(field("m.m_id").eq(field("m.m_root_id")));
 
-        if (request.keyword() != null && !request.keyword().isBlank()) {
-            String kw = "%" + request.keyword() + "%";
+        if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
+            String kw = "%" + request.getKeyword() + "%";
             condition = condition.and(
                     field("m.m_subject").likeIgnoreCase(kw)
                             .or(field("m.m_no").likeIgnoreCase(kw))
@@ -94,23 +80,21 @@ public class MailQueryRepository {
             );
         }
 
-        if (request.mailTypeId() != null) {
-            condition = condition.and(field("m.m_type").eq(request.mailTypeId()));
+        if (request.getMailTypeId() != null) {
+            condition = condition.and(field("m.m_type").eq(request.getMailTypeId()));
         }
-        if (request.mailCategoryId() != null) {
-            condition = condition.and(field("m.m_category").eq(request.mailCategoryId()));
+        if (request.getMailCategoryId() != null) {
+            condition = condition.and(field("m.m_category").eq(request.getMailCategoryId()));
         }
-        if (request.startDate() != null && request.endDate() != null) {
-            condition = condition.and(field("m.m_date").between(request.startDate(), request.endDate()));
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            condition = condition.and(field("m.m_date").between(request.getStartDate(), request.getEndDate()));
         }
-        if (request.hasAttachment() != null && request.hasAttachment()) {
+        if (request.getHasAttachment() != null && request.getHasAttachment()) {
             condition = condition.and(field("m.m_attachment_qty").gt(0));
         }
-        if (request.senderId() != null) {
-            condition = condition.and(field("m.m_created_by").eq(request.senderId()));
+        if (request.getSenderId() != null) {
+            condition = condition.and(field("m.m_created_by").eq(request.getSenderId()));
         }
-
-        SortField<?> sort = SortParam.resolve(request.sortBy(), request.sortDir(), MAIL_ALLOWED_SORTS, MAIL_DEFAULT_SORT);
 
         return dsl.select(
                         field("m.m_id").as("id"),
@@ -131,8 +115,8 @@ public class MailQueryRepository {
                 .leftJoin(table("mail_type").as("mt")).on(field("mt.mail_type_id").eq(field("m.m_type")))
                 .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("m.m_category")))
                 .where(condition)
-                .orderBy(sort)
-                .limit(request.size())
+                .orderBy(request.toSortField())
+                .limit(request.getSize())
                 .offset(request.offset())
                 .fetchInto(MailSummaryResponse.class);
     }

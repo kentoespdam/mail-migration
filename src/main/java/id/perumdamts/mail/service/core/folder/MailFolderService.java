@@ -94,11 +94,10 @@ public class MailFolderService {
     }
 
     public List<MailSummaryResponse> getMailsInFolder(Integer userId, Integer folderId,
-                                                       int page, int size,
-                                                       String sortBy, String sortDir,
-                                                       String keyword) {
+                                                       MailFolderMailsParams params) {
         validateFolderAccess(userId, folderId);
-        return mailQueryRepository.findMailsInFolder(userId, folderId, page * size, size, sortBy, sortDir, keyword);
+        return mailQueryRepository.findMailsInFolder(userId, folderId,
+                params.offset(), params.getSize(), params.toSortField(), params.getKeyword());
     }
 
     // ── Command Operations — Personal Folder CRUD ──
@@ -209,10 +208,9 @@ public class MailFolderService {
 
     /**
      * Empty trash — purge semua mail di folder DELETED.
-     * @return jumlah mail yang di-purge
      */
-    public int emptyTrash(Integer userId) {
-        return userTaskRepository.purgeTrash(userId);
+    public void emptyTrash(Integer userId) {
+        userTaskRepository.purgeTrash(userId);
     }
 
     // ── Private Helpers ──

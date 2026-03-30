@@ -16,7 +16,6 @@ import java.util.UUID;
 
 /**
  * Service untuk verifikasi cetak surat (signMe + checkSign).
- * 
  * Migration notes dari source PHP:
  * - Ganti uniqid() dengan UUID.randomUUID()
  * - checkSign() return JSON (bukan HTML)

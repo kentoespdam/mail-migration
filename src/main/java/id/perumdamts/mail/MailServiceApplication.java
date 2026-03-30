@@ -3,17 +3,10 @@ package id.perumdamts.mail;
 import id.perumdamts.mail.config.AppWriteProperties;
 import id.perumdamts.mail.config.StorageProperties;
 import id.perumdamts.mail.config.TenantConfig;
-import id.perumdamts.mail.mcp.FolderTools;
-import id.perumdamts.mail.mcp.MailTools;
-import id.perumdamts.mail.mcp.MasterDataTools;
-import id.perumdamts.mail.mcp.RecipientTools;
-import org.springframework.ai.tool.ToolCallbackProvider;
-import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -39,13 +32,4 @@ public class MailServiceApplication {
         SpringApplication.run(MailServiceApplication.class, args);
     }
 
-    @Bean
-    ToolCallbackProvider mcpTools(MailTools mailTools,
-                                  FolderTools folderTools,
-                                  RecipientTools recipientTools,
-                                  MasterDataTools masterDataTools) {
-        return MethodToolCallbackProvider.builder()
-                .toolObjects(mailTools, folderTools, recipientTools, masterDataTools)
-                .build();
-    }
 }

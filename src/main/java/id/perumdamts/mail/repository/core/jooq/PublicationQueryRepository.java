@@ -1,15 +1,13 @@
 package id.perumdamts.mail.repository.core.jooq;
 
-import id.perumdamts.mail.dto.common.SortParam;
 import id.perumdamts.mail.dto.core.publication.PublicationDto;
-import id.perumdamts.mail.dto.core.publication.PublicationFilter;
+import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.SortField;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.jooq.impl.DSL.*;
@@ -19,39 +17,31 @@ public class PublicationQueryRepository {
 
     private final DSLContext dsl;
 
-    private static final Map<String, String> PUB_ALLOWED_SORTS = Map.of(
-            "createdAt", "p.created_at",
-            "publishedDate", "p.published_date",
-            "title", "p.judul"
-    );
-
-    private static final String PUB_DEFAULT_SORT = "p.created_at";
-
     public PublicationQueryRepository(DSLContext dsl) {
         this.dsl = dsl;
     }
 
-    public List<PublicationDto> findAll(PublicationFilter filter, int offset, int limit) {
+    public List<PublicationDto> findAll(PublicationParams params) {
         Condition condition = field("p.status").ne(inline("DELETED"));
 
-        if (filter.status() != null) {
-            condition = condition.and(field("p.status").eq(inline(filter.status().name())));
+        if (params.getStatus() != null) {
+            condition = condition.and(field("p.status").eq(inline(params.getStatus().name())));
         }
-        if (filter.keyword() != null && !filter.keyword().isBlank()) {
-            String kw = "%" + filter.keyword() + "%";
+        if (params.getKeyword() != null && !params.getKeyword().isBlank()) {
+            String kw = "%" + params.getKeyword() + "%";
             condition = condition.and(
                     field("p.judul").likeIgnoreCase(kw)
                             .or(field("p.desk").likeIgnoreCase(kw))
             );
         }
-        if (filter.typeId() != null) {
-            condition = condition.and(field("p.type").eq(filter.typeId()));
+        if (params.getTypeId() != null) {
+            condition = condition.and(field("p.type").eq(params.getTypeId()));
         }
-        if (filter.startDate() != null && filter.endDate() != null) {
-            condition = condition.and(field("p.published_date").between(filter.startDate(), filter.endDate()));
+        if (params.getStartDate() != null && params.getEndDate() != null) {
+            condition = condition.and(field("p.published_date").between(params.getStartDate(), params.getEndDate()));
         }
 
-        SortField<?> sort = SortParam.resolve(filter.sortBy(), filter.sortDir(), PUB_ALLOWED_SORTS, PUB_DEFAULT_SORT);
+        SortField<?> sort = params.toSortField();
 
         return dsl.select(
                         field("p.id").as("id"),
@@ -75,8 +65,8 @@ public class PublicationQueryRepository {
                 .leftJoin(table("jenis_dokumen").as("jd")).on(field("jd.id").eq(field("p.type")))
                 .where(condition)
                 .orderBy(sort)
-                .limit(limit)
-                .offset(offset)
+                .limit(params.getSize())
+                .offset(params.offset())
                 .fetchInto(PublicationDto.class);
     }
 

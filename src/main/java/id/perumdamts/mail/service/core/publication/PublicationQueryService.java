@@ -1,7 +1,7 @@
 package id.perumdamts.mail.service.core.publication;
 
 import id.perumdamts.mail.dto.core.publication.PublicationDto;
-import id.perumdamts.mail.dto.core.publication.PublicationFilter;
+import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.repository.core.jooq.PublicationQueryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -19,8 +19,8 @@ public class PublicationQueryService {
         this.queryRepository = queryRepository;
     }
 
-    public List<PublicationDto> list(PublicationFilter filter, int offset, int limit) {
-        return queryRepository.findAll(filter, offset, limit);
+    public List<PublicationDto> list(PublicationParams params) {
+        return queryRepository.findAll(params);
     }
 
     public PublicationDto findById(Integer id) {

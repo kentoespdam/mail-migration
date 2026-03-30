@@ -2,6 +2,7 @@ package id.perumdamts.mail.service.master;
 
 import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.master.QuickMessageMapper;
+import id.perumdamts.mail.dto.master.QuickMessageParams;
 import id.perumdamts.mail.dto.master.QuickMessageRequest;
 import id.perumdamts.mail.dto.master.QuickMessageResponse;
 import id.perumdamts.mail.entity.master.QuickMessage;
@@ -11,7 +12,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,12 +32,14 @@ public class QuickMessageService {
     /**
      * Paginated list — untuk admin panel (termasuk INACTIVE, exclude DELETED via @SQLRestriction).
      */
-    public Page<QuickMessageResponse> findAll(Pageable pageable, String search) {
-        if (search != null && !search.isBlank()) {
-            return repository.findByMessageContainingIgnoreCaseOrderByMessageAsc(search, pageable)
+    public Page<QuickMessageResponse> findAll(QuickMessageParams params) {
+        String s = params.getSearch();
+        var pageable = params.toPageable();
+        if (s != null && !s.isBlank()) {
+            return repository.findByMessageContainingIgnoreCase(s, pageable)
                     .map(mapper::toResponse);
         }
-        return repository.findAllByOrderByMessageAsc(pageable)
+        return repository.findAll(pageable)
                 .map(mapper::toResponse);
     }
 

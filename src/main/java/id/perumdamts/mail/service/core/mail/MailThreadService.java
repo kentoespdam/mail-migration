@@ -1,6 +1,7 @@
 package id.perumdamts.mail.service.core.mail;
 
 import id.perumdamts.mail.dto.core.mail.MailSummaryResponse;
+import lombok.Getter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,7 +13,6 @@ import java.util.Map;
 /**
  * Service untuk membangun thread tree dari flat mail data.
  * Implementasi dari make_nlevel_threaded() + find_node() di source PHP.
- * 
  * Fix bug di source PHP: find_node() tidak explicit return FALSE.
  */
 @Service
@@ -115,6 +115,7 @@ public class MailThreadService {
     /**
      * Node untuk mail thread tree.
      */
+    @Getter
     public static class MailThreadNode {
         private final MailSummaryResponse mail;
         private final List<MailThreadNode> children = new ArrayList<>();
@@ -124,21 +125,9 @@ public class MailThreadService {
             this.mail = mail;
         }
 
-        public MailSummaryResponse getMail() {
-            return mail;
-        }
-
-        public List<MailThreadNode> getChildren() {
-            return children;
-        }
-
         public void addChild(MailThreadNode child) {
             children.add(child);
             child.depth = this.depth + 1;
-        }
-
-        public int getDepth() {
-            return depth;
         }
 
         public boolean isLeaf() {

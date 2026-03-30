@@ -22,7 +22,6 @@ import java.util.List;
 /**
  * Service untuk pengiriman surat dengan 10 side-effects.
  * Implementasi dari send() di source PHP (mailmodel.php:812-1016).
- * 
  * Migration notes:
  * - Core transaction (@Transactional) + event-driven side effects (@Async, @EventListener)
  * - Email notification → MailNotificationService (async)

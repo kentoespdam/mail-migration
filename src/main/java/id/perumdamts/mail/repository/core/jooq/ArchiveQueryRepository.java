@@ -1,6 +1,5 @@
 package id.perumdamts.mail.repository.core.jooq;
 
-import id.perumdamts.mail.dto.common.SortParam;
 import id.perumdamts.mail.dto.core.archive.ArchiveReportRequest;
 import id.perumdamts.mail.dto.core.archive.ArchiveReportResponse;
 import id.perumdamts.mail.dto.core.archive.ArchiveSearchRequest;
@@ -11,7 +10,6 @@ import org.jooq.SortField;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.jooq.impl.DSL.*;
 
@@ -19,16 +17,6 @@ import static org.jooq.impl.DSL.*;
 public class ArchiveQueryRepository {
 
     private final DSLContext dsl;
-
-    private static final Map<String, String> ARCHIVE_ALLOWED_SORTS = Map.of(
-            "createdDate", "a.ma_created_date",
-            "archiveDate", "a.ma_date",
-            "subject", "a.ma_subject",
-            "archiveNumber", "a.ma_no",
-            "year", "a.ma_year"
-    );
-
-    private static final String ARCHIVE_DEFAULT_SORT = "a.ma_created_date";
 
     public ArchiveQueryRepository(DSLContext dsl) {
         this.dsl = dsl;
@@ -43,7 +31,7 @@ public class ArchiveQueryRepository {
 
         condition = applyFilters(condition, request);
 
-        SortField<?> sort = SortParam.resolve(request.sortBy(), request.sortDir(), ARCHIVE_ALLOWED_SORTS, ARCHIVE_DEFAULT_SORT);
+        SortField<?> sort = request.toSortField();
 
         return dsl.select(
                         field("a.ma_id").as("id"),
@@ -63,7 +51,7 @@ public class ArchiveQueryRepository {
                 .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("a.ma_category")))
                 .where(condition)
                 .orderBy(sort)
-                .limit(request.size())
+                .limit(request.getSize())
                 .offset(request.offset())
                 .fetchInto(ArchiveSummaryResponse.class);
     }
@@ -80,7 +68,7 @@ public class ArchiveQueryRepository {
 
         condition = applyFilters(condition, request);
 
-        SortField<?> sort = SortParam.resolve(request.sortBy(), request.sortDir(), ARCHIVE_ALLOWED_SORTS, ARCHIVE_DEFAULT_SORT);
+        SortField<?> sort = request.toSortField();
 
         return dsl.selectDistinct(
                         field("a.ma_id").as("id"),
@@ -102,7 +90,7 @@ public class ArchiveQueryRepository {
                 .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("a.ma_category")))
                 .where(condition)
                 .orderBy(sort)
-                .limit(request.size())
+                .limit(request.getSize())
                 .offset(request.offset())
                 .fetchInto(ArchiveSummaryResponse.class);
     }
@@ -140,8 +128,8 @@ public class ArchiveQueryRepository {
     }
 
     private Condition applyFilters(Condition condition, ArchiveSearchRequest request) {
-        if (request.keyword() != null && !request.keyword().isBlank()) {
-            String kw = "%" + request.keyword() + "%";
+        if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
+            String kw = "%" + request.getKeyword() + "%";
             condition = condition.and(
                     field("a.ma_subject").likeIgnoreCase(kw)
                             .or(field("a.ma_no").likeIgnoreCase(kw))
@@ -149,17 +137,17 @@ public class ArchiveQueryRepository {
                             .or(field("a.ma_keyword_flag").likeIgnoreCase(kw))
             );
         }
-        if (request.categoryId() != null) {
-            condition = condition.and(field("a.ma_category").eq(request.categoryId()));
+        if (request.getCategoryId() != null) {
+            condition = condition.and(field("a.ma_category").eq(request.getCategoryId()));
         }
-        if (request.year() != null) {
-            condition = condition.and(field("a.ma_year").eq(request.year()));
+        if (request.getYear() != null) {
+            condition = condition.and(field("a.ma_year").eq(request.getYear()));
         }
-        if (request.startDate() != null && request.endDate() != null) {
-            condition = condition.and(field("a.ma_date").between(request.startDate(), request.endDate()));
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            condition = condition.and(field("a.ma_date").between(request.getStartDate(), request.getEndDate()));
         }
-        if (request.status() != null) {
-            condition = condition.and(field("a.ma_status").eq(request.status()));
+        if (request.getStatus() != null) {
+            condition = condition.and(field("a.ma_status").eq(request.getStatus()));
         }
         return condition;
     }

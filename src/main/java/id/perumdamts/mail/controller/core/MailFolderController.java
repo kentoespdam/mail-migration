@@ -1,14 +1,12 @@
 package id.perumdamts.mail.controller.core;
 
-import id.perumdamts.mail.config.TenantConfig;
-import id.perumdamts.mail.dto.core.folder.FolderCounterResponse;
-import id.perumdamts.mail.dto.core.folder.MailFolderRequest;
-import id.perumdamts.mail.dto.core.folder.MailFolderResponse;
-import id.perumdamts.mail.dto.core.folder.MoveMailRequest;
+import id.perumdamts.mail.dto.core.folder.*;
 import id.perumdamts.mail.dto.core.mail.MailSummaryResponse;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.folder.MailFolderService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,15 +27,11 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/v1/mail")
+@RequiredArgsConstructor
 public class MailFolderController {
 
     private final MailFolderService folderService;
-    private final TenantConfig tenantConfig;
-
-    public MailFolderController(MailFolderService folderService, TenantConfig tenantConfig) {
-        this.folderService = folderService;
-        this.tenantConfig = tenantConfig;
-    }
+//    private final TenantConfig tenantConfig;
 
     /**
      * Get folder tree untuk user (system + personal folders) dengan counter badge.
@@ -95,14 +89,9 @@ public class MailFolderController {
     public List<MailSummaryResponse> getMailsInFolder(
             @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable Integer id,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false) String sortBy,
-            @RequestParam(required = false) String sortDir,
-            @RequestParam(required = false) String keyword) {
+            @ParameterObject MailFolderMailsParams params) {
         return folderService.getMailsInFolder(
-                Integer.parseInt(principal.userId()), id, page, size,
-                sortBy, sortDir, keyword);
+                Integer.parseInt(principal.userId()), id, params);
     }
 
     /**

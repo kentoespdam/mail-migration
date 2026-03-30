@@ -1,13 +1,14 @@
 package id.perumdamts.mail.controller.master;
 
 import id.perumdamts.mail.dto.master.MailTypeLookup;
+import id.perumdamts.mail.dto.master.MailTypeParams;
 import id.perumdamts.mail.dto.master.MailTypeRequest;
 import id.perumdamts.mail.dto.master.MailTypeResponse;
 import id.perumdamts.mail.service.master.MailTypeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,10 +23,8 @@ public class MailTypeController {
     private final MailTypeService service;
 
     @GetMapping
-    public Page<MailTypeResponse> findAll(
-            @RequestParam(required = false) String search,
-            Pageable pageable) {
-        return service.findAll(search, pageable);
+    public Page<MailTypeResponse> findAll(@ParameterObject MailTypeParams params) {
+        return service.findAll(params);
     }
 
     @GetMapping("/lookup")
