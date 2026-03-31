@@ -58,8 +58,6 @@ id.perumdamts.mail/
 │   ├── JooqConfig.java
 │   ├── OpenApiConfig.java
 │   ├── SecurityConfig.java
-│   ├── SqidsConfig.java
-│   ├── SqidsProperties.java
 │   ├── StorageProperties.java
 │   ├── TenantConfig.java
 │   └── WebClientConfig.java
@@ -122,8 +120,6 @@ id.perumdamts.mail/
 │   ├── MailStatisticListener.java
 │   ├── MailResponseTimeListener.java
 │   └── ArchivePublishedEventListener.java
-├── infrastructure/
-│   └── sqids/                 # 5 Sqids ID encoding classes
 ├── integration/
 │   └── hr/                    # 12 HR Service Feign client classes
 ├── repository/

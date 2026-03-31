@@ -5,6 +5,7 @@ plugins {
     java
     id("org.springframework.boot") version "4.0.4"
     id("io.spring.dependency-management") version "1.1.7"
+    id("co.uzzu.dotenv.gradle") version "4.0.0"
 }
 
 group = "id.perumdamts"
@@ -79,9 +80,6 @@ dependencies {
 
     // == Actuator ==
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-
-    // == Sqids ==
-    implementation("org.sqids:sqids:0.1.0")
 
     // == MapStruct ==
     implementation("org.mapstruct:mapstruct:${mapstructVersion}")

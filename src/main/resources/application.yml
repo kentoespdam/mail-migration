@@ -47,7 +47,7 @@ spring:
   # ── Redis ──
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       timeout: 2s
@@ -95,14 +95,12 @@ app:
   scheduler:
     publication-notif:
       enabled: false
-  # ── Sqids ──
-  sqids:
-    alphabet: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
-    min-length: 8
-    shuffle-key: ${SQIDS_SHUFFLE_KEY:m41l-s3rv1c3-k3y}
   # ── Storage ──
   storage:
     base-path: ${STORAGE_BASE_PATH:/data/attachments}
+
+  config:
+    import: optional:file:.env[.properties]
 
 # ── HR Service (OpenFeign) ──
 hr:

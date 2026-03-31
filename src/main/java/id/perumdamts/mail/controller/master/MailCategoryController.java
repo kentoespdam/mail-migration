@@ -3,7 +3,6 @@ package id.perumdamts.mail.controller.master;
 import id.perumdamts.mail.dto.master.MailCategoryParams;
 import id.perumdamts.mail.dto.master.MailCategoryRequest;
 import id.perumdamts.mail.dto.master.MailCategoryResponse;
-import id.perumdamts.mail.infrastructure.sqids.SqidsHelper;
 import id.perumdamts.mail.service.master.MailCategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 public class MailCategoryController {
 
     private final MailCategoryService service;
-    private final SqidsHelper sqidsHelper;
 
     @GetMapping
     public PagedModel<MailCategoryResponse> findAll(@ParameterObject MailCategoryParams params) {
@@ -29,8 +27,8 @@ public class MailCategoryController {
     }
 
     @GetMapping("/{id}")
-    public MailCategoryResponse findById(@PathVariable String id) {
-        return service.findById(sqidsHelper.decode(id));
+    public MailCategoryResponse findById(@PathVariable Integer id) {
+        return service.findById(id);
     }
 
     @PostMapping
@@ -39,13 +37,13 @@ public class MailCategoryController {
     }
 
     @PutMapping("/{id}")
-    public MailCategoryResponse update(@PathVariable String id, @Valid @RequestBody MailCategoryRequest request) {
-        return service.update(sqidsHelper.decode(id), request);
+    public MailCategoryResponse update(@PathVariable Integer id, @Valid @RequestBody MailCategoryRequest request) {
+        return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String id) {
-        service.delete(sqidsHelper.decode(id));
+    public void delete(@PathVariable Integer id) {
+        service.delete(id);
     }
 }

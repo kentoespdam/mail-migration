@@ -3,7 +3,6 @@ package id.perumdamts.mail.controller.master;
 import id.perumdamts.mail.dto.master.QuickMessageParams;
 import id.perumdamts.mail.dto.master.QuickMessageRequest;
 import id.perumdamts.mail.dto.master.QuickMessageResponse;
-import id.perumdamts.mail.infrastructure.sqids.SqidsHelper;
 import id.perumdamts.mail.service.master.QuickMessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class QuickMessageController {
     private final QuickMessageService service;
-    private final SqidsHelper sqidsHelper;
 
     @GetMapping("/lookup")
     public List<QuickMessageResponse> lookup() {
@@ -33,8 +31,8 @@ public class QuickMessageController {
     }
 
     @GetMapping("/{id}")
-    public QuickMessageResponse findById(@PathVariable String id) {
-        return service.findById(sqidsHelper.decode(id));
+    public QuickMessageResponse findById(@PathVariable Integer id) {
+        return service.findById(id);
     }
 
     @PostMapping
@@ -43,13 +41,13 @@ public class QuickMessageController {
     }
 
     @PutMapping("/{id}")
-    public QuickMessageResponse update(@PathVariable String id, @Valid @RequestBody QuickMessageRequest request) {
-        return service.update(sqidsHelper.decode(id), request);
+    public QuickMessageResponse update(@PathVariable Integer id, @Valid @RequestBody QuickMessageRequest request) {
+        return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String id) {
-        service.delete(sqidsHelper.decode(id));
+    public void delete(@PathVariable Integer id) {
+        service.delete(id);
     }
 }
