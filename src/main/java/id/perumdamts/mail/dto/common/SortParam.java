@@ -10,11 +10,15 @@ import static org.jooq.impl.DSL.field;
 public record SortParam(String sortBy, String sortDir) {
 
     /**
-     * Resolve sort field using whitelist. Falls back to defaultColumn if sortBy is not in allowed map.
+     * Resolve sort field using whitelist. Falls back to defaultColumn if sortBy is null or not in allowed map.
      */
     public static SortField<?> resolve(String sortBy, String sortDir,
                                         Map<String, String> allowedSorts, String defaultColumn) {
-        String column = allowedSorts.getOrDefault(sortBy, defaultColumn);
+        // Handle null or blank sortBy - use default column
+        String column = (sortBy == null || sortBy.isBlank()) 
+                ? defaultColumn 
+                : allowedSorts.getOrDefault(sortBy, defaultColumn);
+        
         Field<Object> f = field(column);
         return "asc".equalsIgnoreCase(sortDir) ? f.asc() : f.desc();
     }

@@ -1,9 +1,9 @@
 package id.perumdamts.mail.service.master;
 
-import id.perumdamts.mail.dto.master.MailCategoryMapper;
-import id.perumdamts.mail.dto.master.MailCategoryParams;
-import id.perumdamts.mail.dto.master.MailCategoryRequest;
-import id.perumdamts.mail.dto.master.MailCategoryResponse;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryMapper;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryParams;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryRequest;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryResponse;
 import id.perumdamts.mail.entity.master.MailCategory;
 import id.perumdamts.mail.entity.master.MailType;
 import id.perumdamts.mail.repository.master.jpa.MailCategoryRepository;
@@ -29,7 +29,7 @@ public class MailCategoryService {
         return repository.findAll(params.toSpecification(), params.toPageable()).map(mapper::toResponse);
     }
 
-    public MailCategoryResponse findById(Integer id) {
+    public MailCategoryResponse findById(Long id) {
         return mapper.toResponse(getOrThrow(id));
     }
 
@@ -46,7 +46,7 @@ public class MailCategoryService {
     }
 
     @Transactional
-    public MailCategoryResponse update(Integer id, MailCategoryRequest request) {
+    public MailCategoryResponse update(Long id, MailCategoryRequest request) {
         var entity = getOrThrow(id);
         MailType mailType = getMailTypeOrThrow(request.mailTypeId());
 
@@ -66,18 +66,18 @@ public class MailCategoryService {
     }
 
     @Transactional
-    public void delete(Integer id) {
+    public void delete(Long id) {
         var entity = getOrThrow(id);
         entity.markDeleted();
         repository.save(entity);
     }
 
-    private MailCategory getOrThrow(Integer id) {
+    private MailCategory getOrThrow(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MailCategory not found: " + id));
     }
 
-    private MailType getMailTypeOrThrow(Integer mailTypeId) {
+    private MailType getMailTypeOrThrow(Long mailTypeId) {
         return mailTypeRepository.findById(mailTypeId)
                 .orElseThrow(() -> new EntityNotFoundException("MailType not found: " + mailTypeId));
     }

@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface PublicationRepository extends JpaRepository<Publication, Integer> {
+public interface PublicationRepository extends JpaRepository<Publication, Long> {
 
     List<Publication> findByNotifFlag(int notifFlag);
 }

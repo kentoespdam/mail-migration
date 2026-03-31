@@ -1,4 +1,4 @@
-package id.perumdamts.mail.dto.master;
+package id.perumdamts.mail.dto.master.quickMessage;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

@@ -1,0 +1,211 @@
+package id.perumdamts.mail.repository.core.jooq;
+
+import id.perumdamts.mail.config.SqidsProperties;
+import id.perumdamts.mail.dto.core.publication.PublicationDto;
+import id.perumdamts.mail.dto.core.publication.PublicationParams;
+import id.perumdamts.mail.enums.PublicationStatus;
+import id.perumdamts.mail.util.SqidsEncoder;
+import lombok.extern.slf4j.Slf4j;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Record;
+import org.jooq.Result;
+import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
+import org.jooq.tools.jdbc.MockConnection;
+import org.jooq.tools.jdbc.MockDataProvider;
+import org.jooq.tools.jdbc.MockExecuteContext;
+import org.jooq.tools.jdbc.MockResult;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.jooq.impl.DSL.field;
+
+@Slf4j
+class PublicationQueryRepositoryTest {
+
+    private static final Field<Long> P_ID = field("p.id", Long.class);
+    private static final Field<String> P_JUDUL = field("p.judul", String.class);
+    private static final Field<String> P_DESK = field("p.desk", String.class);
+    private static final Field<Integer> P_TYPE = field("p.type", Integer.class);
+    private static final Field<String> JD_JENIS_DOKUMEN = field("jd.jenis_dokumen", String.class);
+    private static final Field<String> P_STATUS = field("p.status", String.class);
+    private static final Field<LocalDateTime> P_PUBLISHED_DATE = field("p.published_date", LocalDateTime.class);
+    private static final Field<String> P_FILE_NAME = field("p.file_name", String.class);
+    private static final Field<String> P_FILE_PATH = field("p.file_path", String.class);
+    private static final Field<Integer> P_FILE_SIZE = field("p.file_size", Integer.class);
+    private static final Field<String> P_CREATED_BY_NAME = field("p.created_by_name", String.class);
+    private static final Field<String> P_CREATED_BY_TITLE = field("p.created_by_title", String.class);
+    private static final Field<Integer> P_CREATED_BY_USER_ID = field("p.created_by_user_id", Integer.class);
+    private static final Field<LocalDateTime> P_CREATED_AT = field("p.created_at", LocalDateTime.class);
+    private static final Field<LocalDateTime> P_UPDATED_AT = field("p.updated_at", LocalDateTime.class);
+    private static final Field<Integer> TOTAL_COUNT = field("total_count", Integer.class);
+
+    @Test
+    void findAll_shouldExcludeDeletedAndMapDto() {
+        AtomicReference<String> capturedSql = new AtomicReference<>();
+        PublicationParams params = new PublicationParams();
+        params.setSortBy("id");
+        params.setSortDir("asc");
+
+        PublicationQueryRepository repository = repositoryWithProvider(ctx -> {
+            capturedSql.set(ctx.sql());
+            return new MockResult[]{
+                    new MockResult(2, publicationRows(true, 2))
+            };
+        });
+
+        List<PublicationDto> items = repository.findAll(params);
+
+        assertThat(items).hasSize(2);
+        assertThat(items.getFirst().getId()).startsWith("pbl_");
+        assertThat(items.getFirst().getDocumentType()).isNotNull();
+        assertThat(items.getFirst().getTotalCount()).isEqualTo(2);
+        assertThat(items.get(1).getDocumentType()).isNull();
+        assertThat(normalize(capturedSql.get())).contains("p.status <> 'deleted'");
+        log.info("SQL: {}", capturedSql.get());
+    }
+
+    @Test
+    void findAll_shouldApplyStatusKeywordTypeAndDateFilters() {
+        AtomicReference<String> capturedSql = new AtomicReference<>();
+        PublicationParams params = new PublicationParams();
+        params.setStatus(PublicationStatus.PUBLISHED);
+        params.setKeyword("policy");
+        params.setTypeId(7);
+        params.setStartDate(LocalDate.of(2026, 1, 1));
+        params.setEndDate(LocalDate.of(2026, 1, 31));
+        params.setSortBy("title");
+        params.setSortDir("desc");
+        params.setPage(1);
+        params.setSize(5);
+
+        PublicationQueryRepository repository = repositoryWithProvider(ctx -> {
+            capturedSql.set(ctx.sql());
+            return new MockResult[]{
+                    new MockResult(1, publicationRows(true, 1))
+            };
+        });
+
+        repository.findAll(params);
+
+        String sql = normalize(capturedSql.get());
+        assertThat(sql).contains("p.status = 'published'");
+        assertThat(sql).contains("p.type = cast(? as int)");
+        assertThat(sql).contains("p.published_date between cast(? as date) and cast(? as date)");
+        assertThat(sql).contains("order by p.judul desc");
+        assertThat(sql).contains("fetch next ? rows only");
+        assertThat(sql).contains("offset ? rows");
+
+        log.info("SQL with filters: {}", capturedSql.get());
+    }
+
+    @Test
+    void findById_shouldReturnMappedPublicationWithoutTotalCount() {
+        PublicationQueryRepository repository = repositoryWithProvider(ctx -> new MockResult[]{
+                new MockResult(1, publicationRows(false, null))
+        });
+
+        Optional<PublicationDto> result = repository.findById(10L);
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).startsWith("pbl_");
+        assertThat(result.get().getTotalCount()).isNull();
+        assertThat(result.get().getDocumentType().id()).isEqualTo(2);
+    }
+
+    @Test
+    void findById_shouldReturnEmptyWhenNoRecord() {
+        PublicationQueryRepository repository = repositoryWithProvider(ctx -> new MockResult[]{
+                new MockResult(0, DSL.using(SQLDialect.H2).newResult(P_ID))
+        });
+
+        Optional<PublicationDto> result = repository.findById(99L);
+
+        assertThat(result).isEmpty();
+    }
+
+    private static PublicationQueryRepository repositoryWithProvider(MockDataProvider provider) {
+        DSLContext dsl = DSL.using(new MockConnection(provider), SQLDialect.H2);
+        SqidsEncoder encoder = new SqidsEncoder(new SqidsProperties(null, 0, null, "test-shuffle-key"));
+        return new PublicationQueryRepository(dsl, encoder);
+    }
+
+    private static Result<Record> publicationRows(boolean includeCount, Integer countValue) {
+        DSLContext dsl = DSL.using(SQLDialect.H2);
+        Field<?>[] fields = includeCount
+                ? new Field<?>[]{
+                P_ID, P_JUDUL, P_DESK, P_TYPE, JD_JENIS_DOKUMEN, P_STATUS,
+                P_PUBLISHED_DATE, P_FILE_NAME, P_FILE_PATH, P_FILE_SIZE,
+                P_CREATED_BY_NAME, P_CREATED_BY_TITLE, P_CREATED_BY_USER_ID,
+                P_CREATED_AT, P_UPDATED_AT, TOTAL_COUNT
+        }
+                : new Field<?>[]{
+                P_ID, P_JUDUL, P_DESK, P_TYPE, JD_JENIS_DOKUMEN, P_STATUS,
+                P_PUBLISHED_DATE, P_FILE_NAME, P_FILE_PATH, P_FILE_SIZE,
+                P_CREATED_BY_NAME, P_CREATED_BY_TITLE, P_CREATED_BY_USER_ID,
+                P_CREATED_AT, P_UPDATED_AT
+        };
+        Result<Record> result = dsl.newResult(fields);
+
+        LocalDateTime now = LocalDateTime.of(2026, 1, 10, 8, 30);
+        Record first = dsl.newRecord(result.fields());
+        first.set(P_ID, 10L);
+        first.set(P_JUDUL, "Policy Update");
+        first.set(P_DESK, "Internal policy update");
+        first.set(P_TYPE, 2);
+        first.set(JD_JENIS_DOKUMEN, "Memo");
+        first.set(P_STATUS, "PUBLISHED");
+        first.set(P_PUBLISHED_DATE, now);
+        first.set(P_FILE_NAME, "policy.pdf");
+        first.set(P_FILE_PATH, "/files/policy.pdf");
+        first.set(P_FILE_SIZE, 128);
+        first.set(P_CREATED_BY_NAME, "Admin");
+        first.set(P_CREATED_BY_TITLE, "Manager");
+        first.set(P_CREATED_BY_USER_ID, 11);
+        first.set(P_CREATED_AT, now.minusDays(2));
+        first.set(P_UPDATED_AT, now.minusDays(1));
+        if (includeCount) {
+            first.set(TOTAL_COUNT, countValue);
+        }
+        result.add(first);
+
+        if (includeCount) {
+            Record second = dsl.newRecord(result.fields());
+            second.set(P_ID, 11L);
+            second.set(P_JUDUL, "No Type");
+            second.set(P_DESK, "Without doc type");
+            second.set(P_TYPE, null);
+            second.set(JD_JENIS_DOKUMEN, null);
+            second.set(P_STATUS, "PUBLISHED");
+            second.set(P_PUBLISHED_DATE, now);
+            second.set(P_FILE_NAME, "no-type.pdf");
+            second.set(P_FILE_PATH, "/files/no-type.pdf");
+            second.set(P_FILE_SIZE, 64);
+            second.set(P_CREATED_BY_NAME, "System");
+            second.set(P_CREATED_BY_TITLE, "Automated");
+            second.set(P_CREATED_BY_USER_ID, 12);
+            second.set(P_CREATED_AT, now.minusDays(2));
+            second.set(P_UPDATED_AT, now.minusDays(1));
+            second.set(TOTAL_COUNT, countValue);
+            result.add(second);
+        }
+
+        return result;
+    }
+
+    private static String normalize(String sql) {
+        return sql
+                .replace("\"", "")
+                .replace("`", "")
+                .replaceAll("\\s+", " ")
+                .toLowerCase(Locale.ROOT);
+    }
+}

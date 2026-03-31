@@ -88,7 +88,7 @@ public class PublicationCommandService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public PublicationDto update(Integer id, UpdatePublicationRequest request, MultipartFile file,
+    public PublicationDto update(Long id, UpdatePublicationRequest request, MultipartFile file,
                                   MailPrincipal principal) {
         var pub = getOrThrow(id);
 
@@ -119,7 +119,7 @@ public class PublicationCommandService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public void delete(Integer id, MailPrincipal principal) {
+    public void delete(Long id, MailPrincipal principal) {
         var pub = getOrThrow(id);
         pub.softDelete();
         publicationRepository.save(pub);
@@ -164,7 +164,7 @@ public class PublicationCommandService {
         }
     }
 
-    private Publication getOrThrow(Integer id) {
+    private Publication getOrThrow(Long id) {
         return publicationRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Publication not found: " + id));
     }

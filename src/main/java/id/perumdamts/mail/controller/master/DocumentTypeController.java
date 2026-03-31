@@ -1,8 +1,8 @@
 package id.perumdamts.mail.controller.master;
 
-import id.perumdamts.mail.dto.core.publication.DocumentTypeDto;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeDto;
 import id.perumdamts.mail.dto.core.publication.PublicationMapper;
-import id.perumdamts.mail.dto.master.DocumentTypeParams;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeParams;
 import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.web.PagedModel;

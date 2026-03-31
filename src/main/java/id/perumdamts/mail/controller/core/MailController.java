@@ -1,5 +1,6 @@
 package id.perumdamts.mail.controller.core;
 
+import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.mail.*;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.mail.MailCommandService;
@@ -9,8 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import id.perumdamts.mail.dto.common.PagedResponse;
 
 import java.util.List;
 

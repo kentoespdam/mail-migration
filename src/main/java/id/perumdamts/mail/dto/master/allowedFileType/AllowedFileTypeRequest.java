@@ -1,4 +1,4 @@
-package id.perumdamts.mail.dto.core.publication;
+package id.perumdamts.mail.dto.master.allowedFileType;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

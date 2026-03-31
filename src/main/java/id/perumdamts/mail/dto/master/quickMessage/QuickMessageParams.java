@@ -1,4 +1,4 @@
-package id.perumdamts.mail.dto.master;
+package id.perumdamts.mail.dto.master.quickMessage;
 
 import id.perumdamts.mail.dto.common.JpaPageRequest;
 import lombok.Getter;

@@ -3,11 +3,11 @@ package id.perumdamts.mail.event;
 import java.time.Instant;
 
 public record PublicationPublishedEvent(
-        Integer publicationId,
+        Long publicationId,
         String publisherName,
         Instant publishedAt
 ) {
-    public PublicationPublishedEvent(Integer publicationId, String publisherName) {
+    public PublicationPublishedEvent(Long publicationId, String publisherName) {
         this(publicationId, publisherName, Instant.now());
     }
 }

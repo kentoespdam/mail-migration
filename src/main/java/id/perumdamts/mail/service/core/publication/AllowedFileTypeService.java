@@ -1,9 +1,9 @@
 package id.perumdamts.mail.service.core.publication;
 
-import id.perumdamts.mail.dto.core.publication.AllowedFileTypeDto;
-import id.perumdamts.mail.dto.core.publication.AllowedFileTypeRequest;
+import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;
+import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeRequest;
 import id.perumdamts.mail.dto.core.publication.PublicationMapper;
-import id.perumdamts.mail.dto.master.AllowedFileTypeParams;
+import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeParams;
 import id.perumdamts.mail.entity.master.AllowedFileType;
 import id.perumdamts.mail.repository.master.jpa.AllowedFileTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -54,7 +54,7 @@ public class AllowedFileTypeService {
 
     @Transactional
     @CacheEvict(value = "allowedFileTypes", allEntries = true)
-    public AllowedFileTypeDto update(Integer id, AllowedFileTypeRequest request) {
+    public AllowedFileTypeDto update(Long id, AllowedFileTypeRequest request) {
         var entity = getOrThrow(id);
         entity.setContext(request.context().toUpperCase());
         entity.setExtension(request.extension().toLowerCase());
@@ -67,7 +67,7 @@ public class AllowedFileTypeService {
 
     @Transactional
     @CacheEvict(value = "allowedFileTypes", allEntries = true)
-    public void delete(Integer id) {
+    public void delete(Long id) {
         var entity = getOrThrow(id);
         entity.setIsActive(false);
         repository.save(entity);
@@ -92,7 +92,7 @@ public class AllowedFileTypeService {
         }
     }
 
-    private AllowedFileType getOrThrow(Integer id) {
+    private AllowedFileType getOrThrow(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("AllowedFileType not found: " + id));
     }

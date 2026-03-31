@@ -13,11 +13,11 @@ import java.util.Map;
 public class PublicationParams extends PagedRequest {
 
     private static final Map<String, String> ALLOWED = Map.of(
-            "createdAt", "p.created_at",
+            "id","p.id",
             "publishedDate", "p.published_date",
             "title", "p.judul"
     );
-    private static final String DEFAULT = "p.created_at";
+    private static final String DEFAULT_SORT_COLUMN = "p.id";
 
     private PublicationStatus status;
     private String keyword;
@@ -32,6 +32,6 @@ public class PublicationParams extends PagedRequest {
 
     @Override
     protected String defaultSortColumn() {
-        return DEFAULT;
+        return DEFAULT_SORT_COLUMN;
     }
 }

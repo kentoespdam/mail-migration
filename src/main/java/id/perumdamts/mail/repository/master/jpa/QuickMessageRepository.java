@@ -8,13 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface QuickMessageRepository extends JpaRepository<QuickMessage, Integer> {
-
+public interface QuickMessageRepository extends JpaRepository<QuickMessage, Long> {
     List<QuickMessage> findAllByStatusOrderByMessageAsc(RecordStatus status);
 
     Page<QuickMessage> findByMessageContainingIgnoreCase(String message, Pageable pageable);
 
     boolean existsByMessage(String message);
 
-    boolean existsByMessageAndIdNot(String message, Integer id);
+    boolean existsByMessageAndIdNot(String message, Long id);
 }

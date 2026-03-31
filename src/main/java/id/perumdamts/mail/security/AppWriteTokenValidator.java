@@ -24,8 +24,8 @@ import java.util.Map;
  *
  * <p>Cache key: karakter pertama token sepanjang {@code props.tokenCacheKeyLength()} (default 20).
  */
-@Component
 @Slf4j
+@Component
 public class AppWriteTokenValidator {
 
     private static final String ACCOUNT_ENDPOINT          = "/v1/account";

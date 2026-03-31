@@ -74,7 +74,7 @@ public class MailArchiveCommandService {
         if (request.keywordFlag() != null) archive.setKeywordFlag(request.keywordFlag());
         if (request.mailId() != null) archive.setMailId(request.mailId());
         if (request.categoryId() != null) {
-            archive.setCategory(categoryRepository.getReferenceById(request.categoryId()));
+            archive.setCategory(categoryRepository.getReferenceById(request.categoryId().longValue()));
         }
         if (request.rack() != null || request.shelf() != null
                 || request.box() != null || request.folderPosition() != null) {
@@ -157,7 +157,7 @@ public class MailArchiveCommandService {
         archive.setMailId(request.mailId());
         archive.setKeywordFlag(request.keywordFlag());
         if (request.categoryId() != null) {
-            archive.setCategory(categoryRepository.getReferenceById(request.categoryId()));
+            archive.setCategory(categoryRepository.getReferenceById(request.categoryId().longValue()));
         }
         archive.setLocation(new ArchiveLocation(
                 request.rack(), request.shelf(), request.box(), request.folderPosition()));

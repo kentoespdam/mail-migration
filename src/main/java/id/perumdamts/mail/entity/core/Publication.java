@@ -1,5 +1,6 @@
 package id.perumdamts.mail.entity.core;
 
+import id.perumdamts.mail.entity.SqidEntity;
 import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.enums.PublicationStatus;
 import jakarta.persistence.*;
@@ -18,11 +19,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-public class Publication {
+public class Publication implements SqidEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(name = "judul", nullable = false)
     private String title;

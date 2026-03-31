@@ -1,12 +1,13 @@
 package id.perumdamts.mail.controller.master;
 
-import id.perumdamts.mail.dto.master.MailCategoryParams;
-import id.perumdamts.mail.dto.master.MailCategoryRequest;
-import id.perumdamts.mail.dto.master.MailCategoryResponse;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryParams;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryRequest;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryResponse;
+import id.perumdamts.mail.entity.master.MailCategory;
 import id.perumdamts.mail.service.master.MailCategoryService;
+import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
@@ -16,10 +17,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/mail-categories")
 @RequiredArgsConstructor
-@Slf4j
 public class MailCategoryController {
 
     private final MailCategoryService service;
+    private final SqidsEncoder encoder;
 
     @GetMapping
     public PagedModel<MailCategoryResponse> findAll(@ParameterObject MailCategoryParams params) {
@@ -27,8 +28,9 @@ public class MailCategoryController {
     }
 
     @GetMapping("/{id}")
-    public MailCategoryResponse findById(@PathVariable Integer id) {
-        return service.findById(id);
+    public MailCategoryResponse findById(@PathVariable String id) {
+        long rawId = encoder.decode(MailCategory.class, id);
+        return service.findById(rawId);
     }
 
     @PostMapping
@@ -37,13 +39,15 @@ public class MailCategoryController {
     }
 
     @PutMapping("/{id}")
-    public MailCategoryResponse update(@PathVariable Integer id, @Valid @RequestBody MailCategoryRequest request) {
-        return service.update(id, request);
+    public MailCategoryResponse update(@PathVariable String id, @Valid @RequestBody MailCategoryRequest request) {
+        long rawId = encoder.decode(MailCategory.class, id);
+        return service.update(rawId, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) {
-        service.delete(id);
+    public void delete(@PathVariable String id) {
+        long rawId = encoder.decode(MailCategory.class, id);
+        service.delete(rawId);
     }
 }

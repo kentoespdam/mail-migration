@@ -1,0 +1,21 @@
+package id.perumdamts.mail.dto.master.mailCategory;
+
+import id.perumdamts.mail.dto.common.SqidMapper;
+import id.perumdamts.mail.entity.master.MailCategory;
+import id.perumdamts.mail.util.SqidsEncoder;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.springframework.beans.factory.annotation.Autowired;
+
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
+public abstract class MailCategoryMapper extends SqidMapper<MailCategory> {
+
+    @Autowired protected SqidsEncoder encoder;
+
+    @Mapping(target = "id", expression = "java(sqid(entity))")
+    @Mapping(target = "mailTypeSqid", expression = "java(encoder.encode(MailType.class, entity.getMailType().getId()))")
+    @Mapping(source = "mailType.name", target = "mailTypeName")
+    @Mapping(source = "status", target = "status")
+    public abstract MailCategoryResponse toResponse(MailCategory entity);
+}

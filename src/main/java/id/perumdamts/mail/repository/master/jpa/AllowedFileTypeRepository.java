@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 
-public interface AllowedFileTypeRepository extends JpaRepository<AllowedFileType, Integer>, JpaSpecificationExecutor<AllowedFileType> {
-
+public interface AllowedFileTypeRepository extends JpaRepository<AllowedFileType, Long>, JpaSpecificationExecutor<AllowedFileType> {
     List<AllowedFileType> findByContextAndIsActiveTrue(String context);
 }

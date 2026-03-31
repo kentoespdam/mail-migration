@@ -8,14 +8,11 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import java.util.List;
 import java.util.Optional;
 
-public interface MailTypeRepository extends JpaRepository<MailType, Integer>,
+public interface MailTypeRepository extends JpaRepository<MailType, Long>,
                                             JpaSpecificationExecutor<MailType> {
-
-    Optional<MailType> findByName(String name);
-
     boolean existsByName(String name);
 
-    boolean existsByNameAndIdNot(String name, Integer id);
+    boolean existsByNameAndIdNot(String name, Long id);
 
     List<MailType> findAllByStatusOrderByIdAsc(RecordStatus status);
 }

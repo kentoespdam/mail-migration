@@ -49,7 +49,7 @@ enum CategoryStatus     { ACTIVE, INACTIVE }
 ```
 id.perumdamts.mail/
 ├── MailServiceApplication.java
-├── config/                    # 13 configuration classes
+├── config/                    # 11 configuration classes
 │   ├── AppWriteProperties.java
 │   ├── AppWritePropertiesConfig.java
 │   ├── AsyncConfig.java

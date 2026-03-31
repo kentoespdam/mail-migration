@@ -1,4 +1,4 @@
-package id.perumdamts.mail.dto.master;
+package id.perumdamts.mail.dto.master.documentType;
 
 import id.perumdamts.mail.dto.common.JpaSearchRequest;
 import id.perumdamts.mail.entity.master.DocumentType;

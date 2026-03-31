@@ -41,6 +41,11 @@ dependencyManagement {
 val jooqVersion    = "3.20.1"
 val mapstructVersion = "1.6.3"
 val flywayVersion  = "11.3.0"
+val mockitoVersion = "5.23.0"
+val mockitoAgent by configurations.creating {
+    // Make sure it's not transitive if you manage dependencies via a BOM or version catalog
+    isTransitive = false
+}
 
 dependencies {
 
@@ -81,6 +86,9 @@ dependencies {
     // == Actuator ==
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
+    // == Sqids — obfuscated public IDs ==
+    implementation("org.sqids:sqids:0.1.0")
+
     // == MapStruct ==
     implementation("org.mapstruct:mapstruct:${mapstructVersion}")
     annotationProcessor("org.mapstruct:mapstruct-processor:${mapstructVersion}")
@@ -101,6 +109,14 @@ dependencies {
     // == Test ==
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+
+    // == Mockito ==
+    testImplementation("org.mockito:mockito-core:${mockitoVersion}")
+    mockitoAgent("org.mockito:mockito-core:${mockitoVersion}")
+
+    // == Lombok Test ==
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -116,4 +132,9 @@ tasks.named<BootJar>("bootJar") {
 
 tasks.named<BootRun>("bootRun") {
     jvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+}
+
+tasks.test{
+    jvmArgs("-javaagent:${mockitoAgent.singleFile.absolutePath}")
+    useJUnitPlatform()
 }

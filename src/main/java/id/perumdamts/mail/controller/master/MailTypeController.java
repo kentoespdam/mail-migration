@@ -1,10 +1,12 @@
 package id.perumdamts.mail.controller.master;
 
-import id.perumdamts.mail.dto.master.MailTypeLookup;
-import id.perumdamts.mail.dto.master.MailTypeParams;
-import id.perumdamts.mail.dto.master.MailTypeRequest;
-import id.perumdamts.mail.dto.master.MailTypeResponse;
+import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
+import id.perumdamts.mail.dto.master.mailType.MailTypeParams;
+import id.perumdamts.mail.dto.master.mailType.MailTypeRequest;
+import id.perumdamts.mail.dto.master.mailType.MailTypeResponse;
+import id.perumdamts.mail.entity.master.MailType;
 import id.perumdamts.mail.service.master.MailTypeService;
+import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -21,6 +23,7 @@ import java.util.List;
 public class MailTypeController {
 
     private final MailTypeService service;
+    private final SqidsEncoder encoder;
 
     @GetMapping
     public PagedModel<MailTypeResponse> findAll(@ParameterObject MailTypeParams params) {
@@ -33,8 +36,9 @@ public class MailTypeController {
     }
 
     @GetMapping("/{id}")
-    public MailTypeResponse findById(@PathVariable Integer id) {
-        return service.findById(id);
+    public MailTypeResponse findById(@PathVariable String id) {
+        long rawId = encoder.decode(MailType.class, id);
+        return service.findById(rawId);
     }
 
     @PostMapping
@@ -43,13 +47,15 @@ public class MailTypeController {
     }
 
     @PutMapping("/{id}")
-    public MailTypeResponse update(@PathVariable Integer id, @Valid @RequestBody MailTypeRequest request) {
-        return service.update(id, request);
+    public MailTypeResponse update(@PathVariable String id, @Valid @RequestBody MailTypeRequest request) {
+        long rawId = encoder.decode(MailType.class, id);
+        return service.update(rawId, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) {
-        service.delete(id);
+    public void delete(@PathVariable String id) {
+        long rawId = encoder.decode(MailType.class, id);
+        service.delete(rawId);
     }
 }

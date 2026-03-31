@@ -1,10 +1,13 @@
 package id.perumdamts.mail.controller.master;
 
-import id.perumdamts.mail.dto.core.publication.AllowedFileTypeDto;
-import id.perumdamts.mail.dto.core.publication.AllowedFileTypeRequest;
-import id.perumdamts.mail.dto.master.AllowedFileTypeParams;
+import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;
+import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeRequest;
+import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeParams;
+import id.perumdamts.mail.entity.master.AllowedFileType;
 import id.perumdamts.mail.service.core.publication.AllowedFileTypeService;
+import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
@@ -16,13 +19,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/file-rules")
+@RequiredArgsConstructor
 public class AllowedFileTypeController {
 
     private final AllowedFileTypeService service;
-
-    public AllowedFileTypeController(AllowedFileTypeService service) {
-        this.service = service;
-    }
+    private final SqidsEncoder encoder;
 
     @GetMapping
     public PagedModel<AllowedFileTypeDto> findAll(@ParameterObject AllowedFileTypeParams params) {
@@ -42,15 +43,17 @@ public class AllowedFileTypeController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public AllowedFileTypeDto update(@PathVariable Integer id,
+    public AllowedFileTypeDto update(@PathVariable String id,
                                       @Valid @RequestBody AllowedFileTypeRequest request) {
-        return service.update(id, request);
+        long rawId = encoder.decode(AllowedFileType.class, id);
+        return service.update(rawId, request);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) {
-        service.delete(id);
+    public void delete(@PathVariable String id) {
+        long rawId = encoder.decode(AllowedFileType.class, id);
+        service.delete(rawId);
     }
 }

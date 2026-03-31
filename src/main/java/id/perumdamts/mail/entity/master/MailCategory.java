@@ -1,5 +1,6 @@
 package id.perumdamts.mail.entity.master;
 
+import id.perumdamts.mail.entity.SqidEntity;
 import id.perumdamts.mail.enums.CategoryStatus;
 import id.perumdamts.mail.util.CategoryStatusConverter;
 import jakarta.persistence.*;
@@ -27,12 +28,12 @@ import org.hibernate.annotations.SQLRestriction;
 @AllArgsConstructor
 @Getter
 @Setter
-public class MailCategory {
+public class MailCategory implements SqidEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "mcat_id")
-    private Integer id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mail_type_id", nullable = false,

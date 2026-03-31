@@ -1,5 +1,6 @@
 package id.perumdamts.mail.entity.master;
 
+import id.perumdamts.mail.entity.SqidEntity;
 import id.perumdamts.mail.enums.RecordStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -16,12 +17,12 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-public class MailType {
+public class MailType implements SqidEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "mail_type_id")
-    private Integer id;
+    private Long id;
 
     @Column(name = "mail_type", nullable = false, length = 32)
     private String name;

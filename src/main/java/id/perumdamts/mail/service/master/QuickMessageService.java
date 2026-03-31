@@ -1,10 +1,10 @@
 package id.perumdamts.mail.service.master;
 
 import id.perumdamts.mail.config.CacheConfig;
-import id.perumdamts.mail.dto.master.QuickMessageMapper;
-import id.perumdamts.mail.dto.master.QuickMessageParams;
-import id.perumdamts.mail.dto.master.QuickMessageRequest;
-import id.perumdamts.mail.dto.master.QuickMessageResponse;
+import id.perumdamts.mail.dto.master.quickMessage.QuickMessageMapper;
+import id.perumdamts.mail.dto.master.quickMessage.QuickMessageParams;
+import id.perumdamts.mail.dto.master.quickMessage.QuickMessageRequest;
+import id.perumdamts.mail.dto.master.quickMessage.QuickMessageResponse;
 import id.perumdamts.mail.entity.master.QuickMessage;
 import id.perumdamts.mail.enums.RecordStatus;
 import id.perumdamts.mail.repository.master.jpa.QuickMessageRepository;
@@ -43,7 +43,7 @@ public class QuickMessageService {
                 .map(mapper::toResponse);
     }
 
-    public QuickMessageResponse findById(Integer id) {
+    public QuickMessageResponse findById(Long id) {
         return mapper.toResponse(getOrThrow(id));
     }
 
@@ -72,7 +72,7 @@ public class QuickMessageService {
 
     @Transactional
     @CacheEvict(value = CacheConfig.CacheNames.TENANT_CONFIG, key = "'quickMessages'")
-    public QuickMessageResponse update(Integer id, QuickMessageRequest request) {
+    public QuickMessageResponse update(Long id, QuickMessageRequest request) {
         var entity = getOrThrow(id);
         String trimmed = request.message().trim();
         if (repository.existsByMessageAndIdNot(trimmed, id)) {
@@ -85,13 +85,13 @@ public class QuickMessageService {
 
     @Transactional
     @CacheEvict(value = CacheConfig.CacheNames.TENANT_CONFIG, key = "'quickMessages'")
-    public void delete(Integer id) {
+    public void delete(Long id) {
         var entity = getOrThrow(id);
         entity.markDeleted();
         repository.save(entity);
     }
 
-    private QuickMessage getOrThrow(Integer id) {
+    private QuickMessage getOrThrow(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("QuickMessage not found: " + id));
     }

@@ -63,7 +63,7 @@ public abstract class AbstractMailNumberGenerator implements MailNumberGenerator
      * Sequence di-reset setiap tahun.
      */
     protected int getNextSequence(Mail mail) {
-        Integer categoryId = mail.getMailCategory() != null ? mail.getMailCategory().getId() : 0;
+        int categoryId = mail.getMailCategory() != null ? mail.getMailCategory().getId().intValue() : 0;
         int year = LocalDate.now().getYear();
 
         // Lock row untuk prevent race condition

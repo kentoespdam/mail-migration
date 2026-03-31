@@ -98,10 +98,10 @@ public class MailCommandService {
         if (request.mailDate() != null) mail.setMailDate(request.mailDate());
         if (request.maxResponseDate() != null) mail.setMaxResponseDate(request.maxResponseDate());
         if (request.mailTypeId() != null) {
-            mail.setMailType(mailTypeRepository.getReferenceById(request.mailTypeId()));
+            mail.setMailType(mailTypeRepository.getReferenceById(request.mailTypeId().longValue()));
         }
         if (request.mailCategoryId() != null) {
-            mail.setMailCategory(mailCategoryRepository.getReferenceById(request.mailCategoryId()));
+            mail.setMailCategory(mailCategoryRepository.getReferenceById(request.mailCategoryId().longValue()));
         }
         if (request.noSuratMasuk() != null) mail.setNoSuratMasuk(request.noSuratMasuk());
         if (request.asalSuratMasuk() != null) mail.setAsalSuratMasuk(request.asalSuratMasuk());
@@ -204,10 +204,10 @@ public class MailCommandService {
         mail.setMailDate(mailDate);
         mail.setMaxResponseDate(maxResponseDate);
         if (mailTypeId != null) {
-            mail.setMailType(mailTypeRepository.getReferenceById(mailTypeId));
+            mail.setMailType(mailTypeRepository.getReferenceById(mailTypeId.longValue()));
         }
         if (mailCategoryId != null) {
-            mail.setMailCategory(mailCategoryRepository.getReferenceById(mailCategoryId));
+            mail.setMailCategory(mailCategoryRepository.getReferenceById(mailCategoryId.longValue()));
         }
         mail.setNoSuratMasuk(noSuratMasuk);
         mail.setAsalSuratMasuk(asalSuratMasuk);

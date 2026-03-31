@@ -1,5 +1,6 @@
 package id.perumdamts.mail.entity.master;
 
+import id.perumdamts.mail.entity.SqidEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,11 +15,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-public class AllowedFileType {
+public class AllowedFileType implements SqidEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @Column(nullable = false, length = 50)
     private String context;

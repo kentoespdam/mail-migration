@@ -1,5 +1,6 @@
 package id.perumdamts.mail.entity.master;
 
+import id.perumdamts.mail.entity.SqidEntity;
 import id.perumdamts.mail.enums.RecordStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,12 +24,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-public class QuickMessage {
+public class QuickMessage implements SqidEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Integer id;
+    private Long id;
 
     @Column(name = "pesan", nullable = false, length = 128)
     private String message;

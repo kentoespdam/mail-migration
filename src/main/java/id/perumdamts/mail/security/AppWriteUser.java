@@ -13,10 +13,8 @@ import java.util.List;
  * <p>Field {@code $id} dari JSON dijadikan {@code id} via {@code @JsonProperty}.
  */
 public record AppWriteUser(
-
         /* User ID AppWrite — sama dengan pegawaiId di HR Service. */
         @JsonProperty("$id") String id,
-
         String name,
         String email,
         String phone,

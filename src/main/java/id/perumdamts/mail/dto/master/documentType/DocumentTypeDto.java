@@ -1,4 +1,4 @@
-package id.perumdamts.mail.dto.core.publication;
+package id.perumdamts.mail.dto.master.documentType;
 
 public record DocumentTypeDto(
         Integer id,

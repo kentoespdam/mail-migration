@@ -1,9 +1,11 @@
 package id.perumdamts.mail.controller.master;
 
-import id.perumdamts.mail.dto.master.QuickMessageParams;
-import id.perumdamts.mail.dto.master.QuickMessageRequest;
-import id.perumdamts.mail.dto.master.QuickMessageResponse;
+import id.perumdamts.mail.dto.master.quickMessage.QuickMessageParams;
+import id.perumdamts.mail.dto.master.quickMessage.QuickMessageRequest;
+import id.perumdamts.mail.dto.master.quickMessage.QuickMessageResponse;
+import id.perumdamts.mail.entity.master.QuickMessage;
 import id.perumdamts.mail.service.master.QuickMessageService;
+import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -19,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class QuickMessageController {
     private final QuickMessageService service;
+    private final SqidsEncoder encoder;
 
     @GetMapping("/lookup")
     public List<QuickMessageResponse> lookup() {
@@ -31,8 +34,9 @@ public class QuickMessageController {
     }
 
     @GetMapping("/{id}")
-    public QuickMessageResponse findById(@PathVariable Integer id) {
-        return service.findById(id);
+    public QuickMessageResponse findById(@PathVariable String id) {
+        long rawId = encoder.decode(QuickMessage.class, id);
+        return service.findById(rawId);
     }
 
     @PostMapping
@@ -41,13 +45,16 @@ public class QuickMessageController {
     }
 
     @PutMapping("/{id}")
-    public QuickMessageResponse update(@PathVariable Integer id, @Valid @RequestBody QuickMessageRequest request) {
-        return service.update(id, request);
+    public QuickMessageResponse update(@PathVariable String id,
+                                        @Valid @RequestBody QuickMessageRequest request) {
+        long rawId = encoder.decode(QuickMessage.class, id);
+        return service.update(rawId, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) {
-        service.delete(id);
+    public void delete(@PathVariable String id) {
+        long rawId = encoder.decode(QuickMessage.class, id);
+        service.delete(rawId);
     }
 }

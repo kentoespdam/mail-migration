@@ -70,6 +70,13 @@ spring:
       max-file-size: 10MB
       max-request-size: 50MB
 
+# ── Sqids ──
+sqids:
+  shuffle-key: ${SQIDS_SHUFFLE_KEY:random_key}
+  alphabet: abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789
+  min-length: 10
+  separator: "_"
+
 # ── AppWrite ──
 appwrite:
   endpoint: ${APPWRITE_ENDPOINT:http://192.168.230.254:82}

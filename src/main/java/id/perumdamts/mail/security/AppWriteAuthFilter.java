@@ -5,9 +5,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,18 +32,14 @@ import static jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
  * <p>Cache key: 20 karakter pertama token JWT (cukup unik, tidak menyimpan full token).
  * Token cache TTL: 5 menit (dikonfigurasi via {@link AppWriteProperties}).
  */
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class AppWriteAuthFilter extends OncePerRequestFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(AppWriteAuthFilter.class);
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final AppWriteTokenValidator tokenValidator;
-
-    public AppWriteAuthFilter(AppWriteProperties props,
-                              AppWriteTokenValidator tokenValidator) {
-        this.tokenValidator = tokenValidator;
-    }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -62,7 +58,11 @@ public class AppWriteAuthFilter extends OncePerRequestFilter {
             MailPrincipal principal = cachedUser.toMailPrincipal();
 
             UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+                    new UsernamePasswordAuthenticationToken(
+                            principal,
+                            null,
+                            principal.getAuthorities()
+                    );
             SecurityContextHolder.getContext().setAuthentication(auth);
 
         } catch (Exception ex) {

@@ -1,10 +1,6 @@
 package id.perumdamts.mail.service.master;
 
-import id.perumdamts.mail.dto.master.MailTypeLookup;
-import id.perumdamts.mail.dto.master.MailTypeMapper;
-import id.perumdamts.mail.dto.master.MailTypeParams;
-import id.perumdamts.mail.dto.master.MailTypeRequest;
-import id.perumdamts.mail.dto.master.MailTypeResponse;
+import id.perumdamts.mail.dto.master.mailType.*;
 import id.perumdamts.mail.entity.master.MailType;
 import id.perumdamts.mail.enums.CategoryStatus;
 import id.perumdamts.mail.enums.RecordStatus;
@@ -39,7 +35,7 @@ public class MailTypeService {
                 .toList();
     }
 
-    public MailTypeResponse findById(Integer id) {
+    public MailTypeResponse findById(Long id) {
         return mapper.toResponse(getOrThrow(id));
     }
 
@@ -53,7 +49,7 @@ public class MailTypeService {
     }
 
     @Transactional
-    public MailTypeResponse update(Integer id, MailTypeRequest request) {
+    public MailTypeResponse update(Long id, MailTypeRequest request) {
         var entity = getOrThrow(id);
         if (repository.existsByNameAndIdNot(request.name(), id)) {
             throw new IllegalArgumentException("Duplikasi Jenis Surat: " + request.name());
@@ -63,7 +59,7 @@ public class MailTypeService {
     }
 
     @Transactional
-    public void delete(Integer id) {
+    public void delete(Long id) {
         var entity = getOrThrow(id);
 
         long activeCategories = categoryRepository.countByMailTypeAndStatusNot(entity, CategoryStatus.DELETED);
@@ -76,7 +72,7 @@ public class MailTypeService {
         repository.save(entity);
     }
 
-    private MailType getOrThrow(Integer id) {
+    private MailType getOrThrow(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MailType not found: " + id));
     }
