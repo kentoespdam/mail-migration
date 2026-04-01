@@ -1,13 +1,13 @@
 package id.perumdamts.mail.dto.master.mailCategory;
 
 import id.perumdamts.mail.dto.common.HasSqid;
+import id.perumdamts.mail.dto.master.mailType.MailTypeMiniResponse;
 import lombok.Value;
 
 @Value
 public class MailCategoryResponse implements HasSqid {
     String id;
-    String mailTypeSqid;
-    String mailTypeName;
+    MailTypeMiniResponse mailType;
     String code;
     String name;
     String codeName;
