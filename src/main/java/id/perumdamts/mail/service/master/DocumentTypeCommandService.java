@@ -1,63 +1,50 @@
 package id.perumdamts.mail.service.master;
 
-import id.perumdamts.mail.dto.master.documentType.*;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeMapper;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeRequest;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
 import id.perumdamts.mail.entity.master.DocumentType;
-import id.perumdamts.mail.enums.RecordStatus;
 import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;
+import id.perumdamts.mail.repository.master.jooq.DocumentTypeQueryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
-@Slf4j
-public class DocumentTypeService {
+public class DocumentTypeCommandService {
 
     private final DocumentTypeRepository repository;
+    private final DocumentTypeQueryRepository queryRepository; // To return Response after create/update
     private final DocumentTypeMapper mapper;
 
-    public Page<DocumentTypeResponse> findAll(DocumentTypeParams params) {
-        return repository.findAll(params.toSpecification(), params.toPageable()).map(mapper::toResponse);
-    }
-
-    public List<DocumentTypeLookup> lookup() {
-        return repository.findAllByStatusOrderByIdAsc(RecordStatus.ACTIVE).stream()
-                .map(mapper::toLookup)
-                .toList();
-    }
-
-    public DocumentTypeResponse findById(Long id) {
-        return mapper.toResponse(getOrThrow(id));
-    }
-
-    @Transactional
     public DocumentTypeResponse create(DocumentTypeRequest request) {
         if (repository.existsByName(request.name())) {
             throw new IllegalArgumentException("Duplikasi Jenis Dokumen: " + request.name());
         }
         var entity = new DocumentType(request.name());
-        return mapper.toResponse(repository.save(entity));
+        var saved = repository.save(entity);
+        return queryRepository.findById(saved.getId()).orElseThrow();
     }
 
-    @Transactional
     public DocumentTypeResponse update(Long id, DocumentTypeRequest request) {
-        var entity = getOrThrow(id);
+        var entity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("DocumentType not found: " + id));
+        
         if (repository.existsByNameAndIdNot(request.name(), id)) {
             throw new IllegalArgumentException("Duplikasi Jenis Dokumen: " + request.name());
         }
+        
         entity.setName(request.name());
-        return mapper.toResponse(repository.save(entity));
+        repository.save(entity);
+        return queryRepository.findById(id).orElseThrow();
     }
 
-    @Transactional
     public void delete(Long id) {
-        var entity = getOrThrow(id);
+        var entity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("DocumentType not found: " + id));
 
         long publicationCount = entity.getPublications() != null ? entity.getPublications().size() : 0;
         if (publicationCount > 0) {
@@ -66,10 +53,5 @@ public class DocumentTypeService {
 
         entity.markDeleted();
         repository.save(entity);
-    }
-
-    private DocumentType getOrThrow(Long id) {
-        return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("DocumentType not found: " + id));
     }
 }

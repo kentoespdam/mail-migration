@@ -1,31 +1,29 @@
 package id.perumdamts.mail.dto.master.documentType;
-
-import id.perumdamts.mail.dto.common.JpaSearchRequest;
-import id.perumdamts.mail.entity.master.DocumentType;
+import id.perumdamts.mail.dto.common.PagedRequest;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Set;
+import java.util.Map;
 
 @Getter
 @Setter
-public class DocumentTypeParams extends JpaSearchRequest<DocumentType> {
+public class DocumentTypeParams extends PagedRequest {
 
-    private static final Set<String> ALLOWED = Set.of("name", "id", "status");
+    private static final Map<String, String> ALLOWED = Map.of(
+            "id", "jd.id",
+            "name", "jd.jenis_dokumen",
+            "status", "jd.status"
+    );
 
     private String search;
 
     @Override
-    public Specification<DocumentType> toSpecification() {
-        return (root, query, cb) -> search == null || search.isBlank()
-                ? null
-                : cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%");
+    protected Map<String, String> allowedSorts() {
+        return ALLOWED;
     }
 
     @Override
-    protected Set<String> allowedSorts() { return ALLOWED; }
-
-    @Override
-    protected String defaultSort() { return "name"; }
+    protected String defaultSortColumn() {
+        return "jd.jenis_dokumen";
+    }
 }
