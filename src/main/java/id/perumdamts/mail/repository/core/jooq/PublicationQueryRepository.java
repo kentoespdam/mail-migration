@@ -1,8 +1,8 @@
 package id.perumdamts.mail.repository.core.jooq;
 
-import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.dto.core.publication.PublicationDto;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.entity.core.Publication;
 import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.util.SqidsEncoder;

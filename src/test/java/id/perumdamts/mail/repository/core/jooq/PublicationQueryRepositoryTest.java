@@ -114,7 +114,7 @@ class PublicationQueryRepositoryTest {
         assertThat(result).isPresent();
         assertThat(result.get().getId()).startsWith("pbl_");
         assertThat(result.get().getTotalCount()).isNull();
-        assertThat(result.get().getDocumentType().id()).isNotNull();
+        assertThat(result.get().getDocumentType().getId()).isNotNull();
     }
 
     @Test

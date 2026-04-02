@@ -5,12 +5,11 @@ import id.perumdamts.mail.dto.master.documentType.DocumentTypeMapper;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeParams;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
 import id.perumdamts.mail.enums.RecordStatus;
-import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;
 import id.perumdamts.mail.repository.master.jooq.DocumentTypeQueryRepository;
+import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

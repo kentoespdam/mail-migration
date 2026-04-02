@@ -1,6 +1,9 @@
 package id.perumdamts.mail.controller.master;
 
-import id.perumdamts.mail.dto.master.documentType.*;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeParams;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeRequest;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
 import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.service.master.DocumentTypeCommandService;
 import id.perumdamts.mail.service.master.DocumentTypeQueryService;
