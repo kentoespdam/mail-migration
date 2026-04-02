@@ -1,35 +1,30 @@
 package id.perumdamts.mail.dto.master.mailType;
 
-import id.perumdamts.mail.dto.common.JpaSearchRequest;
-import id.perumdamts.mail.entity.master.MailType;
+import id.perumdamts.mail.dto.common.PagedRequest;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Set;
+import java.util.Map;
 
 @Getter
 @Setter
-public class MailTypeParams extends JpaSearchRequest<MailType> {
+public class MailTypeParams extends PagedRequest {
 
-    private static final Set<String> ALLOWED = Set.of("name", "status", "createdDate");
+    private static final Map<String, String> ALLOWED = Map.of(
+            "name", "mt.mail_type",
+            "status", "mt.mail_type_status"
+    );
 
     private String search;
 
     @Override
-    public Specification<MailType> toSpecification() {
-        return (root, query, cb) -> search == null || search.isBlank()
-                ? null
-                : cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%");
-    }
-
-    @Override
-    protected Set<String> allowedSorts() {
+    protected Map<String, String> allowedSorts() {
         return ALLOWED;
     }
 
     @Override
-    protected String defaultSort() {
-        return "name";
+    protected String defaultSortColumn() {
+        return "mt.mail_type";
     }
 }
+

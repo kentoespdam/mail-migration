@@ -1,26 +1,30 @@
 package id.perumdamts.mail.dto.master.quickMessage;
 
-import id.perumdamts.mail.dto.common.JpaPageRequest;
+import id.perumdamts.mail.dto.common.PagedRequest;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Set;
+import java.util.Map;
 
 @Getter
 @Setter
-public class QuickMessageParams extends JpaPageRequest {
+public class QuickMessageParams extends PagedRequest {
 
-    private static final Set<String> ALLOWED = Set.of("message", "status", "createdDate");
+    private static final Map<String, String> ALLOWED = Map.of(
+            "message", "ps.pesan",
+            "status", "ps.status"
+    );
 
     private String search;
 
     @Override
-    protected Set<String> allowedSorts() {
+    protected Map<String, String> allowedSorts() {
         return ALLOWED;
     }
 
     @Override
-    protected String defaultSort() {
-        return "message";
+    protected String defaultSortColumn() {
+        return "ps.pesan";
     }
 }
+
