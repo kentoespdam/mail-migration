@@ -1,9 +1,10 @@
 package id.perumdamts.mail.repository.core.jooq;
 
-import id.perumdamts.mail.dto.master.documentType.DocumentTypeDto;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.dto.core.publication.PublicationDto;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.entity.core.Publication;
+import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
@@ -120,18 +121,18 @@ public class PublicationQueryRepository {
     }
 
     private PublicationDto mapToPublicationDto(Record r, Integer totalCount) {
-        Integer id = r.get(field("p.id"), Integer.class);
+        Long id = r.get(field("p.id"), Long.class);
         if (id == null) {
             log.warn("Null id found in publication record, skipping");
             return null;
         }
 
-        Integer docTypeId = r.get(field("p.type"), Integer.class);
+        Long docTypeId = r.get(field("p.type"), Long.class);
         String docTypeName = r.get(field("jd.jenis_dokumen"), String.class);
-        DocumentTypeDto docType = docTypeId != null ? new DocumentTypeDto(docTypeId, docTypeName) : null;
+        DocumentTypeLookup docType = docTypeId != null ? new DocumentTypeLookup(encoder.encode(DocumentType.class, docTypeId), docTypeName) : null;
 
         return new PublicationDto(
-                encoder.encode(Publication.class, id.longValue()),
+                encoder.encode(Publication.class, id),
                 r.get(field("p.judul"), String.class),
                 r.get(field("p.desk"), String.class),
                 docType,

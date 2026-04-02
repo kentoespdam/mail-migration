@@ -1,6 +1,6 @@
 package id.perumdamts.mail.dto.master.documentType;
 
-public record DocumentTypeDto(
-        Integer id,
+public record DocumentTypeLookup(
+        String id,
         String name
 ) {}

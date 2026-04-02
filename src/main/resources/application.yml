@@ -9,6 +9,9 @@ spring:
   application:
     name: mail-service
 
+  config:
+    import: optional:file:.env[.properties]
+
   # ── Flyway ──
   flyway:
     enabled: true
@@ -47,7 +50,7 @@ spring:
   # ── Redis ──
   data:
     redis:
-      host: ${REDIS_HOST:127.0.0.1}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       timeout: 2s
@@ -106,8 +109,7 @@ app:
   storage:
     base-path: ${STORAGE_BASE_PATH:/data/attachments}
 
-  config:
-    import: optional:file:.env[.properties]
+
 
 # ── HR Service (OpenFeign) ──
 hr:

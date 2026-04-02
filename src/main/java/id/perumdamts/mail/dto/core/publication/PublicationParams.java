@@ -21,7 +21,7 @@ public class PublicationParams extends PagedRequest {
 
     private PublicationStatus status;
     private String keyword;
-    private Integer typeId;
+    private Long typeId;
     private LocalDate startDate;
     private LocalDate endDate;
 

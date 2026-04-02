@@ -1,7 +1,7 @@
 package id.perumdamts.mail.dto.core.publication;
 
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;
-import id.perumdamts.mail.dto.master.documentType.DocumentTypeDto;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.entity.core.Publication;
 import id.perumdamts.mail.entity.master.AllowedFileType;
 import id.perumdamts.mail.entity.master.DocumentType;
@@ -22,7 +22,8 @@ public abstract class PublicationMapper {
     @Mapping(target = "totalCount", ignore = true)
     public abstract PublicationDto toDto(Publication entity);
 
-    public abstract DocumentTypeDto toDto(DocumentType entity);
+    @Mapping(target = "id", expression = "java(entity.getId() != null ? encoder.encode(DocumentType.class, entity.getId()) : null)")
+    public abstract DocumentTypeLookup toDto(DocumentType entity);
 
     @Mapping(target = "id", expression = "java(encoder.encode(AllowedFileType.class, entity.getId()))")
     public abstract AllowedFileTypeDto toDto(AllowedFileType entity);

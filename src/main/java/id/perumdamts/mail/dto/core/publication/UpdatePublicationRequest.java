@@ -6,6 +6,6 @@ import jakarta.validation.constraints.NotNull;
 public record UpdatePublicationRequest(
         @NotBlank String title,
         String description,
-        @NotNull Integer documentTypeId,
+        @NotNull Long documentTypeId,
         boolean publish
 ) {}

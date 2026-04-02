@@ -1,7 +1,7 @@
 package id.perumdamts.mail.dto.core.publication;
 
 import id.perumdamts.mail.dto.common.HasSqid;
-import id.perumdamts.mail.dto.master.documentType.DocumentTypeDto;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import lombok.Value;
 
 import java.time.LocalDateTime;
@@ -11,7 +11,7 @@ public class PublicationDto implements HasSqid {
     String id;
     String title;
     String description;
-    DocumentTypeDto documentType;
+    DocumentTypeLookup documentType;
     String status;
     LocalDateTime publishedDate;
     String fileName;
