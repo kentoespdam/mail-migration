@@ -1,6 +1,10 @@
 package id.perumdamts.mail.dto.master.mailType;
 
-public record MailTypeLookup(
-        Integer id,
-        String name
-) {}
+import id.perumdamts.mail.dto.common.HasSqid;
+import lombok.Value;
+
+@Value
+public class MailTypeLookup implements HasSqid {
+    String id;
+    String name;
+}

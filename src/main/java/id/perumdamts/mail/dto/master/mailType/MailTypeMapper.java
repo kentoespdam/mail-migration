@@ -13,5 +13,6 @@ public abstract class MailTypeMapper extends SqidMapper<MailType> {
     @Mapping(target = "categoryCount", expression = "java(entity.getCategories() != null ? entity.getCategories().size() : 0)")
     public abstract MailTypeResponse toResponse(MailType entity);
 
+    @Mapping(target = "id", expression = "java(sqid(entity))")
     public abstract MailTypeLookup toLookup(MailType entity);
 }

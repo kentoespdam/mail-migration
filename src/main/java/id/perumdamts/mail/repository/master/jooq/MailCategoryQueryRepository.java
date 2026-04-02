@@ -36,8 +36,9 @@ public class MailCategoryQueryRepository {
             );
         }
 
-        if (params.getMailTypeId() != null) {
-            condition = condition.and(field("mc.mail_type_id").eq(params.getMailTypeId()));
+        if (params.getMailTypeId() != null && !params.getMailTypeId().isBlank()) {
+            long decodedId = encoder.decode(MailType.class, params.getMailTypeId());
+            condition = condition.and(field("mc.mail_type_id").eq(decodedId));
         }
 
         var records = dsl.select(

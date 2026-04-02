@@ -1,8 +1,8 @@
 package id.perumdamts.mail.controller.master;
 
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;
-import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeRequest;
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeParams;
+import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeRequest;
 import id.perumdamts.mail.entity.master.AllowedFileType;
 import id.perumdamts.mail.service.core.publication.AllowedFileTypeService;
 import id.perumdamts.mail.util.SqidsEncoder;

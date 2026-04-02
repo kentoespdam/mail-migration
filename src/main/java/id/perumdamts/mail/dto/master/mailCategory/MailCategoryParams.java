@@ -17,7 +17,7 @@ public class MailCategoryParams extends PagedRequest {
     );
 
     private String search;
-    private Long mailTypeId;
+    private String mailTypeId;
 
     @Override
     protected Map<String, String> allowedSorts() {
