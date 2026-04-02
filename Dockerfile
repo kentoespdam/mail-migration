@@ -15,6 +15,8 @@ RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuse
 # Copy JAR from builder
 COPY --from=builder /app/build/libs/mail-service.jar app.jar
 RUN chown appuser:appuser app.jar
+RUN mkdir -p /data/attachments/
+RUN chown -R appuser:appuser /data/attachments/
 
 # Switch to non-root user
 USER appuser
