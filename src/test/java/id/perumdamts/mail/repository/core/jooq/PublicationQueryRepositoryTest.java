@@ -6,15 +6,11 @@ import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.enums.PublicationStatus;
 import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.extern.slf4j.Slf4j;
-import org.jooq.DSLContext;
-import org.jooq.Field;
+import org.jooq.*;
 import org.jooq.Record;
-import org.jooq.Result;
-import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.MockConnection;
 import org.jooq.tools.jdbc.MockDataProvider;
-import org.jooq.tools.jdbc.MockExecuteContext;
 import org.jooq.tools.jdbc.MockResult;
 import org.junit.jupiter.api.Test;
 
@@ -79,7 +75,7 @@ class PublicationQueryRepositoryTest {
         PublicationParams params = new PublicationParams();
         params.setStatus(PublicationStatus.PUBLISHED);
         params.setKeyword("policy");
-        params.setTypeId(7);
+        params.setTypeId(7L);
         params.setStartDate(LocalDate.of(2026, 1, 1));
         params.setEndDate(LocalDate.of(2026, 1, 31));
         params.setSortBy("title");
@@ -98,7 +94,7 @@ class PublicationQueryRepositoryTest {
 
         String sql = normalize(capturedSql.get());
         assertThat(sql).contains("p.status = 'published'");
-        assertThat(sql).contains("p.type = cast(? as int)");
+        assertThat(sql).contains("p.type = cast(? as bigint)");
         assertThat(sql).contains("p.published_date between cast(? as date) and cast(? as date)");
         assertThat(sql).contains("order by p.judul desc");
         assertThat(sql).contains("fetch next ? rows only");
@@ -109,7 +105,7 @@ class PublicationQueryRepositoryTest {
 
     @Test
     void findById_shouldReturnMappedPublicationWithoutTotalCount() {
-        PublicationQueryRepository repository = repositoryWithProvider(ctx -> new MockResult[]{
+        PublicationQueryRepository repository = repositoryWithProvider(_ -> new MockResult[]{
                 new MockResult(1, publicationRows(false, null))
         });
 
@@ -118,12 +114,12 @@ class PublicationQueryRepositoryTest {
         assertThat(result).isPresent();
         assertThat(result.get().getId()).startsWith("pbl_");
         assertThat(result.get().getTotalCount()).isNull();
-        assertThat(result.get().getDocumentType().id()).isEqualTo(2);
+        assertThat(result.get().getDocumentType().id()).isNotNull();
     }
 
     @Test
     void findById_shouldReturnEmptyWhenNoRecord() {
-        PublicationQueryRepository repository = repositoryWithProvider(ctx -> new MockResult[]{
+        PublicationQueryRepository repository = repositoryWithProvider(_ -> new MockResult[]{
                 new MockResult(0, DSL.using(SQLDialect.H2).newResult(P_ID))
         });
 

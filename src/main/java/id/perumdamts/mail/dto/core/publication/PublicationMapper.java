@@ -1,5 +1,6 @@
 package id.perumdamts.mail.dto.core.publication;
 
+import id.perumdamts.mail.dto.common.SqidMapper;
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.entity.core.Publication;
@@ -12,11 +13,11 @@ import org.mapstruct.MappingConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public abstract class PublicationMapper {
+public abstract class PublicationMapper extends SqidMapper<Publication> {
 
     @Autowired protected SqidsEncoder encoder;
 
-    @Mapping(target = "id", expression = "java(entity.getId() != null ? encoder.encode(Publication.class, entity.getId()) : null)")
+    @Mapping(target = "id", expression = "java(sqid(entity))")
     @Mapping(source = "documentType", target = "documentType")
     @Mapping(source = "status", target = "status")
     @Mapping(target = "totalCount", ignore = true)
