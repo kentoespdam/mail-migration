@@ -7,6 +7,7 @@ import id.perumdamts.mail.entity.master.MailType;
 import id.perumdamts.mail.repository.master.jpa.MailCategoryRepository;
 import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
 import id.perumdamts.mail.repository.master.jooq.MailCategoryQueryRepository;
+import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,12 @@ public class MailCategoryCommandService {
     private final MailCategoryRepository repository;
     private final MailTypeRepository mailTypeRepository;
     private final MailCategoryQueryRepository queryRepository;
+    private final SqidsEncoder encoder;
 
     public MailCategoryResponse create(MailCategoryRequest request) {
-        MailType mailType = getMailTypeOrThrow(request.mailTypeId());
-        if (repository.existsByMailTypeIdAndCode(request.mailTypeId(), request.code())) {
+        long mailTypeId = encoder.decode(MailType.class, request.mailTypeId());
+        MailType mailType = getMailTypeOrThrow(mailTypeId);
+        if (repository.existsByMailTypeIdAndCode(mailTypeId, request.code())) {
             throw new IllegalStateException(
                     "Kode \"%s\" sudah terpakai. Silahkan gunakan kode yang lain.".formatted(request.code()));
         }
@@ -36,11 +39,12 @@ public class MailCategoryCommandService {
     public MailCategoryResponse update(Long id, MailCategoryRequest request) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MailCategory not found: " + id));
-        MailType mailType = getMailTypeOrThrow(request.mailTypeId());
+        long mailTypeId = encoder.decode(MailType.class, request.mailTypeId());
+        MailType mailType = getMailTypeOrThrow(mailTypeId);
 
         // Check unique constraint if code or type changed
-        if (!entity.getMailType().getId().equals(request.mailTypeId()) || !entity.getCode().equals(request.code())) {
-            if (repository.existsByMailTypeIdAndCode(request.mailTypeId(), request.code())) {
+        if (!entity.getMailType().getId().equals(mailTypeId) || !entity.getCode().equals(request.code())) {
+            if (repository.existsByMailTypeIdAndCode(mailTypeId, request.code())) {
                 throw new IllegalStateException(
                         "Kode \"%s\" sudah terpakai. Silahkan gunakan kode yang lain.".formatted(request.code()));
             }
