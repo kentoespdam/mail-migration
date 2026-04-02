@@ -5,7 +5,8 @@ import id.perumdamts.mail.dto.master.mailType.MailTypeParams;
 import id.perumdamts.mail.dto.master.mailType.MailTypeRequest;
 import id.perumdamts.mail.dto.master.mailType.MailTypeResponse;
 import id.perumdamts.mail.entity.master.MailType;
-import id.perumdamts.mail.service.master.MailTypeService;
+import id.perumdamts.mail.service.master.MailTypeCommandService;
+import id.perumdamts.mail.service.master.MailTypeQueryService;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,40 +23,42 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MailTypeController {
 
-    private final MailTypeService service;
+    private final MailTypeCommandService commandService;
+    private final MailTypeQueryService queryService;
     private final SqidsEncoder encoder;
 
     @GetMapping
     public PagedModel<MailTypeResponse> findAll(@ParameterObject MailTypeParams params) {
-        return new PagedModel<>(service.findAll(params));
+        return new PagedModel<>(queryService.findAll(params));
     }
 
     @GetMapping("/lookup")
     public List<MailTypeLookup> lookup() {
-        return service.lookup();
+        return queryService.lookup();
     }
 
     @GetMapping("/{id}")
     public MailTypeResponse findById(@PathVariable String id) {
         long rawId = encoder.decode(MailType.class, id);
-        return service.findById(rawId);
+        return queryService.findById(rawId);
     }
 
     @PostMapping
     public ResponseEntity<MailTypeResponse> create(@Valid @RequestBody MailTypeRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(commandService.create(request));
     }
 
     @PutMapping("/{id}")
     public MailTypeResponse update(@PathVariable String id, @Valid @RequestBody MailTypeRequest request) {
         long rawId = encoder.decode(MailType.class, id);
-        return service.update(rawId, request);
+        return commandService.update(rawId, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String id) {
         long rawId = encoder.decode(MailType.class, id);
-        service.delete(rawId);
+        commandService.delete(rawId);
     }
 }
+

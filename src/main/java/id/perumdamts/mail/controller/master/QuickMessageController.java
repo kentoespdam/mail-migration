@@ -4,7 +4,8 @@ import id.perumdamts.mail.dto.master.quickMessage.QuickMessageParams;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageRequest;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageResponse;
 import id.perumdamts.mail.entity.master.QuickMessage;
-import id.perumdamts.mail.service.master.QuickMessageService;
+import id.perumdamts.mail.service.master.QuickMessageCommandService;
+import id.perumdamts.mail.service.master.QuickMessageQueryService;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,41 +21,43 @@ import java.util.List;
 @RequestMapping("/api/v1/quick-messages")
 @RequiredArgsConstructor
 public class QuickMessageController {
-    private final QuickMessageService service;
+
+    private final QuickMessageCommandService commandService;
+    private final QuickMessageQueryService queryService;
     private final SqidsEncoder encoder;
 
     @GetMapping("/lookup")
     public List<QuickMessageResponse> lookup() {
-        return service.lookup();
+        return queryService.lookup();
     }
 
     @GetMapping
     public PagedModel<QuickMessageResponse> findAll(@ParameterObject QuickMessageParams params) {
-        return new PagedModel<>(service.findAll(params));
+        return new PagedModel<>(queryService.findAll(params));
     }
 
     @GetMapping("/{id}")
     public QuickMessageResponse findById(@PathVariable String id) {
         long rawId = encoder.decode(QuickMessage.class, id);
-        return service.findById(rawId);
+        return queryService.findById(rawId);
     }
 
     @PostMapping
     public ResponseEntity<QuickMessageResponse> create(@Valid @RequestBody QuickMessageRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(commandService.create(request));
     }
 
     @PutMapping("/{id}")
-    public QuickMessageResponse update(@PathVariable String id,
-                                        @Valid @RequestBody QuickMessageRequest request) {
+    public QuickMessageResponse update(@PathVariable String id, @Valid @RequestBody QuickMessageRequest request) {
         long rawId = encoder.decode(QuickMessage.class, id);
-        return service.update(rawId, request);
+        return commandService.update(rawId, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable String id) {
         long rawId = encoder.decode(QuickMessage.class, id);
-        service.delete(rawId);
+        commandService.delete(rawId);
     }
 }
+
