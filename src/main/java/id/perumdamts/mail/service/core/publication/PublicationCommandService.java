@@ -6,10 +6,12 @@ import id.perumdamts.mail.dto.core.publication.PublicationDto;
 import id.perumdamts.mail.dto.core.publication.PublicationMapper;
 import id.perumdamts.mail.dto.core.publication.UpdatePublicationRequest;
 import id.perumdamts.mail.entity.core.Publication;
+import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.event.PublicationPublishedEvent;
 import id.perumdamts.mail.repository.core.jpa.PublicationRepository;
 import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;
 import id.perumdamts.mail.security.MailPrincipal;
+import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +42,7 @@ public class PublicationCommandService {
     private final AllowedFileTypeService allowedFileTypeService;
     private final ApplicationEventPublisher eventPublisher;
     private final PublicationMapper mapper;
+    private final SqidsEncoder encoder;
     private final Path storagePath;
 
     public PublicationCommandService(PublicationRepository publicationRepository,
@@ -47,12 +50,14 @@ public class PublicationCommandService {
                                       AllowedFileTypeService allowedFileTypeService,
                                       ApplicationEventPublisher eventPublisher,
                                       PublicationMapper mapper,
+                                      SqidsEncoder encoder,
                                       StorageProperties storageProperties) {
         this.publicationRepository = publicationRepository;
         this.documentTypeRepository = documentTypeRepository;
         this.allowedFileTypeService = allowedFileTypeService;
         this.eventPublisher = eventPublisher;
         this.mapper = mapper;
+        this.encoder = encoder;
         this.storagePath = Paths.get(storageProperties.basePath(), "publik").toAbsolutePath().normalize();
     }
 
@@ -63,7 +68,8 @@ public class PublicationCommandService {
         var pub = new Publication();
         pub.setTitle(request.title());
         pub.setDescription(request.description());
-        pub.setDocumentType(documentTypeRepository.getReferenceById(request.documentTypeId()));
+        long documentTypeId = encoder.decode(DocumentType.class, request.documentTypeId());
+        pub.setDocumentType(documentTypeRepository.getReferenceById(documentTypeId));
         pub.setCreatedByUserId(Integer.parseInt(principal.userId()));
         pub.setCreatedByName(principal.name());
         pub.setCreatedAt(LocalDateTime.now());
@@ -94,7 +100,8 @@ public class PublicationCommandService {
 
         pub.setTitle(request.title());
         pub.setDescription(request.description());
-        pub.setDocumentType(documentTypeRepository.getReferenceById(request.documentTypeId()));
+        long documentTypeId = encoder.decode(DocumentType.class, request.documentTypeId());
+        pub.setDocumentType(documentTypeRepository.getReferenceById(documentTypeId));
         pub.setUpdatedAt(LocalDateTime.now());
 
         if (file != null && !file.isEmpty()) {
