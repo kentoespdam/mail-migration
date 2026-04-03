@@ -36,3 +36,4 @@ application-dev.yml
 inspect/
 /.ollamassist/
 /dummy_prompt.txt
+issue.md
