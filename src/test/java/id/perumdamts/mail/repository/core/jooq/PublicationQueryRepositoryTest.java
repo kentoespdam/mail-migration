@@ -1,7 +1,7 @@
 package id.perumdamts.mail.repository.core.jooq;
 
 import id.perumdamts.mail.config.SqidsProperties;
-import id.perumdamts.mail.dto.core.publication.PublicationDto;
+import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.enums.PublicationStatus;
 import id.perumdamts.mail.util.SqidsEncoder;
@@ -58,7 +58,7 @@ class PublicationQueryRepositoryTest {
             };
         });
 
-        List<PublicationDto> items = repository.findAll(params);
+        List<PublicationResponse> items = repository.findAll(params);
 
         assertThat(items).hasSize(2);
         assertThat(items.getFirst().getId()).startsWith("pbl_");
@@ -109,7 +109,7 @@ class PublicationQueryRepositoryTest {
                 new MockResult(1, publicationRows(false, null))
         });
 
-        Optional<PublicationDto> result = repository.findById(10L);
+        Optional<PublicationResponse> result = repository.findById(10L);
 
         assertThat(result).isPresent();
         assertThat(result.get().getId()).startsWith("pbl_");
@@ -123,7 +123,7 @@ class PublicationQueryRepositoryTest {
                 new MockResult(0, DSL.using(SQLDialect.H2).newResult(P_ID))
         });
 
-        Optional<PublicationDto> result = repository.findById(99L);
+        Optional<PublicationResponse> result = repository.findById(99L);
 
         assertThat(result).isEmpty();
     }

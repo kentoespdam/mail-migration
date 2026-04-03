@@ -2,7 +2,7 @@ package id.perumdamts.mail.service.core.publication;
 
 import id.perumdamts.mail.config.StorageProperties;
 import id.perumdamts.mail.dto.core.publication.CreatePublicationRequest;
-import id.perumdamts.mail.dto.core.publication.PublicationDto;
+import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.dto.core.publication.PublicationMapper;
 import id.perumdamts.mail.dto.core.publication.UpdatePublicationRequest;
 import id.perumdamts.mail.entity.core.Publication;
@@ -63,7 +63,7 @@ public class PublicationCommandService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public PublicationDto create(CreatePublicationRequest request, MultipartFile file,
+    public PublicationResponse create(CreatePublicationRequest request, MultipartFile file,
                                   MailPrincipal principal) {
         var pub = new Publication();
         pub.setTitle(request.title());
@@ -94,7 +94,7 @@ public class PublicationCommandService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public PublicationDto update(Long id, UpdatePublicationRequest request, MultipartFile file,
+    public PublicationResponse update(Long id, UpdatePublicationRequest request, MultipartFile file,
                                   MailPrincipal principal) {
         var pub = getOrThrow(id);
 

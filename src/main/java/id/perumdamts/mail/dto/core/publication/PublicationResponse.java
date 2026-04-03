@@ -7,7 +7,7 @@ import lombok.Value;
 import java.time.LocalDateTime;
 
 @Value
-public class PublicationDto implements HasSqid {
+public class PublicationResponse implements HasSqid {
     String id;
     String title;
     String description;
@@ -15,7 +15,6 @@ public class PublicationDto implements HasSqid {
     String status;
     LocalDateTime publishedDate;
     String fileName;
-    String filePath;
     Integer fileSize;
     String createdByName;
     String createdByTitle;

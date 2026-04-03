@@ -1,6 +1,6 @@
 package id.perumdamts.mail.repository.core.jooq;
 
-import id.perumdamts.mail.dto.core.publication.PublicationDto;
+import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.entity.core.Publication;
@@ -31,7 +31,7 @@ public class PublicationQueryRepository {
         this.encoder = encoder;
     }
 
-    public List<PublicationDto> findAll(PublicationParams params) {
+    public List<PublicationResponse> findAll(PublicationParams params) {
         Condition condition = field("p.status").ne(inline("DELETED"));
 
         if (params.getStatus() != null) {
@@ -84,7 +84,7 @@ public class PublicationQueryRepository {
                 .toList();
     }
 
-    public Optional<PublicationDto> findById(Long id) {
+    public Optional<PublicationResponse> findById(Long id) {
         var result = dsl.select(
                         field("p.id"),
                         field("p.judul"),
@@ -111,16 +111,16 @@ public class PublicationQueryRepository {
         return Optional.ofNullable(result);
     }
 
-    private PublicationDto toDto(Record r) {
+    private PublicationResponse toDto(Record r) {
         Integer totalCount = r.get(field("total_count"), Integer.class);
-        return mapToPublicationDto(r, totalCount != null ? totalCount : 0);
+        return mapToPublicationResponse(r, totalCount != null ? totalCount : 0);
     }
 
-    private PublicationDto toDtoNoCount(Record r) {
-        return mapToPublicationDto(r, null);
+    private PublicationResponse toDtoNoCount(Record r) {
+        return mapToPublicationResponse(r, null);
     }
 
-    private PublicationDto mapToPublicationDto(Record r, Integer totalCount) {
+    private PublicationResponse mapToPublicationResponse(Record r, Integer totalCount) {
         Long id = r.get(field("p.id"), Long.class);
         if (id == null) {
             log.warn("Null id found in publication record, skipping");
@@ -131,7 +131,7 @@ public class PublicationQueryRepository {
         String docTypeName = r.get(field("jd.jenis_dokumen"), String.class);
         DocumentTypeLookup docType = docTypeId != null ? new DocumentTypeLookup(encoder.encode(DocumentType.class, docTypeId), docTypeName) : null;
 
-        return new PublicationDto(
+        return new PublicationResponse(
                 encoder.encode(Publication.class, id),
                 r.get(field("p.judul"), String.class),
                 r.get(field("p.desk"), String.class),
@@ -139,7 +139,6 @@ public class PublicationQueryRepository {
                 r.get(field("p.status"), String.class),
                 r.get(field("p.published_date"), LocalDateTime.class),
                 r.get(field("p.file_name"), String.class),
-                r.get(field("p.file_path"), String.class),
                 r.get(field("p.file_size"), Integer.class),
                 r.get(field("p.created_by_name"), String.class),
                 r.get(field("p.created_by_title"), String.class),

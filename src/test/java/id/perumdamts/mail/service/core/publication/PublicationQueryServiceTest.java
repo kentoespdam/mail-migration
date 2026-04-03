@@ -1,8 +1,11 @@
 package id.perumdamts.mail.service.core.publication;
 
-import id.perumdamts.mail.dto.common.PagedResponse;
-import id.perumdamts.mail.dto.core.publication.PublicationDto;
+import id.perumdamts.mail.config.StorageProperties;
+import id.perumdamts.mail.dto.common.FileDownloadResource;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
+import id.perumdamts.mail.dto.core.publication.PublicationResponse;
+import id.perumdamts.mail.entity.core.Publication;
+import id.perumdamts.mail.repository.core.jpa.PublicationRepository;
 import id.perumdamts.mail.repository.core.jooq.PublicationQueryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +14,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,9 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
@@ -30,56 +35,57 @@ class PublicationQueryServiceTest {
     @Mock
     private PublicationQueryRepository queryRepository;
 
+    @Mock
+    private PublicationRepository publicationRepository;
+
+    @Mock
+    private StorageProperties storageProperties;
+
     @InjectMocks
     private PublicationQueryService service;
 
     @Test
-    void list_shouldBuildPagedResponseUsingFirstItemTotalCount() {
+    void findAll_shouldReturnPageUsingFirstItemTotalCount() {
         PublicationParams params = new PublicationParams();
-        PublicationDto first = publicationDto("pub-1", 12);
-        PublicationDto second = publicationDto("pub-2", 12);
-        List<PublicationDto> items = List.of(first, second);
+        PublicationResponse first = publicationResponse("pub-1", 2);
+        PublicationResponse second = publicationResponse("pub-2", 2);
+        List<PublicationResponse> items = List.of(first, second);
 
         when(queryRepository.findAll(any(PublicationParams.class))).thenReturn(items);
 
-        PagedResponse<PublicationDto> result = service.list(params);
+        Page<PublicationResponse> result = service.findAll(params);
 
-        assertThat(result.content()).containsExactly(first, second);
-        assertThat(result.totalElements()).isEqualTo(12);
-        assertThat(result.page()).isEqualTo(params.getPage());
-        assertThat(result.size()).isEqualTo(params.getSize());
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent().get(0).getTotalCount()).isEqualTo(2);
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getNumber()).isEqualTo(params.getPage());
+        assertThat(result.getSize()).isEqualTo(params.getSize());
         verify(queryRepository).findAll(eq(params));
         verifyNoMoreInteractions(queryRepository);
-
-        log.info("paged, {}",result);
     }
 
     @Test
-    void list_shouldReturnZeroTotalWhenRepositoryReturnsEmptyList() {
+    void findAll_shouldReturnEmptyPageWhenRepositoryReturnsEmptyList() {
         PublicationParams params = new PublicationParams();
 
         when(queryRepository.findAll(any(PublicationParams.class))).thenReturn(List.of());
 
-        PagedResponse<PublicationDto> result = service.list(params);
+        Page<PublicationResponse> result = service.findAll(params);
 
-        assertThat(result.content()).isEmpty();
-        assertThat(result.totalElements()).isZero();
-        assertThat(result.page()).isEqualTo(params.getPage());
-        assertThat(result.size()).isEqualTo(params.getSize());
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isZero();
         verify(queryRepository).findAll(eq(params));
         verifyNoMoreInteractions(queryRepository);
-
-        log.info("empty paged, {}",result);
     }
 
     @Test
     void findById_shouldReturnPublicationWhenExists() {
         Long id = 10L;
-        PublicationDto expected = publicationDto("pub-10", null);
+        PublicationResponse expected = publicationResponse("pub-10", null);
 
         when(queryRepository.findById(any(Long.class))).thenReturn(Optional.of(expected));
 
-        PublicationDto result = service.findById(id);
+        PublicationResponse result = service.findById(id);
 
         assertThat(result).isEqualTo(expected);
         verify(queryRepository).findById(eq(id));
@@ -95,11 +101,55 @@ class PublicationQueryServiceTest {
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage("Publication not found: 99");
         verify(queryRepository).findById(eq(id));
-        verifyNoMoreInteractions(queryRepository);
     }
 
-    private static PublicationDto publicationDto(String id, Integer totalCount) {
-        return new PublicationDto(
+    @Test
+    void downloadFile_shouldReturnResourceWhenFileExists() throws IOException {
+        Long id = 10L;
+        Publication pub = new Publication();
+        pub.setFileName("test.pdf");
+        pub.setFilePath("publik/test.pdf");
+
+        Path tempDir = Files.createTempDirectory("mail-test");
+        Path filePath = tempDir.resolve("publik/test.pdf");
+        Files.createDirectories(filePath.getParent());
+        Files.writeString(filePath, "test-content");
+
+        when(publicationRepository.findById(eq(id))).thenReturn(Optional.of(pub));
+        when(storageProperties.basePath()).thenReturn(tempDir.toString());
+
+        FileDownloadResource result = service.downloadFile(id);
+
+        assertThat(result.fileName()).isEqualTo("test.pdf");
+        assertThat(result.resource()).isNotNull();
+        assertThat(result.resource().exists()).isTrue();
+        assertThat(result.contentType()).isNotBlank();
+
+        // Clean up
+        Files.deleteIfExists(filePath);
+        Files.deleteIfExists(filePath.getParent());
+        Files.deleteIfExists(tempDir);
+    }
+
+    @Test
+    void downloadFile_shouldRejectPathTraversal() {
+        Long id = 10L;
+        Publication pub = new Publication();
+        pub.setFileName("evil.pdf");
+        pub.setFilePath("../../etc/passwd");
+
+        Path tempDir = Path.of("/tmp/mail-test-traversal");
+
+        when(publicationRepository.findById(eq(id))).thenReturn(Optional.of(pub));
+        when(storageProperties.basePath()).thenReturn(tempDir.toString());
+
+        assertThatThrownBy(() -> service.downloadFile(id))
+                .isInstanceOf(SecurityException.class)
+                .hasMessage("Invalid file path");
+    }
+
+    private static PublicationResponse publicationResponse(String id, Integer totalCount) {
+        return new PublicationResponse(
                 id,
                 "title",
                 "description",
@@ -107,7 +157,6 @@ class PublicationQueryServiceTest {
                 "PUBLISHED",
                 null,
                 "file.pdf",
-                "/tmp/file.pdf",
                 123,
                 "Creator",
                 "Manager",

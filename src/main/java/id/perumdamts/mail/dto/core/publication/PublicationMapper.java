@@ -21,7 +21,7 @@ public abstract class PublicationMapper extends SqidMapper<Publication> {
     @Mapping(source = "documentType", target = "documentType")
     @Mapping(source = "status", target = "status")
     @Mapping(target = "totalCount", ignore = true)
-    public abstract PublicationDto toDto(Publication entity);
+    public abstract PublicationResponse toDto(Publication entity);
 
     @Mapping(target = "id", expression = "java(entity.getId() != null ? encoder.encode(DocumentType.class, entity.getId()) : null)")
     public abstract DocumentTypeLookup toDto(DocumentType entity);

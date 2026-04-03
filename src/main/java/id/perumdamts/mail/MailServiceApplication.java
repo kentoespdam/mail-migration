@@ -13,20 +13,24 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 /**
  * Mail Service — migrasi surat-menyurat dari PHP ke Spring Boot 4.
  *
- * <p>Annotation penting:
+ * <p>
+ * Annotation penting:
  * <ul>
- *   <li>{@code @EnableFeignClients} — aktifkan OpenFeign untuk HR Service client</li>
- *   <li>{@code @EnableAsync} — aktifkan async execution untuk domain event listeners</li>
+ * <li>{@code @EnableFeignClients} — aktifkan OpenFeign untuk HR Service
+ * client</li>
+ * <li>{@code @EnableAsync} — aktifkan async execution untuk domain event
+ * listeners</li>
  * </ul>
  *
- * <p>{@code @EnableCaching} dan {@code @EnableScheduling} dikonfigurasi di class config masing-masing.
+ * <p>
+ * {@code @EnableCaching} dan {@code @EnableScheduling} dikonfigurasi di class
+ * config masing-masing.
  */
 @SpringBootApplication
-@EnableConfigurationProperties({AppWriteProperties.class, TenantConfig.class, StorageProperties.class})
+@EnableConfigurationProperties({ AppWriteProperties.class, TenantConfig.class, StorageProperties.class })
 @EnableFeignClients(basePackages = "id.perumdamts.mail.integration")
 @EnableAsync
 @EnableScheduling
-//@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 public class MailServiceApplication {
 
     static void main(String[] args) {
