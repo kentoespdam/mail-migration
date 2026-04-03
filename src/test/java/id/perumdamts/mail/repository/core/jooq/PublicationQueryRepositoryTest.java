@@ -1,8 +1,8 @@
 package id.perumdamts.mail.repository.core.jooq;
 
 import id.perumdamts.mail.config.SqidsProperties;
-import id.perumdamts.mail.dto.core.publication.PublicationDto;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
+import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.enums.PublicationStatus;
 import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +13,10 @@ import org.jooq.tools.jdbc.MockConnection;
 import org.jooq.tools.jdbc.MockDataProvider;
 import org.jooq.tools.jdbc.MockResult;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,14 +35,13 @@ class PublicationQueryRepositoryTest {
     private static final Field<String> P_STATUS = field("p.status", String.class);
     private static final Field<LocalDateTime> P_PUBLISHED_DATE = field("p.published_date", LocalDateTime.class);
     private static final Field<String> P_FILE_NAME = field("p.file_name", String.class);
-    private static final Field<String> P_FILE_PATH = field("p.file_path", String.class);
     private static final Field<Integer> P_FILE_SIZE = field("p.file_size", Integer.class);
     private static final Field<String> P_CREATED_BY_NAME = field("p.created_by_name", String.class);
     private static final Field<String> P_CREATED_BY_TITLE = field("p.created_by_title", String.class);
     private static final Field<Integer> P_CREATED_BY_USER_ID = field("p.created_by_user_id", Integer.class);
     private static final Field<LocalDateTime> P_CREATED_AT = field("p.created_at", LocalDateTime.class);
     private static final Field<LocalDateTime> P_UPDATED_AT = field("p.updated_at", LocalDateTime.class);
-    private static final Field<Integer> TOTAL_COUNT = field("total_count", Integer.class);
+    private static final Field<Long> TOTAL_COUNT = field("total_count", Long.class);
 
     @Test
     void findAll_shouldExcludeDeletedAndMapDto() {
@@ -54,17 +53,17 @@ class PublicationQueryRepositoryTest {
         PublicationQueryRepository repository = repositoryWithProvider(ctx -> {
             capturedSql.set(ctx.sql());
             return new MockResult[]{
-                    new MockResult(2, publicationRows(true, 2))
+                    new MockResult(2, publicationRows(true, 2L))
             };
         });
 
-        List<PublicationDto> items = repository.findAll(params);
+        Page<PublicationResponse> page = repository.findAll(params);
 
-        assertThat(items).hasSize(2);
-        assertThat(items.getFirst().getId()).startsWith("pbl_");
-        assertThat(items.getFirst().getDocumentType()).isNotNull();
-        assertThat(items.getFirst().getTotalCount()).isEqualTo(2);
-        assertThat(items.get(1).getDocumentType()).isNull();
+        assertThat(page.getContent()).hasSize(2);
+        assertThat(page.getTotalElements()).isEqualTo(2);
+        assertThat(page.getContent().getFirst().getId()).startsWith("pbl_");
+        assertThat(page.getContent().getFirst().getDocumentType()).isNotNull();
+        assertThat(page.getContent().get(1).getDocumentType()).isNull();
         assertThat(normalize(capturedSql.get())).contains("p.status <> 'deleted'");
         log.info("SQL: {}", capturedSql.get());
     }
@@ -86,7 +85,7 @@ class PublicationQueryRepositoryTest {
         PublicationQueryRepository repository = repositoryWithProvider(ctx -> {
             capturedSql.set(ctx.sql());
             return new MockResult[]{
-                    new MockResult(1, publicationRows(true, 1))
+                    new MockResult(1, publicationRows(true, 1L))
             };
         });
 
@@ -109,11 +108,10 @@ class PublicationQueryRepositoryTest {
                 new MockResult(1, publicationRows(false, null))
         });
 
-        Optional<PublicationDto> result = repository.findById(10L);
+        Optional<PublicationResponse> result = repository.findById(10L);
 
         assertThat(result).isPresent();
         assertThat(result.get().getId()).startsWith("pbl_");
-        assertThat(result.get().getTotalCount()).isNull();
         assertThat(result.get().getDocumentType().getId()).isNotNull();
     }
 
@@ -123,7 +121,7 @@ class PublicationQueryRepositoryTest {
                 new MockResult(0, DSL.using(SQLDialect.H2).newResult(P_ID))
         });
 
-        Optional<PublicationDto> result = repository.findById(99L);
+        Optional<PublicationResponse> result = repository.findById(99L);
 
         assertThat(result).isEmpty();
     }
@@ -134,18 +132,18 @@ class PublicationQueryRepositoryTest {
         return new PublicationQueryRepository(dsl, encoder);
     }
 
-    private static Result<Record> publicationRows(boolean includeCount, Integer countValue) {
+    private static Result<Record> publicationRows(boolean includeCount, Long countValue) {
         DSLContext dsl = DSL.using(SQLDialect.H2);
         Field<?>[] fields = includeCount
                 ? new Field<?>[]{
                 P_ID, P_JUDUL, P_DESK, P_TYPE, JD_JENIS_DOKUMEN, P_STATUS,
-                P_PUBLISHED_DATE, P_FILE_NAME, P_FILE_PATH, P_FILE_SIZE,
+                P_PUBLISHED_DATE, P_FILE_NAME, P_FILE_SIZE,
                 P_CREATED_BY_NAME, P_CREATED_BY_TITLE, P_CREATED_BY_USER_ID,
                 P_CREATED_AT, P_UPDATED_AT, TOTAL_COUNT
         }
                 : new Field<?>[]{
                 P_ID, P_JUDUL, P_DESK, P_TYPE, JD_JENIS_DOKUMEN, P_STATUS,
-                P_PUBLISHED_DATE, P_FILE_NAME, P_FILE_PATH, P_FILE_SIZE,
+                P_PUBLISHED_DATE, P_FILE_NAME, P_FILE_SIZE,
                 P_CREATED_BY_NAME, P_CREATED_BY_TITLE, P_CREATED_BY_USER_ID,
                 P_CREATED_AT, P_UPDATED_AT
         };
@@ -161,7 +159,6 @@ class PublicationQueryRepositoryTest {
         first.set(P_STATUS, "PUBLISHED");
         first.set(P_PUBLISHED_DATE, now);
         first.set(P_FILE_NAME, "policy.pdf");
-        first.set(P_FILE_PATH, "/files/policy.pdf");
         first.set(P_FILE_SIZE, 128);
         first.set(P_CREATED_BY_NAME, "Admin");
         first.set(P_CREATED_BY_TITLE, "Manager");
@@ -183,7 +180,6 @@ class PublicationQueryRepositoryTest {
             second.set(P_STATUS, "PUBLISHED");
             second.set(P_PUBLISHED_DATE, now);
             second.set(P_FILE_NAME, "no-type.pdf");
-            second.set(P_FILE_PATH, "/files/no-type.pdf");
             second.set(P_FILE_SIZE, 64);
             second.set(P_CREATED_BY_NAME, "System");
             second.set(P_CREATED_BY_TITLE, "Automated");

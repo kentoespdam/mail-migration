@@ -1,16 +1,20 @@
 package id.perumdamts.mail.service.core.publication;
 
-import id.perumdamts.mail.dto.common.PagedResponse;
-import id.perumdamts.mail.dto.core.publication.PublicationDto;
+import id.perumdamts.mail.config.StorageProperties;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
+import id.perumdamts.mail.dto.core.publication.PublicationResponse;
+import id.perumdamts.mail.repository.core.jpa.PublicationRepository;
 import id.perumdamts.mail.repository.core.jooq.PublicationQueryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,56 +34,61 @@ class PublicationQueryServiceTest {
     @Mock
     private PublicationQueryRepository queryRepository;
 
-    @InjectMocks
+    @Mock
+    private PublicationRepository publicationRepository;
+
     private PublicationQueryService service;
 
-    @Test
-    void list_shouldBuildPagedResponseUsingFirstItemTotalCount() {
-        PublicationParams params = new PublicationParams();
-        PublicationDto first = publicationDto("pub-1", 12);
-        PublicationDto second = publicationDto("pub-2", 12);
-        List<PublicationDto> items = List.of(first, second);
-
-        when(queryRepository.findAll(any(PublicationParams.class))).thenReturn(items);
-
-        PagedResponse<PublicationDto> result = service.list(params);
-
-        assertThat(result.content()).containsExactly(first, second);
-        assertThat(result.totalElements()).isEqualTo(12);
-        assertThat(result.page()).isEqualTo(params.getPage());
-        assertThat(result.size()).isEqualTo(params.getSize());
-        verify(queryRepository).findAll(eq(params));
-        verifyNoMoreInteractions(queryRepository);
-
-        log.info("paged, {}",result);
+    @BeforeEach
+    void setUp() {
+        service = new PublicationQueryService(queryRepository, publicationRepository,
+                new StorageProperties("/tmp/test-storage"));
     }
 
     @Test
-    void list_shouldReturnZeroTotalWhenRepositoryReturnsEmptyList() {
+    void findAll_shouldDelegateToRepository() {
         PublicationParams params = new PublicationParams();
+        PublicationResponse first = publicationResponse("pub-1");
+        PublicationResponse second = publicationResponse("pub-2");
+        Page<PublicationResponse> page = new PageImpl<>(List.of(first, second), PageRequest.of(0, 10), 12);
 
-        when(queryRepository.findAll(any(PublicationParams.class))).thenReturn(List.of());
+        when(queryRepository.findAll(any(PublicationParams.class))).thenReturn(page);
 
-        PagedResponse<PublicationDto> result = service.list(params);
+        Page<PublicationResponse> result = service.findAll(params);
 
-        assertThat(result.content()).isEmpty();
-        assertThat(result.totalElements()).isZero();
-        assertThat(result.page()).isEqualTo(params.getPage());
-        assertThat(result.size()).isEqualTo(params.getSize());
+        assertThat(result.getContent()).containsExactly(first, second);
+        assertThat(result.getTotalElements()).isEqualTo(12);
         verify(queryRepository).findAll(eq(params));
         verifyNoMoreInteractions(queryRepository);
 
-        log.info("empty paged, {}",result);
+        log.info("paged, {}", result);
+    }
+
+    @Test
+    void findAll_shouldReturnEmptyPageWhenRepositoryReturnsEmpty() {
+        PublicationParams params = new PublicationParams();
+        Page<PublicationResponse> emptyPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+
+        when(queryRepository.findAll(any(PublicationParams.class))).thenReturn(emptyPage);
+
+        Page<PublicationResponse> result = service.findAll(params);
+
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isZero();
+        verify(queryRepository).findAll(eq(params));
+        verifyNoMoreInteractions(queryRepository);
+
+        log.info("empty paged, {}", result);
     }
 
     @Test
     void findById_shouldReturnPublicationWhenExists() {
         Long id = 10L;
-        PublicationDto expected = publicationDto("pub-10", null);
+        PublicationResponse expected = publicationResponse("pub-10");
 
         when(queryRepository.findById(any(Long.class))).thenReturn(Optional.of(expected));
 
-        PublicationDto result = service.findById(id);
+        PublicationResponse result = service.findById(id);
 
         assertThat(result).isEqualTo(expected);
         verify(queryRepository).findById(eq(id));
@@ -98,8 +107,8 @@ class PublicationQueryServiceTest {
         verifyNoMoreInteractions(queryRepository);
     }
 
-    private static PublicationDto publicationDto(String id, Integer totalCount) {
-        return new PublicationDto(
+    private static PublicationResponse publicationResponse(String id) {
+        return new PublicationResponse(
                 id,
                 "title",
                 "description",
@@ -107,14 +116,12 @@ class PublicationQueryServiceTest {
                 "PUBLISHED",
                 null,
                 "file.pdf",
-                "/tmp/file.pdf",
                 123,
                 "Creator",
                 "Manager",
                 1,
                 null,
-                null,
-                totalCount
+                null
         );
     }
 }

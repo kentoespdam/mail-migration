@@ -1,7 +1,7 @@
 package id.perumdamts.mail.repository.core.jooq;
 
-import id.perumdamts.mail.dto.core.publication.PublicationDto;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
+import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.entity.core.Publication;
 import id.perumdamts.mail.entity.master.DocumentType;
@@ -11,6 +11,9 @@ import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.SortField;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -31,7 +34,7 @@ public class PublicationQueryRepository {
         this.encoder = encoder;
     }
 
-    public List<PublicationDto> findAll(PublicationParams params) {
+    public Page<PublicationResponse> findAll(PublicationParams params) {
         Condition condition = field("p.status").ne(inline("DELETED"));
 
         if (params.getStatus() != null) {
@@ -53,8 +56,7 @@ public class PublicationQueryRepository {
 
         SortField<?> sort = params.toSortField();
 
-
-        return dsl.select(
+        var records = dsl.select(
                         field("p.id"),
                         field("p.judul"),
                         field("p.desk"),
@@ -63,7 +65,6 @@ public class PublicationQueryRepository {
                         field("p.status"),
                         field("p.published_date"),
                         field("p.file_name"),
-                        field("p.file_path"),
                         field("p.file_size"),
                         field("p.created_by_name"),
                         field("p.created_by_title"),
@@ -78,13 +79,17 @@ public class PublicationQueryRepository {
                 .orderBy(sort)
                 .limit(params.getSize())
                 .offset(params.offset())
-                .fetch(this::toDto)
-                .stream()
+                .fetch();
+
+        long total = records.isEmpty() ? 0 : records.getFirst().get(field("total_count"), Long.class);
+        List<PublicationResponse> content = records.map(this::toDto).stream()
                 .filter(java.util.Objects::nonNull)
                 .toList();
+
+        return new PageImpl<>(content, PageRequest.of(params.getPage(), params.getSize()), total);
     }
 
-    public Optional<PublicationDto> findById(Long id) {
+    public Optional<PublicationResponse> findById(Long id) {
         var result = dsl.select(
                         field("p.id"),
                         field("p.judul"),
@@ -94,7 +99,6 @@ public class PublicationQueryRepository {
                         field("p.status"),
                         field("p.published_date"),
                         field("p.file_name"),
-                        field("p.file_path"),
                         field("p.file_size"),
                         field("p.created_by_name"),
                         field("p.created_by_title"),
@@ -106,21 +110,12 @@ public class PublicationQueryRepository {
                 .leftJoin(table("jenis_dokumen").as("jd")).on(field("jd.id").eq(field("p.type")))
                 .where(field("p.id").eq(id))
                 .and(field("p.status").ne(inline("DELETED")))
-                .fetchOne(this::toDtoNoCount);
+                .fetchOne(this::toDto);
 
         return Optional.ofNullable(result);
     }
 
-    private PublicationDto toDto(Record r) {
-        Integer totalCount = r.get(field("total_count"), Integer.class);
-        return mapToPublicationDto(r, totalCount != null ? totalCount : 0);
-    }
-
-    private PublicationDto toDtoNoCount(Record r) {
-        return mapToPublicationDto(r, null);
-    }
-
-    private PublicationDto mapToPublicationDto(Record r, Integer totalCount) {
+    private PublicationResponse toDto(Record r) {
         Long id = r.get(field("p.id"), Long.class);
         if (id == null) {
             log.warn("Null id found in publication record, skipping");
@@ -131,7 +126,7 @@ public class PublicationQueryRepository {
         String docTypeName = r.get(field("jd.jenis_dokumen"), String.class);
         DocumentTypeLookup docType = docTypeId != null ? new DocumentTypeLookup(encoder.encode(DocumentType.class, docTypeId), docTypeName) : null;
 
-        return new PublicationDto(
+        return new PublicationResponse(
                 encoder.encode(Publication.class, id),
                 r.get(field("p.judul"), String.class),
                 r.get(field("p.desk"), String.class),
@@ -139,14 +134,12 @@ public class PublicationQueryRepository {
                 r.get(field("p.status"), String.class),
                 r.get(field("p.published_date"), LocalDateTime.class),
                 r.get(field("p.file_name"), String.class),
-                r.get(field("p.file_path"), String.class),
                 r.get(field("p.file_size"), Integer.class),
                 r.get(field("p.created_by_name"), String.class),
                 r.get(field("p.created_by_title"), String.class),
                 r.get(field("p.created_by_user_id"), Integer.class),
                 r.get(field("p.created_at"), LocalDateTime.class),
-                r.get(field("p.updated_at"), LocalDateTime.class),
-                totalCount
+                r.get(field("p.updated_at"), LocalDateTime.class)
         );
     }
 }

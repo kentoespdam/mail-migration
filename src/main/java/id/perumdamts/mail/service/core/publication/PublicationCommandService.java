@@ -2,7 +2,7 @@ package id.perumdamts.mail.service.core.publication;
 
 import id.perumdamts.mail.config.StorageProperties;
 import id.perumdamts.mail.dto.core.publication.CreatePublicationRequest;
-import id.perumdamts.mail.dto.core.publication.PublicationDto;
+import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.dto.core.publication.PublicationMapper;
 import id.perumdamts.mail.dto.core.publication.UpdatePublicationRequest;
 import id.perumdamts.mail.entity.core.Publication;
@@ -63,29 +63,29 @@ public class PublicationCommandService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public PublicationDto create(CreatePublicationRequest request, MultipartFile file,
-                                  MailPrincipal principal) {
+    public PublicationResponse create(CreatePublicationRequest request, MailPrincipal principal) {
         var pub = new Publication();
-        pub.setTitle(request.title());
-        pub.setDescription(request.description());
-        long documentTypeId = encoder.decode(DocumentType.class, request.documentTypeId());
+        pub.setTitle(request.getTitle());
+        pub.setDescription(request.getDescription());
+        long documentTypeId = encoder.decode(DocumentType.class, request.getDocumentTypeId());
         pub.setDocumentType(documentTypeRepository.getReferenceById(documentTypeId));
         pub.setCreatedByUserId(Integer.parseInt(principal.userId()));
         pub.setCreatedByName(principal.name());
         pub.setCreatedAt(LocalDateTime.now());
 
+        var file = request.getFile();
         if (file != null && !file.isEmpty()) {
             allowedFileTypeService.validate("PUBLICATION", file);
             storeFile(pub, file);
         }
 
-        if (request.publish()) {
+        if (request.isPublish()) {
             pub.publish();
         }
 
         pub = publicationRepository.save(pub);
 
-        if (request.publish()) {
+        if (request.isPublish()) {
             eventPublisher.publishEvent(new PublicationPublishedEvent(pub.getId(), principal.name()));
         }
 
@@ -94,16 +94,16 @@ public class PublicationCommandService {
 
     @Transactional
     @PreAuthorize("hasRole('ADMIN')")
-    public PublicationDto update(Long id, UpdatePublicationRequest request, MultipartFile file,
-                                  MailPrincipal principal) {
+    public PublicationResponse update(Long id, UpdatePublicationRequest request, MailPrincipal principal) {
         var pub = getOrThrow(id);
 
-        pub.setTitle(request.title());
-        pub.setDescription(request.description());
-        long documentTypeId = encoder.decode(DocumentType.class, request.documentTypeId());
+        pub.setTitle(request.getTitle());
+        pub.setDescription(request.getDescription());
+        long documentTypeId = encoder.decode(DocumentType.class, request.getDocumentTypeId());
         pub.setDocumentType(documentTypeRepository.getReferenceById(documentTypeId));
         pub.setUpdatedAt(LocalDateTime.now());
 
+        var file = request.getFile();
         if (file != null && !file.isEmpty()) {
             allowedFileTypeService.validate("PUBLICATION", file);
             deleteOldFile(pub);
@@ -111,13 +111,13 @@ public class PublicationCommandService {
         }
 
         boolean wasPublished = pub.isPublished();
-        if (request.publish() && pub.isDraft()) {
+        if (request.isPublish() && pub.isDraft()) {
             pub.publish();
         }
 
         pub = publicationRepository.save(pub);
 
-        if (request.publish() && !wasPublished) {
+        if (request.isPublish() && !wasPublished) {
             eventPublisher.publishEvent(new PublicationPublishedEvent(pub.getId(), principal.name()));
         }
 

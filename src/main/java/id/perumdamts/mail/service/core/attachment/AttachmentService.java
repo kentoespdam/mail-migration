@@ -1,5 +1,20 @@
 package id.perumdamts.mail.service.core.attachment;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import id.perumdamts.mail.config.StorageProperties;
 import id.perumdamts.mail.dto.core.attachment.AttachmentMapper;
 import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
@@ -10,38 +25,19 @@ import id.perumdamts.mail.repository.core.jpa.AttachmentDownloadHistoryRepositor
 import id.perumdamts.mail.repository.core.jpa.AttachmentRepository;
 import id.perumdamts.mail.security.MailPrincipal;
 import jakarta.persistence.EntityNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @Transactional(readOnly = true)
 public class AttachmentService {
-
-    private static final Logger log = LoggerFactory.getLogger(AttachmentService.class);
-
     private final AttachmentRepository repository;
     private final AttachmentDownloadHistoryRepository historyRepository;
     private final AttachmentMapper mapper;
     private final Path storagePath;
 
     public AttachmentService(AttachmentRepository repository,
-                             AttachmentDownloadHistoryRepository historyRepository,
-                             AttachmentMapper mapper,
-                             StorageProperties storageProperties) {
+            AttachmentDownloadHistoryRepository historyRepository,
+            AttachmentMapper mapper,
+            StorageProperties storageProperties) {
         this.repository = repository;
         this.historyRepository = historyRepository;
         this.mapper = mapper;
@@ -65,7 +61,7 @@ public class AttachmentService {
 
     @Transactional
     public AttachmentResponse upload(MultipartFile file, AttachmentRefType refType, Long refId,
-                                     String docNotes, MailPrincipal principal) {
+            String docNotes, MailPrincipal principal) {
         String originalFilename = file.getOriginalFilename();
         String fileExt = extractExtension(originalFilename);
         String systemFilename = UUID.randomUUID() + (fileExt.isEmpty() ? "" : "." + fileExt);
@@ -102,8 +98,7 @@ public class AttachmentService {
                 attachment.getId(),
                 parseUserId(principal.userId()),
                 principal.name(),
-                null
-        ));
+                null));
 
         Path filePath = storagePath.resolve(attachment.getSystemFilename()).normalize();
         if (!filePath.startsWith(storagePath)) {
@@ -135,7 +130,8 @@ public class AttachmentService {
     }
 
     private String extractExtension(String filename) {
-        if (filename == null) return "";
+        if (filename == null)
+            return "";
         int dot = filename.lastIndexOf('.');
         return dot >= 0 ? filename.substring(dot + 1).toLowerCase() : "";
     }
@@ -148,5 +144,6 @@ public class AttachmentService {
         }
     }
 
-    public record DownloadResult(Resource resource, String filename, Integer fileSize) {}
+    public record DownloadResult(Resource resource, String filename, Integer fileSize) {
+    }
 }

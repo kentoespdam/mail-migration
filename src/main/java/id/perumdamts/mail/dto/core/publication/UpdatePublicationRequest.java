@@ -1,11 +1,16 @@
 package id.perumdamts.mail.dto.core.publication;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
-public record UpdatePublicationRequest(
-        @NotBlank String title,
-        String description,
-        @NotBlank String documentTypeId,
-        boolean publish
-) {
+@Data
+public class UpdatePublicationRequest {
+    @NotBlank
+    private String title;
+    private String description;
+    @NotBlank
+    private String documentTypeId;
+    private boolean publish;
+    private MultipartFile file;
 }
