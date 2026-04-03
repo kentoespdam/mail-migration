@@ -1,0 +1,18 @@
+services:
+  # ── Builder (JAR only) ─────────────────────────
+  builder:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.builder
+    image: smartoffice-mail-builder:latest
+    container_name: mail-builder
+    # Run container as host user to ensure build outputs are not owned by root
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      # Mount full project to run build on source
+      - ..:/app
+      # Cache downloaded dependencies
+      - builder-gradle-cache:/home/gradle/.gradle
+
+volumes:
+  builder-gradle-cache:

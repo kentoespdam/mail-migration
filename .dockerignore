@@ -6,3 +6,5 @@ build/
 compose.yml
 docker-compose.yml
 .git/
+*.md
+docker/
