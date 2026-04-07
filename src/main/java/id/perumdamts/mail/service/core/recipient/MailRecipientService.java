@@ -66,7 +66,9 @@ public class MailRecipientService {
         }
 
         var recipient = createRecipientFromEmployee(mail, emp, circulationType);
-        return recipientMapper.toResponse(recipientRepository.save(recipient));
+        var saved = recipientRepository.save(recipient);
+        rebuildToStr(mail);
+        return recipientMapper.toResponse(saved);
     }
 
     /**
@@ -111,6 +113,7 @@ public class MailRecipientService {
                 .map(recipientMapper::toResponse)
                 .toList();
 
+        rebuildToStr(mail);
         return BatchRecipientResponse.of(succeeded, failed, request.empIds().size());
     }
 
@@ -119,6 +122,7 @@ public class MailRecipientService {
         Mail mail = getMailOrThrow(mailId);
         assertCanManageRecipients(mail, currentUserId);
         recipientRepository.deleteByMailIdAndId(mailId, recipientId);
+        rebuildToStr(mail);
     }
 
     @Transactional
@@ -126,6 +130,7 @@ public class MailRecipientService {
         Mail mail = getMailOrThrow(mailId);
         assertCanManageRecipients(mail, currentUserId);
         recipientRepository.deleteAllByMailIdAndIdIn(mailId, recipientIds);
+        rebuildToStr(mail);
     }
 
     @Transactional
@@ -167,9 +172,11 @@ public class MailRecipientService {
                 })
                 .toList();
 
-        return recipientRepository.saveAll(toSave).stream()
+        var saved = recipientRepository.saveAll(toSave).stream()
                 .map(recipientMapper::toResponse)
                 .toList();
+        rebuildToStr(mail);
+        return saved;
     }
 
     /**
@@ -215,9 +222,11 @@ public class MailRecipientService {
             toSave.add(originator);
         }
 
-        return recipientRepository.saveAll(toSave).stream()
+        var saved = recipientRepository.saveAll(toSave).stream()
                 .map(recipientMapper::toResponse)
                 .toList();
+        rebuildToStr(mail);
+        return saved;
     }
 
     private MailRecipient createRecipientFromEmployee(Mail mail, EmployeeDto emp, CirculationType circulationType) {
@@ -235,6 +244,12 @@ public class MailRecipientService {
     private Mail getMailOrThrow(Integer mailId) {
         return mailRepository.findById(mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
+    }
+
+    private void rebuildToStr(Mail mail) {
+        List<MailRecipient> recipients = recipientRepository.findByMailId(mail.getId());
+        mail.setToStr(Mail.buildToStr(recipients));
+        mailRepository.save(mail);
     }
 
     private void assertCanManageRecipients(Mail mail, Integer currentUserId) {

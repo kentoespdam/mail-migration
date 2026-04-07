@@ -111,6 +111,9 @@ public class MailCommandService {
 
         mail.setUpdatedDate(LocalDateTime.now());
 
+        List<MailRecipient> recipients = recipientRepository.findByMailId(mailId);
+        mail.setToStr(Mail.buildToStr(recipients));
+
         return mailMapper.toResponse(mailRepository.save(mail));
     }
 

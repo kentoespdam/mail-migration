@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "mail")
@@ -107,6 +108,13 @@ public class Mail {
 
     public boolean isSent() {
         return this.status == MailStatus.SENT.getDbValue();
+    }
+
+    public static String buildToStr(List<MailRecipient> recipients) {
+        return recipients.stream()
+                .map(r -> r.getEmpName() != null ? r.getEmpName() : "User#" + r.getUserId())
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
     }
 
     public void send(String mailNumber) {

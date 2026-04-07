@@ -121,10 +121,7 @@ public class MailSendService {
      * Build recipient list string untuk toStr field.
      */
     private String buildToStr(List<MailRecipient> recipients) {
-        return recipients.stream()
-                .map(r -> r.getEmpName() != null ? r.getEmpName() : "User#" + r.getUserId())
-                .reduce((a, b) -> a + ", " + b)
-                .orElse("");
+        return Mail.buildToStr(recipients);
     }
 
     private Mail getMailOrThrow(Integer mailId) {
