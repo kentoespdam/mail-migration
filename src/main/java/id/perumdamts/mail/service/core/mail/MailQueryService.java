@@ -1,10 +1,7 @@
 package id.perumdamts.mail.service.core.mail;
 
 import id.perumdamts.mail.dto.common.PagedResponse;
-import id.perumdamts.mail.dto.core.mail.MailReportRequest;
-import id.perumdamts.mail.dto.core.mail.MailReportResponse;
-import id.perumdamts.mail.dto.core.mail.MailSearchRequest;
-import id.perumdamts.mail.dto.core.mail.MailSummaryResponse;
+import id.perumdamts.mail.dto.core.mail.*;
 import id.perumdamts.mail.repository.core.jooq.MailQueryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +18,7 @@ public class MailQueryService {
         this.mailQueryRepository = mailQueryRepository;
     }
 
-    public List<MailSummaryResponse> getThread(Integer mailId) {
+    public List<MailSummaryResponse> getThread(Long mailId) {
         return mailQueryRepository.findThread(mailId);
     }
 
@@ -29,6 +26,14 @@ public class MailQueryService {
         List<MailSummaryResponse> items = mailQueryRepository.searchMails(request);
         long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
         return PagedResponse.of(items, request, total);
+    }
+
+    public List<MailTrackingResponse> getTracking(Long mailId) {
+        return mailQueryRepository.findTracking(mailId);
+    }
+
+    public List<RecipientReadStatusResponse> getReadStatus(Long mailId) {
+        return mailQueryRepository.findReadStatus(mailId);
     }
 
     public PagedResponse<MailReportResponse> getReport(MailReportRequest request) {

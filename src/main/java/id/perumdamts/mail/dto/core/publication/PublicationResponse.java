@@ -18,7 +18,7 @@ public class PublicationResponse implements HasSqid {
     Integer fileSize;
     String createdByName;
     String createdByTitle;
-    Integer createdByUserId;
+    String createdByUserId;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

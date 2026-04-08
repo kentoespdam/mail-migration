@@ -44,11 +44,10 @@ public class PublicationQueryRepository {
             String kw = "%" + params.getKeyword() + "%";
             condition = condition.and(
                     field("p.judul").likeIgnoreCase(kw)
-                            .or(field("p.desk").likeIgnoreCase(kw))
-            );
+                            .or(field("p.desk").likeIgnoreCase(kw)));
         }
-        if (params.getTypeId() != null) {
-            condition = condition.and(field("p.type").eq(params.getTypeId()));
+        if (params.getTypeId() != null && !params.getTypeId().isBlank()) {
+            condition = condition.and(field("p.type").eq(encoder.decode(DocumentType.class, params.getTypeId())));
         }
         if (params.getStartDate() != null && params.getEndDate() != null) {
             condition = condition.and(field("p.published_date").between(params.getStartDate(), params.getEndDate()));
@@ -57,22 +56,21 @@ public class PublicationQueryRepository {
         SortField<?> sort = params.toSortField();
 
         var records = dsl.select(
-                        field("p.id"),
-                        field("p.judul"),
-                        field("p.desk"),
-                        field("p.type"),
-                        field("jd.jenis_dokumen"),
-                        field("p.status"),
-                        field("p.published_date"),
-                        field("p.file_name"),
-                        field("p.file_size"),
-                        field("p.created_by_name"),
-                        field("p.created_by_title"),
-                        field("p.created_by_user_id"),
-                        field("p.created_at"),
-                        field("p.updated_at"),
-                        count().over().as("total_count")
-                )
+                field("p.id"),
+                field("p.judul"),
+                field("p.desk"),
+                field("p.type"),
+                field("jd.jenis_dokumen"),
+                field("p.status"),
+                field("p.published_date"),
+                field("p.file_name"),
+                field("p.file_size"),
+                field("p.created_by_name"),
+                field("p.created_by_title"),
+                field("p.created_by_user_id"),
+                field("p.created_at"),
+                field("p.updated_at"),
+                count().over().as("total_count"))
                 .from(table("area_publik").as("p"))
                 .leftJoin(table("jenis_dokumen").as("jd")).on(field("jd.id").eq(field("p.type")))
                 .where(condition)
@@ -91,21 +89,20 @@ public class PublicationQueryRepository {
 
     public Optional<PublicationResponse> findById(Long id) {
         var result = dsl.select(
-                        field("p.id"),
-                        field("p.judul"),
-                        field("p.desk"),
-                        field("p.type"),
-                        field("jd.jenis_dokumen"),
-                        field("p.status"),
-                        field("p.published_date"),
-                        field("p.file_name"),
-                        field("p.file_size"),
-                        field("p.created_by_name"),
-                        field("p.created_by_title"),
-                        field("p.created_by_user_id"),
-                        field("p.created_at"),
-                        field("p.updated_at")
-                )
+                field("p.id"),
+                field("p.judul"),
+                field("p.desk"),
+                field("p.type"),
+                field("jd.jenis_dokumen"),
+                field("p.status"),
+                field("p.published_date"),
+                field("p.file_name"),
+                field("p.file_size"),
+                field("p.created_by_name"),
+                field("p.created_by_title"),
+                field("p.created_by_user_id"),
+                field("p.created_at"),
+                field("p.updated_at"))
                 .from(table("area_publik").as("p"))
                 .leftJoin(table("jenis_dokumen").as("jd")).on(field("jd.id").eq(field("p.type")))
                 .where(field("p.id").eq(id))
@@ -124,7 +121,11 @@ public class PublicationQueryRepository {
 
         Long docTypeId = r.get(field("p.type"), Long.class);
         String docTypeName = r.get(field("jd.jenis_dokumen"), String.class);
-        DocumentTypeLookup docType = docTypeId != null ? new DocumentTypeLookup(encoder.encode(DocumentType.class, docTypeId), docTypeName) : null;
+        DocumentTypeLookup docType = docTypeId != null
+                ? new DocumentTypeLookup(encoder.encode(DocumentType.class, docTypeId), docTypeName)
+                : null;
+
+        Long createdByUserId = r.get(field("p.created_by_user_id"), Long.class);
 
         return new PublicationResponse(
                 encoder.encode(Publication.class, id),
@@ -137,9 +138,8 @@ public class PublicationQueryRepository {
                 r.get(field("p.file_size"), Integer.class),
                 r.get(field("p.created_by_name"), String.class),
                 r.get(field("p.created_by_title"), String.class),
-                r.get(field("p.created_by_user_id"), Integer.class),
+                createdByUserId != null ? encoder.encode(Publication.class, createdByUserId) : null,
                 r.get(field("p.created_at"), LocalDateTime.class),
-                r.get(field("p.updated_at"), LocalDateTime.class)
-        );
+                r.get(field("p.updated_at"), LocalDateTime.class));
     }
 }

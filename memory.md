@@ -21,10 +21,11 @@
 
 - **CQRS-lite**: `CommandService` (JPA write) + `QueryService` (JOOQ read)
 - **Layered**: Controller → Service → Repository · Domain Events via `@TransactionalEventListener` + `@Async`
-- **Soft Delete**: `@SQLRestriction("status != 'DELETED'")` on all entities
+- **Soft Delete**: `@SQLRestriction("status != 'DELETED'")` on all entities · `MailFolder`: `folder_status = 1` (1=Active, 3=Deleted)
 - **Security**: `AppWriteAuthFilter extends OncePerRequestFilter` — JWT validation per request
 - **Tenant**: Replace `CLIENT_CODE if-else` with `TenantConfig`
 - **Virtual Threads**: `spring.threads.virtual.enabled: true` — avoid `synchronized` (use `ReentrantLock`)
+- **CQRS Split**: All core modules now follow Command/Query separation (Folder, Recipient, Mail, Archive, Publication)
 
 ---
 
@@ -85,7 +86,7 @@ id.perumdamts.mail/
 │   │   ├── PagedResponse.java
 │   │   └── JpaSearchRequest.java
 │   ├── core/
-│   │   ├── mail/              # Mail DTOs + Mapper
+│   │   ├── mail/              # Mail DTOs + Mapper (incl. MailTrackingResponse, RecipientReadStatusResponse)
 │   │   ├── archive/           # Archive DTOs + Mapper
 │   │   ├── folder/            # Folder DTOs + Mapper
 │   │   ├── recipient/         # Recipient DTOs + Mapper
@@ -102,7 +103,7 @@ id.perumdamts.mail/
 │   │   ├── ArchiveLocation.java
 │   │   ├── Attachment.java
 │   │   ├── AttachmentDownloadHistory.java
-│   │   ├── PersonalFolder.java
+│   │   ├── MailFolder.java (replaced PersonalFolder)
 │   │   ├── Publication.java
 │   │   └── PrintLog.java
 │   └── master/                # 5 JPA entities
@@ -141,12 +142,18 @@ id.perumdamts.mail/
 │   ├── core/
 │   │   ├── mail/              # CQRS split + numbering strategy
 │   │   ├── archive/           # CQRS split + numbering
-│   │   ├── folder/            # MailFolderService
-│   │   ├── recipient/         # MailRecipientService
+│   │   ├── folder/            # CQRS split: MailFolderCommandService + MailFolderQueryService
+│   │   ├── recipient/         # CQRS split: MailRecipientCommandService + MailRecipientQueryService
 │   │   ├── attachment/        # AttachmentService
-│   │   └── publication/       # PublicationCommand/QueryService
+│   │   └── publication/       # CQRS split: PublicationCommand/QueryService
 │   └── master/                # 3 master data services
-└── util/                      # 2 utility classes
+├── util/                      # 2 utility classes
+└── test/
+    └── java/
+        └── id.perumdamts.mail/
+            ├── controller/core/   # MailControllerTest, MailFolderControllerTest, MailRecipientControllerTest
+            ├── repository/core/jooq/
+            └── service/core/publication/
 ```
 
 ---
@@ -275,7 +282,7 @@ AppWriteUser user = webClient.get().uri("/v1/account")
 
 // User record — roles in prefs.roles (NOT labels)
 record AppWriteUser(@JsonProperty("$id") String id, String name, String email, AppWritePrefs prefs) {}
-record AppWritePrefs(List<String> roles)  // ["USER","ADMIN","SYSTEM"]
+record AppWritePrefs(List<String> roles) {}  // ["USER","ADMIN","SYSTEM"]
 
 // Cache: Redis "appwrite-tokens", key = token.substring(0,20), TTL 5m
 ```
@@ -353,8 +360,10 @@ app:
 ### Other Core Services
 | Service | Package | Purpose |
 |---------|---------|---------|
-| `MailFolderService` | `service/core/folder` | Folder CRUD, move mails |
-| `MailRecipientService` | `service/core/recipient` | Batch recipient management |
+| `MailFolderCommandService` | `service/core/folder` | Folder CRUD, move/delete/restore mails, empty trash |
+| `MailFolderQueryService` | `service/core/folder` | Folder tree, counters, mails in folder search |
+| `MailRecipientCommandService` | `service/core/recipient` | Batch recipient management, copy from/thread, notif flags |
+| `MailRecipientQueryService` | `service/core/recipient` | List recipients |
 | `AttachmentService` | `service/core/attachment` | File upload/download |
 | `PublicationCommandService` | `service/core/publication` | Publication CRUD |
 | `PublicationQueryService` | `service/core/publication` | Publication queries |
@@ -429,11 +438,18 @@ All listeners use `@TransactionalEventListener(phase = AFTER_COMMIT)` + `@Async`
 - `MailCategory`: `@Formula codeName` · unique(code+type)
 - `QuickMessage`: `@Cacheable("tenantConfig")` Redis
 - `MailFolder`: JOOQ for `FolderCounterRepository`, 2-level soft delete (trash first, then purge)
+  - **Entity renamed**: `PersonalFolder` → `MailFolder` (better naming consistency)
+  - **CQRS split**: `MailFolderCommandService` (writes) + `MailFolderQueryService` (reads)
 - `MailRecipient`: Remove denormalization `emp_name`/`pos_name` (but keep as fallback)
+  - **CQRS split**: `MailRecipientCommandService` (writes) + `MailRecipientQueryService` (reads)
+  - **New features**: `copyFrom()` for reply, `copyThread()` for reply-all with distinct recipients
 - `MailArchive`: `@Embedded ArchiveLocation`
+- `SystemFolder`: Updated to use `Long id` (was `Integer`) · added `isMovable()`, `isCountable()`, `requiresRecipientJoin()` methods
 - Domain events: statistics + notifications async via `@TransactionalEventListener` + `@Async`
 - Mail numbering: Strategy pattern per tenant (`MailNumberGenerator`)
 - Virtual threads: Avoid `synchronized` blocks (causes thread pinning) — use `ReentrantLock`
+- **Testing**: Added controller tests for Mail, MailFolder, MailRecipient + repository/service tests
+- **New DTOs**: `MailTrackingResponse`, `RecipientReadStatusResponse` for tracking/read status
 
 ---
 

@@ -1,5 +1,6 @@
 package id.perumdamts.mail.entity.core;
 
+import id.perumdamts.mail.entity.SqidEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,7 +11,7 @@ import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
 
 /**
- * Personal folder yang dibuat oleh user.
+ * Mail folder yang dibuat oleh user.
  * DB column {@code folder_status} adalah INT: 1=Active, 3=Deleted (soft).
  */
 @Entity
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter
 @Setter
-public class PersonalFolder {
+public class MailFolder implements SqidEntity {
 
     private static final int STATUS_ACTIVE = 1;
     private static final int STATUS_DELETED = 3;
@@ -28,13 +29,13 @@ public class PersonalFolder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "folder_id")
-    private Integer id;
+    private Long id;
 
     @Column(name = "parent_folder_id", nullable = false)
-    private Integer parentFolderId;
+    private Long parentFolderId;
 
     @Column(name = "owner_id", nullable = false, updatable = false)
-    private Integer ownerId;
+    private Long ownerId;
 
     @Column(name = "folder_icon_cls", length = 45)
     private String iconClsFolder;
@@ -48,7 +49,7 @@ public class PersonalFolder {
     @Column(name = "folder_created_date")
     private LocalDateTime createdDate;
 
-    public PersonalFolder(Integer ownerId, Integer parentFolderId, String name) {
+    public MailFolder(Long ownerId, Long parentFolderId, String name) {
         this.ownerId = ownerId;
         this.parentFolderId = parentFolderId;
         this.name = name.trim();
@@ -63,7 +64,7 @@ public class PersonalFolder {
         return this.ownerId != null && this.ownerId == 0;
     }
 
-    public boolean isOwnedBy(Integer userId) {
+    public boolean isOwnedBy(Long userId) {
         return this.ownerId.equals(userId);
     }
 

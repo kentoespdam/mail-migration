@@ -7,25 +7,23 @@ import id.perumdamts.mail.enums.SystemFolder;
  * Include counter badge (unread, total) untuk menampilkan jumlah mail.
  */
 public record MailFolderResponse(
-        Integer id,
-        Integer parentFolderId,
-        Integer ownerId,
+        String id,
+        String parentFolderId,
+        String ownerId,
         String name,
         String iconCls,
         boolean system,
         Long unread,
-        Long total
-) {
+        Long total) {
     public static MailFolderResponse fromSystemFolder(SystemFolder sf) {
         return new MailFolderResponse(
-                sf.getId(),
-                sf.getParent() != null ? sf.getParent().getId() : 0,
-                0,
+                String.valueOf(sf.getId()),
+                sf.getParent() != null ? String.valueOf(sf.getParent().getId()) : "0",
+                "0",
                 sf.getDisplayName(),
                 "email",
                 true,
                 0L,
-                0L
-        );
+                0L);
     }
 }

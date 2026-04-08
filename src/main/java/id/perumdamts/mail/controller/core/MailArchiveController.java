@@ -22,7 +22,7 @@ public class MailArchiveController {
     private final MailArchiveQueryService queryService;
 
     public MailArchiveController(MailArchiveCommandService commandService,
-                                  MailArchiveQueryService queryService) {
+            MailArchiveQueryService queryService) {
         this.commandService = commandService;
         this.queryService = queryService;
     }
@@ -68,7 +68,7 @@ public class MailArchiveController {
     public PagedResponse<ArchiveSummaryResponse> searchWithAcl(
             @AuthenticationPrincipal MailPrincipal principal,
             ArchiveSearchRequest request,
-            @RequestParam List<Integer> positionIds) {
+            @RequestParam List<Long> positionIds) {
         return queryService.searchWithAcl(request, positionIds);
     }
 

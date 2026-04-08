@@ -16,21 +16,20 @@ public class MailSearchRequest extends PagedRequest {
 
     private static final Map<String, String> ALLOWED_SORTS = Map.of(
             "createdDate", "m.m_created_date",
-            "mailDate",    "m.m_date",
-            "subject",     "m.m_subject",
-            "mailNumber",  "m.m_no"
-    );
+            "mailDate", "m.m_date",
+            "subject", "m.m_subject",
+            "mailNumber", "m.m_no");
     private static final String DEFAULT_SORT = "m.m_created_date";
 
     // ── Filter fields ─────────────────────────────────────────────────────────
 
-    private String    keyword;
-    private Integer   mailTypeId;
-    private Integer   mailCategoryId;
+    private String keyword;
+    private String mailTypeId;
+    private String mailCategoryId;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Boolean   hasAttachment;
-    private Integer   senderId;
+    private Boolean hasAttachment;
+    private String senderId;
 
     // ── Constructors ──────────────────────────────────────────────────────────
 
@@ -41,10 +40,14 @@ public class MailSearchRequest extends PagedRequest {
     // ── Template methods ──────────────────────────────────────────────────────
 
     @Override
-    protected Map<String, String> allowedSorts()  { return ALLOWED_SORTS; }
+    protected Map<String, String> allowedSorts() {
+        return ALLOWED_SORTS;
+    }
 
     @Override
-    protected String defaultSortColumn()           { return DEFAULT_SORT; }
+    protected String defaultSortColumn() {
+        return DEFAULT_SORT;
+    }
 
     // ── Getters / Setters ─────────────────────────────────────────────────────
 

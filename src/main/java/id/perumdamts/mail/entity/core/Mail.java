@@ -1,5 +1,6 @@
 package id.perumdamts.mail.entity.core;
 
+import id.perumdamts.mail.entity.SqidEntity;
 import id.perumdamts.mail.entity.master.MailCategory;
 import id.perumdamts.mail.entity.master.MailType;
 import id.perumdamts.mail.enums.MailStatus;
@@ -19,12 +20,12 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
-public class Mail {
+public class Mail implements SqidEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "m_id")
-    private Integer id;
+    private Long id;
 
     @Column(name = "m_no", length = 100)
     private String mailNumber;
@@ -76,7 +77,7 @@ public class Mail {
     private LocalDateTime updatedDate;
 
     @Column(name = "m_created_by")
-    private Integer createdBy;
+    private Long createdBy;
 
     @Column(name = "m_created_by_name", length = 100)
     private String createdByName;

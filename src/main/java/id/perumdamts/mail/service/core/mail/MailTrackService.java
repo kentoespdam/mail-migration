@@ -22,7 +22,7 @@ public class MailTrackService {
     private final MailThreadService mailThreadService;
 
     public MailTrackService(MailQueryRepository mailQueryRepository,
-                            MailThreadService mailThreadService) {
+            MailThreadService mailThreadService) {
         this.mailQueryRepository = mailQueryRepository;
         this.mailThreadService = mailThreadService;
     }
@@ -34,7 +34,7 @@ public class MailTrackService {
      * @param mailId ID mail (bisa root atau child)
      * @return flat list mails dalam thread (chronological)
      */
-    public List<MailSummaryResponse> trackMail(Integer mailId) {
+    public List<MailSummaryResponse> trackMail(Long mailId) {
         return mailQueryRepository.findThread(mailId);
     }
 
@@ -45,7 +45,7 @@ public class MailTrackService {
      * @param mailId ID mail (bisa root atau child)
      * @return tree structure dengan parent-child relationship
      */
-    public List<MailThreadService.MailThreadNode> trackMailAsTree(Integer mailId) {
+    public List<MailThreadService.MailThreadNode> trackMailAsTree(Long mailId) {
         List<MailSummaryResponse> flatData = mailQueryRepository.findThread(mailId);
         return mailThreadService.buildTree(flatData);
     }
@@ -54,7 +54,7 @@ public class MailTrackService {
      * Get preview content dengan trimming untuk display.
      * Utility method untuk trim content surat.
      * 
-     * @param content content asli
+     * @param content   content asli
      * @param maxLength max length preview
      * @return trimmed content dengan "..." jika dipotong
      */
@@ -62,20 +62,20 @@ public class MailTrackService {
         if (content == null || content.isEmpty()) {
             return "";
         }
-        
+
         if (content.length() <= maxLength) {
             return content;
         }
-        
-        // Trim dan tambahkan "..." 
+
+        // Trim dan tambahkan "..."
         String trimmed = content.substring(0, maxLength).trim();
-        
+
         // Pastikan tidak cut di tengah kata
         int lastSpace = trimmed.lastIndexOf(' ');
         if (lastSpace > maxLength * 3 / 4) {
             trimmed = trimmed.substring(0, lastSpace);
         }
-        
+
         return trimmed + "...";
     }
 }

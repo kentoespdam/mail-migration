@@ -11,34 +11,34 @@ import java.util.Optional;
 
 public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
 
-    Optional<UserTask> findByUserIdAndMailId(Integer userId, Integer mailId);
+    Optional<UserTask> findByUserIdAndMailId(Long userId, Long mailId);
 
     @Query("SELECT u FROM UserTask u WHERE u.userId = :userId AND u.mailId = :mailId AND u.folderId != -1")
-    Optional<UserTask> findActiveByUserIdAndMailId(@Param("userId") Integer userId,
-                                                    @Param("mailId") Integer mailId);
+    Optional<UserTask> findActiveByUserIdAndMailId(@Param("userId") Long userId,
+            @Param("mailId") Long mailId);
 
     @Query("SELECT u FROM UserTask u WHERE u.userId = :userId AND u.mailId = :mailId")
-    Optional<UserTask> findByUserIdAndMailIdAnyFolder(@Param("userId") Integer userId,
-                                                       @Param("mailId") Integer mailId);
+    Optional<UserTask> findByUserIdAndMailIdAnyFolder(@Param("userId") Long userId,
+            @Param("mailId") Long mailId);
 
-    long countByUserIdAndFolderIdAndReadStatus(Integer userId, Integer folderId, Integer readStatus);
+    long countByUserIdAndFolderIdAndReadStatus(Long userId, Long folderId, Integer readStatus);
 
     @Modifying
     @Query("UPDATE UserTask u SET u.folderId = :toFolder WHERE u.userId = :userId AND u.mailId = :mailId AND u.folderId = :fromFolder")
-    int updateFolder(@Param("userId") Integer userId,
-                     @Param("mailId") Integer mailId,
-                     @Param("fromFolder") int fromFolder,
-                     @Param("toFolder") int toFolder);
+    int updateFolder(@Param("userId") Long userId,
+            @Param("mailId") Long mailId,
+            @Param("fromFolder") Long fromFolder,
+            @Param("toFolder") Long toFolder);
 
     @Modifying
     @Query("UPDATE UserTask u SET u.folderId = -1, u.restoreFolderId = 6 WHERE u.userId = :userId AND u.folderId = 6")
-    int emptyTrash(@Param("userId") Integer userId);
+    int emptyTrash(@Param("userId") Long userId);
 
     @Modifying
     @Query("UPDATE UserTask u SET u.folderId = :targetFolderId WHERE u.userId = :userId AND u.folderId = :sourceFolderId")
-    int relocateMails(@Param("userId") Integer userId,
-                      @Param("sourceFolderId") Integer sourceFolderId,
-                      @Param("targetFolderId") Integer targetFolderId);
+    int relocateMails(@Param("userId") Long userId,
+            @Param("sourceFolderId") Long sourceFolderId,
+            @Param("targetFolderId") Long targetFolderId);
 
     /**
      * Purge semua mail di folder DELETED (folder_id=6) untuk user tertentu.
@@ -46,7 +46,7 @@ public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
      */
     @Modifying
     @Query("UPDATE UserTask u SET u.folderId = -1, u.restoreFolderId = null WHERE u.userId = :userId AND u.folderId = 6")
-    int purgeTrash(@Param("userId") Integer userId);
+    int purgeTrash(@Param("userId") Long userId);
 
     /**
      * Restore mail dari trash ke folder asal.
@@ -54,12 +54,12 @@ public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
      */
     @Modifying
     @Query("UPDATE UserTask u SET u.folderId = u.restoreFolderId, u.restoreFolderId = null WHERE u.userId = :userId AND u.mailId = :mailId AND u.folderId = 6")
-    int restoreFromTrash(@Param("userId") Integer userId,
-                         @Param("mailId") Integer mailId);
+    int restoreFromTrash(@Param("userId") Long userId,
+            @Param("mailId") Long mailId);
 
     /**
      * Get semua UserTask untuk mail tertentu di folder DELETED.
      */
     @Query("SELECT u FROM UserTask u WHERE u.mailId = :mailId AND u.folderId = 6")
-    List<UserTask> findAllInTrashByMailId(@Param("mailId") Integer mailId);
+    List<UserTask> findAllInTrashByMailId(@Param("mailId") Long mailId);
 }

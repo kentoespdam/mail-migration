@@ -1,22 +1,22 @@
 package id.perumdamts.mail.repository.core.jpa;
 
-import id.perumdamts.mail.entity.core.PersonalFolder;
+import id.perumdamts.mail.entity.core.MailFolder;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface MailFolderRepository extends JpaRepository<PersonalFolder, Integer> {
+public interface MailFolderRepository extends JpaRepository<MailFolder, Long> {
 
-    List<PersonalFolder> findByOwnerIdOrderByParentFolderIdAscIdAsc(Integer ownerId);
+    List<MailFolder> findByOwnerIdOrderByParentFolderIdAscIdAsc(Long ownerId);
 
-    List<PersonalFolder> findByOwnerIdAndParentFolderId(Integer ownerId, Integer parentFolderId);
+    List<MailFolder> findByOwnerIdAndParentFolderId(Long ownerId, Long parentFolderId);
 
-    boolean existsByOwnerIdAndName(Integer ownerId, String name);
+    boolean existsByOwnerIdAndName(Long ownerId, String name);
 
-    boolean existsByOwnerIdAndNameAndIdNot(Integer ownerId, String name, Integer excludeId);
+    boolean existsByOwnerIdAndNameAndIdNot(Long ownerId, String name, Long excludeId);
 
-    @Query("SELECT f FROM PersonalFolder f WHERE f.parentFolderId = :parentId")
-    List<PersonalFolder> findActiveChildren(@Param("parentId") Integer parentId);
+    @Query("SELECT f FROM MailFolder f WHERE f.parentFolderId = :parentId")
+    List<MailFolder> findActiveChildren(@Param("parentId") Long parentId);
 }

@@ -18,7 +18,7 @@ public class MailArchiveQueryService {
     private final TenantConfig tenantConfig;
 
     public MailArchiveQueryService(ArchiveQueryRepository archiveQueryRepository,
-                                    TenantConfig tenantConfig) {
+            TenantConfig tenantConfig) {
         this.archiveQueryRepository = archiveQueryRepository;
         this.tenantConfig = tenantConfig;
     }
@@ -30,8 +30,9 @@ public class MailArchiveQueryService {
     }
 
     public PagedResponse<ArchiveSummaryResponse> searchWithAcl(ArchiveSearchRequest request,
-                                                                 List<Integer> positionIds) {
-        List<ArchiveSummaryResponse> items = archiveQueryRepository.searchWithAcl(request, positionIds, tenantConfig.officeCode());
+            List<Long> positionIds) {
+        List<ArchiveSummaryResponse> items = archiveQueryRepository.searchWithAcl(request, positionIds,
+                tenantConfig.officeCode());
         long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
         return PagedResponse.of(items, request, total);
     }

@@ -15,21 +15,20 @@ import java.util.Map;
 public class ArchiveSearchRequest extends PagedRequest {
 
     private static final Map<String, String> ALLOWED_SORTS = Map.of(
-            "createdDate",   "a.created_date",
-            "archiveDate",   "a.archive_date",
+            "createdDate", "a.created_date",
+            "archiveDate", "a.archive_date",
             "archiveNumber", "a.archive_no",
-            "subject",       "a.subject"
-    );
+            "subject", "a.subject");
     private static final String DEFAULT_SORT = "a.created_date";
 
     // ── Filter fields ─────────────────────────────────────────────────────────
 
-    private String    keyword;
-    private Integer   categoryId;
-    private Short     year;
+    private String keyword;
+    private String categoryId;
+    private Short year;
     private LocalDate startDate;
     private LocalDate endDate;
-    private Integer   status;
+    private Integer status;
 
     // ── Constructors ──────────────────────────────────────────────────────────
 
@@ -40,10 +39,14 @@ public class ArchiveSearchRequest extends PagedRequest {
     // ── Template methods ──────────────────────────────────────────────────────
 
     @Override
-    protected Map<String, String> allowedSorts()  { return ALLOWED_SORTS; }
+    protected Map<String, String> allowedSorts() {
+        return ALLOWED_SORTS;
+    }
 
     @Override
-    protected String defaultSortColumn()           { return DEFAULT_SORT; }
+    protected String defaultSortColumn() {
+        return DEFAULT_SORT;
+    }
 
     // ── Getters / Setters ─────────────────────────────────────────────────────
 

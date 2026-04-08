@@ -6,6 +6,7 @@ import id.perumdamts.mail.entity.core.PrintLog;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
 import id.perumdamts.mail.repository.core.jpa.PrintLogRepository;
 import id.perumdamts.mail.security.MailPrincipal;
+import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
@@ -28,45 +29,47 @@ public class MailSignatureService {
     private final PrintLogRepository printLogRepository;
     private final MailRepository mailRepository;
     private final HttpServletRequest httpServletRequest;
+    private final SqidsEncoder encoder;
 
     public MailSignatureService(PrintLogRepository printLogRepository,
-                                 MailRepository mailRepository,
-                                 HttpServletRequest httpServletRequest) {
+            MailRepository mailRepository,
+            HttpServletRequest httpServletRequest,
+            SqidsEncoder encoder) {
         this.printLogRepository = printLogRepository;
         this.mailRepository = mailRepository;
         this.httpServletRequest = httpServletRequest;
+        this.encoder = encoder;
     }
 
     /**
      * Generate verification code saat user mencetak surat.
      * Equivalent dengan signMe() di source PHP.
      * 
-     * @param mailId ID mail yang akan dicetak
+     * @param mailId    ID mail yang akan dicetak
      * @param principal user yang mencetak
      * @return auth code yang di-generate
      */
-    public String signMail(Integer mailId, MailPrincipal principal) {
+    public String signMail(Long mailId, MailPrincipal principal) {
         // Verify mail exists
-        Mail mail = getMailOrThrow(mailId);
-        
+        getMailOrThrow(mailId);
+
         // Generate unique auth code (fix: gunakan UUID instead of uniqid())
         String authCode = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
-        
+
         // Get IP address dan user agent dari request
         String ipAddress = getClientIpAddress();
         String userAgent = httpServletRequest.getHeader("User-Agent");
-        
+
         // Create print log record
         PrintLog printLog = PrintLog.create(
                 mailId,
                 principal.name(),
                 ipAddress,
-                userAgent != null ? userAgent : "Unknown"
-        );
+                userAgent != null ? userAgent : "Unknown");
         printLog.setAuthCode(authCode);
-        
+
         printLogRepository.save(printLog);
-        
+
         return authCode;
     }
 
@@ -82,28 +85,27 @@ public class MailSignatureService {
         if (authCode == null || authCode.isBlank()) {
             return MailSignatureVerificationResponse.invalid("Kode verifikasi kosong");
         }
-        
+
         // Lookup print log by auth code
         PrintLog printLog = printLogRepository.findByAuthCode(authCode)
                 .orElse(null);
-        
+
         if (printLog == null) {
             return MailSignatureVerificationResponse.invalid("Kode verifikasi tidak ditemukan");
         }
-        
+
         // Get mail details
         Mail mail = mailRepository.findById(printLog.getMailId())
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Mail not found: " + printLog.getMailId()));
-        
+
         return MailSignatureVerificationResponse.valid(
-                printLog.getMailId(),
+                encoder.encode(Mail.class, printLog.getMailId()),
                 mail.getMailNumber(),
                 mail.getSubject(),
                 printLog.getPrintDate(),
                 printLog.getUsername(),
-                printLog.getIpAddress()
-        );
+                printLog.getIpAddress());
     }
 
     /**
@@ -113,7 +115,7 @@ public class MailSignatureService {
      * @return list print logs
      */
     @Transactional(readOnly = true)
-    public List<PrintLog> getPrintHistory(Integer mailId) {
+    public List<PrintLog> getPrintHistory(Long mailId) {
         return printLogRepository.findByMailIdOrderByPrintDateDesc(mailId);
     }
 
@@ -122,20 +124,20 @@ public class MailSignatureService {
      * Handle proxy/load balancer scenarios.
      */
     private String getClientIpAddress() {
-        String[] headers = {"X-Forwarded-For", "Proxy-Client-IP", "WL-Proxy-Client-IP", 
-                           "HTTP_CLIENT_IP", "HTTP_X_FORWARDED_FOR"};
-        
+        String[] headers = { "X-Forwarded-For", "Proxy-Client-IP", "WL-Proxy-Client-IP",
+                "HTTP_CLIENT_IP", "HTTP_X_FORWARDED_FOR" };
+
         for (String header : headers) {
             String ip = httpServletRequest.getHeader(header);
             if (ip != null && !ip.isBlank() && !"unknown".equalsIgnoreCase(ip)) {
                 return ip.split(",")[0].trim();
             }
         }
-        
+
         return httpServletRequest.getRemoteAddr();
     }
 
-    private Mail getMailOrThrow(Integer mailId) {
+    private Mail getMailOrThrow(Long mailId) {
         return mailRepository.findById(mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
     }

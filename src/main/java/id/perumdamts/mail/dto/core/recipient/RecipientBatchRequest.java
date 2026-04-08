@@ -6,6 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record RecipientBatchRequest(
-        @NotEmpty List<Integer> empIds,
-        @NotNull Integer circulation
-) {}
+                @NotEmpty List<String> empIds,
+                @NotNull String circulation) {
+}

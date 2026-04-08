@@ -7,9 +7,11 @@ import lombok.Getter;
 import java.util.Optional;
 
 /**
- * Folder-folder sistem yang di-hardcode — sesuai {@code mail_folder.id} di DB legacy.
+ * Folder-folder sistem yang di-hardcode — sesuai {@code mail_folder.id} di DB
+ * legacy.
  *
- * <p>Folder sistem tidak bisa dihapus atau dipindah oleh user.
+ * <p>
+ * Folder sistem tidak bisa dihapus atau dipindah oleh user.
  * Gunakan enum ini (bukan magic int) untuk semua referensi ke ID folder sistem.
  */
 @Getter
@@ -25,11 +27,11 @@ public enum SystemFolder {
     PURGED(-1, "Purged", null);
 
     @JsonValue
-    private final int id;
+    private final Long id;
     private final String displayName;
     private final SystemFolder parent;
 
-    SystemFolder(int id, String displayName, SystemFolder parent) {
+    SystemFolder(long id, String displayName, SystemFolder parent) {
         this.id = id;
         this.displayName = displayName;
         this.parent = parent;
@@ -56,21 +58,23 @@ public enum SystemFolder {
     }
 
     /** Cek apakah folderId adalah personal folder (id > PERSONAL_ROOT) */
-    public static boolean isPersonalFolder(int folderId) {
+    public static boolean isPersonalFolder(Long folderId) {
         return folderId > PERSONAL_ROOT.id;
     }
 
     @JsonCreator
-    public static SystemFolder fromId(int id) {
+    public static SystemFolder fromId(Long id) {
         for (SystemFolder folder : values()) {
-            if (folder.id == id) return folder;
+            if (folder.id.equals(id))
+                return folder;
         }
         throw new IllegalArgumentException("Unknown SystemFolder id: " + id);
     }
 
-    public static Optional<SystemFolder> findById(int id) {
+    public static Optional<SystemFolder> findById(Long id) {
         for (SystemFolder folder : values()) {
-            if (folder.id == id) return Optional.of(folder);
+            if (folder.id.equals(id))
+                return Optional.of(folder);
         }
         return Optional.empty();
     }

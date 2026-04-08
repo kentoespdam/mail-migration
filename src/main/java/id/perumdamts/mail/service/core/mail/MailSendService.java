@@ -23,7 +23,8 @@ import java.util.List;
  * Service untuk pengiriman surat dengan 10 side-effects.
  * Implementasi dari send() di source PHP (mailmodel.php:812-1016).
  * Migration notes:
- * - Core transaction (@Transactional) + event-driven side effects (@Async, @EventListener)
+ * - Core transaction (@Transactional) + event-driven side effects
+ * (@Async, @EventListener)
  * - Email notification → MailNotificationService (async)
  * - Statistik update → MailStatisticService (async)
  * - Response time tracking → MailResponseTimeService (async)
@@ -55,12 +56,12 @@ public class MailSendService {
      * 9. Track response time (async)
      * 10. Build toStr (recipient list)
      * 
-     * @param mailId ID mail yang akan dikirim
+     * @param mailId    ID mail yang akan dikirim
      * @param principal user yang mengirim
      * @return mail yang sudah dikirim
      */
     @Transactional
-    public Mail send(Integer mailId, MailPrincipal principal) {
+    public Mail send(Long mailId, MailPrincipal principal) {
         // Get mail dan validate
         Mail mail = getMailOrThrow(mailId);
         if (!mail.isDraft()) {
@@ -87,7 +88,7 @@ public class MailSendService {
         mailRepository.save(mail);
 
         // Side-effect 4: Create inbox per recipient (batch INSERT)
-        Integer senderId = Integer.parseInt(principal.userId());
+        Long senderId = Long.parseLong(principal.userId());
         List<UserTask> inboxTasks = recipients.stream()
                 .map(r -> UserTask.inbox(r.getUserId(), mailId))
                 .toList();
@@ -104,10 +105,10 @@ public class MailSendService {
         }
 
         // Side-effect 5, 6, 9: Publish event untuk async processing
-        List<Integer> recipientUserIds = recipients.stream()
+        List<Long> recipientUserIds = recipients.stream()
                 .map(MailRecipient::getUserId)
                 .toList();
-        
+
         eventPublisher.publishEvent(new MailSentEvent(
                 mailId, senderId, principal.name(), recipientUserIds));
 
@@ -124,7 +125,7 @@ public class MailSendService {
         return Mail.buildToStr(recipients);
     }
 
-    private Mail getMailOrThrow(Integer mailId) {
+    private Mail getMailOrThrow(Long mailId) {
         return mailRepository.findById(mailId)
                 .orElseThrow(() -> new IllegalArgumentException("Mail not found: " + mailId));
     }

@@ -3,6 +3,7 @@ package id.perumdamts.mail.repository.core.jooq;
 import id.perumdamts.mail.config.SqidsProperties;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
+import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.enums.PublicationStatus;
 import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,7 @@ class PublicationQueryRepositoryTest {
 
         PublicationQueryRepository repository = repositoryWithProvider(ctx -> {
             capturedSql.set(ctx.sql());
-            return new MockResult[]{
+            return new MockResult[] {
                     new MockResult(2, publicationRows(true, 2L))
             };
         });
@@ -74,7 +75,12 @@ class PublicationQueryRepositoryTest {
         PublicationParams params = new PublicationParams();
         params.setStatus(PublicationStatus.PUBLISHED);
         params.setKeyword("policy");
-        params.setTypeId(7L);
+
+        // Use a valid Sqid for DocumentType
+        SqidsEncoder testEncoder = new SqidsEncoder(new SqidsProperties(null, 0, null, "test-shuffle-key"));
+        String typeIdSqid = testEncoder.encode(DocumentType.class, 7L);
+        params.setTypeId(typeIdSqid);
+
         params.setStartDate(LocalDate.of(2026, 1, 1));
         params.setEndDate(LocalDate.of(2026, 1, 31));
         params.setSortBy("title");
@@ -84,7 +90,7 @@ class PublicationQueryRepositoryTest {
 
         PublicationQueryRepository repository = repositoryWithProvider(ctx -> {
             capturedSql.set(ctx.sql());
-            return new MockResult[]{
+            return new MockResult[] {
                     new MockResult(1, publicationRows(true, 1L))
             };
         });
@@ -104,7 +110,7 @@ class PublicationQueryRepositoryTest {
 
     @Test
     void findById_shouldReturnMappedPublicationWithoutTotalCount() {
-        PublicationQueryRepository repository = repositoryWithProvider(_ -> new MockResult[]{
+        PublicationQueryRepository repository = repositoryWithProvider(_ -> new MockResult[] {
                 new MockResult(1, publicationRows(false, null))
         });
 
@@ -117,7 +123,7 @@ class PublicationQueryRepositoryTest {
 
     @Test
     void findById_shouldReturnEmptyWhenNoRecord() {
-        PublicationQueryRepository repository = repositoryWithProvider(_ -> new MockResult[]{
+        PublicationQueryRepository repository = repositoryWithProvider(_ -> new MockResult[] {
                 new MockResult(0, DSL.using(SQLDialect.H2).newResult(P_ID))
         });
 
@@ -135,18 +141,18 @@ class PublicationQueryRepositoryTest {
     private static Result<Record> publicationRows(boolean includeCount, Long countValue) {
         DSLContext dsl = DSL.using(SQLDialect.H2);
         Field<?>[] fields = includeCount
-                ? new Field<?>[]{
-                P_ID, P_JUDUL, P_DESK, P_TYPE, JD_JENIS_DOKUMEN, P_STATUS,
-                P_PUBLISHED_DATE, P_FILE_NAME, P_FILE_SIZE,
-                P_CREATED_BY_NAME, P_CREATED_BY_TITLE, P_CREATED_BY_USER_ID,
-                P_CREATED_AT, P_UPDATED_AT, TOTAL_COUNT
-        }
-                : new Field<?>[]{
-                P_ID, P_JUDUL, P_DESK, P_TYPE, JD_JENIS_DOKUMEN, P_STATUS,
-                P_PUBLISHED_DATE, P_FILE_NAME, P_FILE_SIZE,
-                P_CREATED_BY_NAME, P_CREATED_BY_TITLE, P_CREATED_BY_USER_ID,
-                P_CREATED_AT, P_UPDATED_AT
-        };
+                ? new Field<?>[] {
+                        P_ID, P_JUDUL, P_DESK, P_TYPE, JD_JENIS_DOKUMEN, P_STATUS,
+                        P_PUBLISHED_DATE, P_FILE_NAME, P_FILE_SIZE,
+                        P_CREATED_BY_NAME, P_CREATED_BY_TITLE, P_CREATED_BY_USER_ID,
+                        P_CREATED_AT, P_UPDATED_AT, TOTAL_COUNT
+                }
+                : new Field<?>[] {
+                        P_ID, P_JUDUL, P_DESK, P_TYPE, JD_JENIS_DOKUMEN, P_STATUS,
+                        P_PUBLISHED_DATE, P_FILE_NAME, P_FILE_SIZE,
+                        P_CREATED_BY_NAME, P_CREATED_BY_TITLE, P_CREATED_BY_USER_ID,
+                        P_CREATED_AT, P_UPDATED_AT
+                };
         Result<Record> result = dsl.newResult(fields);
 
         LocalDateTime now = LocalDateTime.of(2026, 1, 10, 8, 30);

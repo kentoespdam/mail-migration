@@ -31,7 +31,7 @@ public class MailNotificationListener {
         // - Send email via SMTP / mail service
         // - Log notification result
 
-        for (Integer recipientId : event.recipientUserIds()) {
+        for (Long recipientId : event.recipientUserIds()) {
             sendNotificationToRecipient(event.mailId(), recipientId);
         }
     }
@@ -40,7 +40,7 @@ public class MailNotificationListener {
      * Send notification ke satu recipient.
      * Placeholder untuk implementasi email notification.
      */
-    private void sendNotificationToRecipient(Integer mailId, Integer recipientId) {
+    private void sendNotificationToRecipient(Long mailId, Long recipientId) {
         // TODO: Implement actual email sending
         log.debug("Notification sent to recipient {}: mail {}", recipientId, mailId);
     }

@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "sys_user_task", indexes = {
@@ -27,13 +28,13 @@ public class UserTask {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    private Long userId;
 
     @Column(name = "tm_id", nullable = false)
-    private Integer mailId;
+    private Long mailId;
 
     @Column(name = "folder_id", nullable = false)
-    private Integer folderId;
+    private Long folderId;
 
     @Column(name = "read_status", nullable = false)
     private Integer readStatus = ReadStatus.UNREAD.getDbValue();
@@ -42,12 +43,12 @@ public class UserTask {
     private LocalDateTime readDate;
 
     @Column(name = "restore_folder_id")
-    private Integer restoreFolderId;
+    private Long restoreFolderId;
 
     @Column(name = "mail_created_date")
     private LocalDateTime mailCreatedDate;
 
-    public UserTask(Integer userId, Integer mailId, int folderId) {
+    public UserTask(Long userId, Long mailId, Long folderId) {
         this.userId = userId;
         this.mailId = mailId;
         this.folderId = folderId;
@@ -55,11 +56,11 @@ public class UserTask {
         this.mailCreatedDate = LocalDateTime.now();
     }
 
-    public static UserTask inbox(Integer userId, Integer mailId) {
+    public static UserTask inbox(Long userId, Long mailId) {
         return new UserTask(userId, mailId, SystemFolder.INBOX.getId());
     }
 
-    public static UserTask draft(Integer userId, Integer mailId) {
+    public static UserTask draft(Long userId, Long mailId) {
         var task = new UserTask(userId, mailId, SystemFolder.DRAFT.getId());
         task.readStatus = ReadStatus.READ.getDbValue();
         return task;
@@ -72,7 +73,7 @@ public class UserTask {
         this.readDate = LocalDateTime.now();
     }
 
-    public void moveToFolder(int targetFolderId) {
+    public void moveToFolder(Long targetFolderId) {
         this.folderId = targetFolderId;
     }
 
@@ -94,10 +95,10 @@ public class UserTask {
     }
 
     public boolean isInTrash() {
-        return this.folderId == SystemFolder.DELETED.getId();
+        return this.folderId.equals(SystemFolder.DELETED.getId());
     }
 
     public boolean isPurged() {
-        return this.folderId == SystemFolder.PURGED.getId();
+        return Objects.equals(this.folderId, SystemFolder.PURGED.getId());
     }
 }

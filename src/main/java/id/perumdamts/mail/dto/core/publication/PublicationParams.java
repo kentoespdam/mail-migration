@@ -13,15 +13,14 @@ import java.util.Map;
 public class PublicationParams extends PagedRequest {
 
     private static final Map<String, String> ALLOWED = Map.of(
-            "id","p.id",
+            "id", "p.id",
             "publishedDate", "p.published_date",
-            "title", "p.judul"
-    );
+            "title", "p.judul");
     private static final String DEFAULT_SORT_COLUMN = "p.id";
 
     private PublicationStatus status;
     private String keyword;
-    private Long typeId;
+    private String typeId;
     private LocalDate startDate;
     private LocalDate endDate;
 

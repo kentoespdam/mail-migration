@@ -3,7 +3,9 @@ package id.perumdamts.mail.dto.core.folder;
 import id.perumdamts.mail.dto.common.PagedRequest;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @Getter
@@ -19,6 +21,12 @@ public class MailFolderMailsParams extends PagedRequest {
     private static final String DEFAULT = "m.m_created_date";
 
     private String keyword;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate sdate;
+
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+    private LocalDate edate;
 
     @Override
     protected Map<String, String> allowedSorts() {

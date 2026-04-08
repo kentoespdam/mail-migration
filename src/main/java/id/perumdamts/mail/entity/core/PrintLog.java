@@ -29,7 +29,7 @@ public class PrintLog {
     private Long id;
 
     @Column(name = "m_id", nullable = false)
-    private Integer mailId;
+    private Long mailId;
 
     @Column(name = "auth_code", length = 100, nullable = false, unique = true)
     private String authCode;
@@ -49,7 +49,7 @@ public class PrintLog {
     /**
      * Factory method untuk create print log dengan auth code.
      */
-    public static PrintLog create(Integer mailId, String username, String ipAddress, String userAgent) {
+    public static PrintLog create(Long mailId, String username, String ipAddress, String userAgent) {
         PrintLog printLog = new PrintLog();
         printLog.mailId = mailId;
         printLog.username = username;

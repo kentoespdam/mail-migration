@@ -21,14 +21,13 @@ public class RecipientQueryRepository {
      * Returns unique (user_id, emp_id, emp_name, pos_name) tuples,
      * picking the most recent record per user.
      */
-    public List<ThreadRecipientRow> findDistinctThreadRecipients(Integer rootMailId) {
+    public List<ThreadRecipientRow> findDistinctThreadRecipients(Long rootMailId) {
         return dsl.select(
-                        field("r.user_id"),
-                        field("r.emp_id"),
-                        field("r.emp_name"),
-                        field("r.pos_name"),
-                        field("r.pos_id")
-                )
+                field("r.user_id"),
+                field("r.emp_id"),
+                field("r.emp_name"),
+                field("r.pos_name"),
+                field("r.pos_id"))
                 .from(table("mail_recipient").as("r"))
                 .join(table("mail").as("m")).on(field("m.m_id").eq(field("r.mail_id")))
                 .where(field("m.m_root_id").eq(rootMailId))
@@ -39,10 +38,10 @@ public class RecipientQueryRepository {
     }
 
     public record ThreadRecipientRow(
-            Integer userId,
-            Integer empId,
+            Long userId,
+            Long empId,
             String empName,
             String posName,
-            Integer posId
-    ) {}
+            Long posId) {
+    }
 }

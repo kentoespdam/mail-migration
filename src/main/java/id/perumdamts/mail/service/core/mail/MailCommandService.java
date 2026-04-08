@@ -16,6 +16,7 @@ import id.perumdamts.mail.repository.core.jpa.UserTaskRepository;
 import id.perumdamts.mail.repository.master.jpa.MailCategoryRepository;
 import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
 import id.perumdamts.mail.security.MailPrincipal;
+import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,15 +41,17 @@ public class MailCommandService {
     private final MailMapper mailMapper;
     private final MailSendService mailSendService;
     private final HrServiceClient hrServiceClient;
+    private final SqidsEncoder encoder;
 
     public MailCommandService(MailRepository mailRepository,
-                               MailTypeRepository mailTypeRepository,
-                               MailCategoryRepository mailCategoryRepository,
-                               MailRecipientRepository recipientRepository,
-                               UserTaskRepository userTaskRepository,
-                               MailMapper mailMapper,
-                               MailSendService mailSendService,
-                               HrServiceClient hrServiceClient) {
+            MailTypeRepository mailTypeRepository,
+            MailCategoryRepository mailCategoryRepository,
+            MailRecipientRepository recipientRepository,
+            UserTaskRepository userTaskRepository,
+            MailMapper mailMapper,
+            MailSendService mailSendService,
+            HrServiceClient hrServiceClient,
+            SqidsEncoder encoder) {
         this.mailRepository = mailRepository;
         this.mailTypeRepository = mailTypeRepository;
         this.mailCategoryRepository = mailCategoryRepository;
@@ -57,6 +60,7 @@ public class MailCommandService {
         this.mailMapper = mailMapper;
         this.mailSendService = mailSendService;
         this.hrServiceClient = hrServiceClient;
+        this.encoder = encoder;
     }
 
     @Transactional
@@ -76,38 +80,49 @@ public class MailCommandService {
                 request.penerimaSuratKeluar(),
                 request.rootMailId(),
                 request.parentMailId(),
-                principal
-        );
+                principal);
 
         // Create draft UserTask for sender
-        userTaskRepository.save(UserTask.draft(Integer.parseInt(principal.userId()), mail.getId()));
+        userTaskRepository.save(UserTask.draft(principal.userIdLong(), mail.getId()));
 
         return mailMapper.toResponse(mail);
     }
 
     @Transactional
-    public MailResponse updateDraft(Integer mailId, MailUpdateRequest request, MailPrincipal principal) {
+    public MailResponse updateDraft(Long mailId, MailUpdateRequest request, MailPrincipal principal) {
         var mail = getMailOrThrow(mailId);
         if (!mail.isDraft()) {
             throw new IllegalStateException("Cannot update a sent mail");
         }
 
-        if (request.subject() != null) mail.setSubject(request.subject());
-        if (request.content() != null) mail.setContent(request.content());
-        if (request.note() != null) mail.setNote(request.note());
-        if (request.mailDate() != null) mail.setMailDate(request.mailDate());
-        if (request.maxResponseDate() != null) mail.setMaxResponseDate(request.maxResponseDate());
+        if (request.subject() != null)
+            mail.setSubject(request.subject());
+        if (request.content() != null)
+            mail.setContent(request.content());
+        if (request.note() != null)
+            mail.setNote(request.note());
+        if (request.mailDate() != null)
+            mail.setMailDate(request.mailDate());
+        if (request.maxResponseDate() != null)
+            mail.setMaxResponseDate(request.maxResponseDate());
         if (request.mailTypeId() != null) {
-            mail.setMailType(mailTypeRepository.getReferenceById(request.mailTypeId().longValue()));
+            Long typeId = encoder.decode(id.perumdamts.mail.entity.master.MailType.class, request.mailTypeId());
+            mail.setMailType(mailTypeRepository.getReferenceById(typeId));
         }
         if (request.mailCategoryId() != null) {
-            mail.setMailCategory(mailCategoryRepository.getReferenceById(request.mailCategoryId().longValue()));
+            Long catId = encoder.decode(id.perumdamts.mail.entity.master.MailCategory.class, request.mailCategoryId());
+            mail.setMailCategory(mailCategoryRepository.getReferenceById(catId));
         }
-        if (request.noSuratMasuk() != null) mail.setNoSuratMasuk(request.noSuratMasuk());
-        if (request.asalSuratMasuk() != null) mail.setAsalSuratMasuk(request.asalSuratMasuk());
-        if (request.tglSuratMasuk() != null) mail.setTglSuratMasuk(request.tglSuratMasuk());
-        if (request.tujuanSuratKeluar() != null) mail.setTujuanSuratKeluar(request.tujuanSuratKeluar());
-        if (request.penerimaSuratKeluar() != null) mail.setPenerimaSuratKeluar(request.penerimaSuratKeluar());
+        if (request.noSuratMasuk() != null)
+            mail.setNoSuratMasuk(request.noSuratMasuk());
+        if (request.asalSuratMasuk() != null)
+            mail.setAsalSuratMasuk(request.asalSuratMasuk());
+        if (request.tglSuratMasuk() != null)
+            mail.setTglSuratMasuk(request.tglSuratMasuk());
+        if (request.tujuanSuratKeluar() != null)
+            mail.setTujuanSuratKeluar(request.tujuanSuratKeluar());
+        if (request.penerimaSuratKeluar() != null)
+            mail.setPenerimaSuratKeluar(request.penerimaSuratKeluar());
 
         mail.setUpdatedDate(LocalDateTime.now());
 
@@ -118,7 +133,7 @@ public class MailCommandService {
     }
 
     @Transactional
-    public MailResponse send(Integer mailId, MailPrincipal principal) {
+    public MailResponse send(Long mailId, MailPrincipal principal) {
         Mail mail = mailSendService.send(mailId, principal);
         return mailMapper.toResponse(mail);
     }
@@ -140,8 +155,7 @@ public class MailCommandService {
                 request.penerimaSuratKeluar(),
                 request.rootMailId(),
                 request.parentMailId(),
-                principal
-        );
+                principal);
 
         // Add recipients
         addRecipients(mail, request.recipients(), principal);
@@ -151,8 +165,8 @@ public class MailCommandService {
     }
 
     @Transactional
-    public void deleteMail(Integer mailId, MailPrincipal principal) {
-        Integer userId = Integer.parseInt(principal.userId());
+    public void deleteMail(Long mailId, MailPrincipal principal) {
+        Long userId = principal.userIdLong();
         var task = userTaskRepository.findActiveByUserIdAndMailId(userId, mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found in your mailbox: " + mailId));
 
@@ -165,8 +179,8 @@ public class MailCommandService {
     }
 
     @Transactional
-    public void restoreMail(Integer mailId, MailPrincipal principal) {
-        Integer userId = Integer.parseInt(principal.userId());
+    public void restoreMail(Long mailId, MailPrincipal principal) {
+        Long userId = principal.userIdLong();
         var task = userTaskRepository.findByUserIdAndMailId(userId, mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
         if (!task.isInTrash()) {
@@ -177,8 +191,8 @@ public class MailCommandService {
     }
 
     @Transactional
-    public void markRead(Integer mailId, MailPrincipal principal) {
-        Integer userId = Integer.parseInt(principal.userId());
+    public void markRead(Long mailId, MailPrincipal principal) {
+        Long userId = principal.userIdLong();
         var task = userTaskRepository.findActiveByUserIdAndMailId(userId, mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
         task.markRead();
@@ -186,20 +200,20 @@ public class MailCommandService {
     }
 
     private Mail createAndPersistMail(String subject,
-                                      String content,
-                                      String note,
-                                      Integer mailTypeId,
-                                      Integer mailCategoryId,
-                                      LocalDate mailDate,
-                                      LocalDate maxResponseDate,
-                                      String noSuratMasuk,
-                                      String asalSuratMasuk,
-                                      String tglSuratMasuk,
-                                      String tujuanSuratKeluar,
-                                      String penerimaSuratKeluar,
-                                      Integer rootMailId,
-                                      Integer parentMailId,
-                                      MailPrincipal principal) {
+            String content,
+            String note,
+            String mailTypeId,
+            String mailCategoryId,
+            LocalDate mailDate,
+            LocalDate maxResponseDate,
+            String noSuratMasuk,
+            String asalSuratMasuk,
+            String tglSuratMasuk,
+            String tujuanSuratKeluar,
+            String penerimaSuratKeluar,
+            String rootMailSqid,
+            String parentMailSqid,
+            MailPrincipal principal) {
         var mail = new Mail();
         mail.setSubject(subject);
         mail.setContent(content);
@@ -207,10 +221,12 @@ public class MailCommandService {
         mail.setMailDate(mailDate);
         mail.setMaxResponseDate(maxResponseDate);
         if (mailTypeId != null) {
-            mail.setMailType(mailTypeRepository.getReferenceById(mailTypeId.longValue()));
+            Long typeId = encoder.decode(id.perumdamts.mail.entity.master.MailType.class, mailTypeId);
+            mail.setMailType(mailTypeRepository.getReferenceById(typeId));
         }
         if (mailCategoryId != null) {
-            mail.setMailCategory(mailCategoryRepository.getReferenceById(mailCategoryId.longValue()));
+            Long catId = encoder.decode(id.perumdamts.mail.entity.master.MailCategory.class, mailCategoryId);
+            mail.setMailCategory(mailCategoryRepository.getReferenceById(catId));
         }
         mail.setNoSuratMasuk(noSuratMasuk);
         mail.setAsalSuratMasuk(asalSuratMasuk);
@@ -218,13 +234,15 @@ public class MailCommandService {
         mail.setTujuanSuratKeluar(tujuanSuratKeluar);
         mail.setPenerimaSuratKeluar(penerimaSuratKeluar);
 
-        mail.setCreatedBy(Integer.parseInt(principal.userId()));
+        mail.setCreatedBy(principal.userIdLong());
         mail.setCreatedByName(principal.name());
         mail.setCreatedDate(LocalDateTime.now());
 
-        if (rootMailId != null && rootMailId > 0) {
+        if (rootMailSqid != null && !rootMailSqid.isBlank()) {
+            Long rootMailId = encoder.decode(Mail.class, rootMailSqid);
             mail.setRootMail(mailRepository.getReferenceById(rootMailId));
-            if (parentMailId != null && parentMailId > 0) {
+            if (parentMailSqid != null && !parentMailSqid.isBlank()) {
+                Long parentMailId = encoder.decode(Mail.class, parentMailSqid);
                 mail.setParentMail(mailRepository.getReferenceById(parentMailId));
             }
         }
@@ -240,12 +258,13 @@ public class MailCommandService {
     }
 
     private void addRecipients(Mail mail, List<RecipientBatchRequest> recipientRequests, MailPrincipal principal) {
-        Integer currentUserId = Integer.parseInt(principal.userId());
+        Long currentUserId = principal.userIdLong();
         List<MailRecipient> toSave = new ArrayList<>();
 
         for (RecipientBatchRequest batchRequest : recipientRequests) {
-            CirculationType circulationType = CirculationType.fromDbValue(batchRequest.circulation());
-            List<Long> empIdLongs = batchRequest.empIds().stream().map(Integer::longValue).toList();
+            CirculationType circulationType = CirculationType.fromDbValue(
+                    (int) encoder.decode(CirculationType.class, batchRequest.circulation()));
+            List<Long> empIdLongs = batchRequest.empIds().stream().map(Long::parseLong).toList();
 
             EmployeeResponse response = hrServiceClient.getBatchEmployees(
                     new BatchIdsRequest(empIdLongs));
@@ -254,13 +273,14 @@ public class MailCommandService {
             Map<Long, EmployeeDto> empMap = employees.stream()
                     .collect(Collectors.toMap(EmployeeDto::id, Function.identity()));
 
-            for (Integer empId : batchRequest.empIds()) {
-                EmployeeDto emp = empMap.get(empId.longValue());
+            for (String empSqid : batchRequest.empIds()) {
+                Long empLongId = Long.parseLong(empSqid);
+                EmployeeDto emp = empMap.get(empLongId);
                 if (emp == null) {
                     continue; // Skip not found employees
                 }
 
-                Integer userId = emp.id().intValue();
+                Long userId = emp.id();
                 if (userId.equals(currentUserId)) {
                     continue; // Skip sender
                 }
@@ -279,10 +299,10 @@ public class MailCommandService {
     }
 
     private MailRecipient createRecipientFromEmployee(Mail mail, EmployeeDto emp, CirculationType circulationType) {
-        var recipient = new MailRecipient(mail, emp.id().intValue(), emp.id().intValue(), circulationType);
+        var recipient = new MailRecipient(mail, emp.id(), emp.id(), circulationType);
         recipient.setEmpName(emp.nama());
         if (emp.jabatanId() != null) {
-            recipient.setPosId(emp.jabatanId().intValue());
+            recipient.setPosId(emp.jabatanId());
         }
         if (emp.jabatanNama() != null) {
             recipient.setPosName(emp.jabatanNama());
@@ -290,7 +310,7 @@ public class MailCommandService {
         return recipient;
     }
 
-    private Mail getMailOrThrow(Integer mailId) {
+    private Mail getMailOrThrow(Long mailId) {
         return mailRepository.findById(mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
     }

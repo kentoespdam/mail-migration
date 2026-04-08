@@ -12,20 +12,23 @@ import java.util.Map;
 public class MailReportRequest extends PagedRequest {
 
     private static final Map<String, String> ALLOWED_SORTS = Map.of(
-            "mailTypeName",     "mt.mail_type",
+            "mailTypeName", "mt.mail_type",
             "mailCategoryName", "mc.mcat_name",
-            "totalMails",       "totalMails"
-    );
+            "totalMails", "totalMails");
     private static final String DEFAULT_SORT = "mt.mail_type";
 
-    private Integer mailTypeId;
-    private Integer mailCategoryId;
+    private String mailTypeId;
+    private String mailCategoryId;
     private LocalDate startDate;
     private LocalDate endDate;
 
     @Override
-    protected Map<String, String> allowedSorts() { return ALLOWED_SORTS; }
+    protected Map<String, String> allowedSorts() {
+        return ALLOWED_SORTS;
+    }
 
     @Override
-    protected String defaultSortColumn() { return DEFAULT_SORT; }
+    protected String defaultSortColumn() {
+        return DEFAULT_SORT;
+    }
 }

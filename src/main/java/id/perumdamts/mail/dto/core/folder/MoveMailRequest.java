@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record MoveMailRequest(
-        @NotNull List<Integer> mailIds,
-        @NotNull Integer fromFolderId,
-        @NotNull Integer toFolderId
+        @NotNull List<String> mailIds,
+        @NotNull String fromFolderId,
+        @NotNull String toFolderId
 ) {}

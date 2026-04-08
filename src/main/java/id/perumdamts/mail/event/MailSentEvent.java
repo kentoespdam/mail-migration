@@ -4,13 +4,12 @@ import java.time.Instant;
 import java.util.List;
 
 public record MailSentEvent(
-        Integer mailId,
-        Integer senderId,
+        Long mailId,
+        Long senderId,
         String senderName,
-        List<Integer> recipientUserIds,
-        Instant sentAt
-) {
-    public MailSentEvent(Integer mailId, Integer senderId, String senderName, List<Integer> recipientUserIds) {
+        List<Long> recipientUserIds,
+        Instant sentAt) {
+    public MailSentEvent(Long mailId, Long senderId, String senderName, List<Long> recipientUserIds) {
         this(mailId, senderId, senderName, recipientUserIds, Instant.now());
     }
 }

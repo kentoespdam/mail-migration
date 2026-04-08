@@ -1,5 +1,6 @@
 package id.perumdamts.mail.entity.core;
 
+import id.perumdamts.mail.entity.SqidEntity;
 import id.perumdamts.mail.enums.CirculationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,13 +10,13 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "mail_recipient", uniqueConstraints = {
-        @UniqueConstraint(name = "uq_recipient_mail_user", columnNames = {"mail_id", "user_id"})
+        @UniqueConstraint(name = "uq_recipient_mail_user", columnNames = { "mail_id", "user_id" })
 })
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class MailRecipient {
+public class MailRecipient implements SqidEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,16 +27,16 @@ public class MailRecipient {
     private Mail mail;
 
     @Column(name = "user_id", nullable = false)
-    private Integer userId;
+    private Long userId;
 
     @Column(name = "emp_id", nullable = false)
-    private Integer empId;
+    private Long empId;
 
     @Column(name = "emp_name", length = 100)
     private String empName;
 
     @Column(name = "pos_id")
-    private Integer posId;
+    private Long posId;
 
     @Column(name = "pos_name", length = 100)
     private String posName;
@@ -58,8 +59,7 @@ public class MailRecipient {
     @Column(name = "folder_position")
     private Integer folderPosition;
 
-
-    public MailRecipient(Mail mail, Integer userId, Integer empId, CirculationType circulationType) {
+    public MailRecipient(Mail mail, Long userId, Long empId, CirculationType circulationType) {
         this.mail = mail;
         this.userId = userId;
         this.empId = empId;

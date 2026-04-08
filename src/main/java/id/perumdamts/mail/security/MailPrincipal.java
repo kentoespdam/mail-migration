@@ -8,25 +8,28 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Principal yang di-set ke {@link org.springframework.security.core.context.SecurityContext}
+ * Principal yang di-set ke
+ * {@link org.springframework.security.core.context.SecurityContext}
  * setelah token AppWrite berhasil divalidasi.
  *
- * <p>Implementasi {@link UserDetails} agar kompatibel dengan Spring Security
+ * <p>
+ * Implementasi {@link UserDetails} agar kompatibel dengan Spring Security
  * dan {@code @PreAuthorize} expressions.
  *
- * <p>Gunakan {@link #from(AppWriteUser)} factory method — bukan constructor langsung.
+ * <p>
+ * Gunakan {@link #from(AppWriteUser)} factory method — bukan constructor
+ * langsung.
  *
- * @param userId    AppWrite user ID (== pegawaiId di HR Service)
- * @param name      Nama lengkap
- * @param email     Email
+ * @param userId      AppWrite user ID (== pegawaiId di HR Service)
+ * @param name        Nama lengkap
+ * @param email       Email
  * @param authorities Granted authorities dari prefs.roles
  */
 public record MailPrincipal(
         String userId,
         String name,
         String email,
-        List<SimpleGrantedAuthority> authorities
-) implements UserDetails {
+        List<SimpleGrantedAuthority> authorities) implements UserDetails {
 
     /**
      * Factory method — konversi {@link AppWriteUser} ke {@link MailPrincipal}.
@@ -65,6 +68,10 @@ public record MailPrincipal(
     @Override
     public String getUsername() {
         return userId; // userId dipakai sebagai username (== pegawaiId)
+    }
+
+    public Long userIdLong() {
+        return Long.parseLong(userId);
     }
 
 }

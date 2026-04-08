@@ -10,16 +10,16 @@ import java.util.Set;
 
 public interface MailRecipientRepository extends JpaRepository<MailRecipient, Long> {
 
-    List<MailRecipient> findByMailId(Integer mailId);
+    List<MailRecipient> findByMailId(Long mailId);
 
-    boolean existsByMailIdAndUserId(Integer mailId, Integer userId);
+    boolean existsByMailIdAndUserId(Long mailId, Long userId);
 
-    void deleteByMailIdAndId(Integer mailId, Long id);
+    void deleteByMailIdAndId(Long mailId, Long id);
 
     @Query("SELECT r.userId FROM MailRecipient r WHERE r.mail.id = :mailId")
-    Set<Integer> findUserIdsByMailId(@Param("mailId") Integer mailId);
+    Set<Long> findUserIdsByMailId(@Param("mailId") Long mailId);
 
-    void deleteAllByMailIdAndIdIn(Integer mailId, List<Long> ids);
+    void deleteAllByMailIdAndIdIn(Long mailId, List<Long> ids);
 
-    void deleteByMailId(Integer mailId);
+    void deleteByMailId(Long mailId);
 }

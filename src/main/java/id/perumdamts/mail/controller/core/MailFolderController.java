@@ -2,8 +2,12 @@ package id.perumdamts.mail.controller.core;
 
 import id.perumdamts.mail.dto.core.folder.*;
 import id.perumdamts.mail.dto.core.mail.MailSummaryResponse;
+import id.perumdamts.mail.entity.core.Mail;
+import id.perumdamts.mail.entity.core.MailFolder;
 import id.perumdamts.mail.security.MailPrincipal;
-import id.perumdamts.mail.service.core.folder.MailFolderService;
+import id.perumdamts.mail.service.core.folder.MailFolderCommandService;
+import id.perumdamts.mail.service.core.folder.MailFolderQueryService;
+import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -30,15 +34,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MailFolderController {
 
-    private final MailFolderService folderService;
-//    private final TenantConfig tenantConfig;
+    private final MailFolderQueryService queryService;
+    private final MailFolderCommandService commandService;
+    private final SqidsEncoder encoder;
 
     /**
      * Get folder tree untuk user (system + personal folders) dengan counter badge.
      */
     @GetMapping("/folders")
     public List<MailFolderResponse> getFolderTree(@AuthenticationPrincipal MailPrincipal principal) {
-        return folderService.getFolderTree(Integer.parseInt(principal.userId()));
+        return queryService.getFolderTree(principal.userIdLong());
     }
 
     /**
@@ -46,7 +51,7 @@ public class MailFolderController {
      */
     @GetMapping("/folders/counters")
     public List<FolderCounterResponse> getCounters(@AuthenticationPrincipal MailPrincipal principal) {
-        return folderService.getCounters(Integer.parseInt(principal.userId()));
+        return queryService.getCounters(principal.userIdLong());
     }
 
     /**
@@ -56,7 +61,7 @@ public class MailFolderController {
     public ResponseEntity<MailFolderResponse> createFolder(
             @AuthenticationPrincipal MailPrincipal principal,
             @Valid @RequestBody MailFolderRequest request) {
-        var response = folderService.createFolder(Integer.parseInt(principal.userId()), request);
+        var response = commandService.createFolder(principal.userIdLong(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -66,9 +71,10 @@ public class MailFolderController {
     @PutMapping("/folders/{id}")
     public MailFolderResponse renameFolder(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable Integer id,
+            @PathVariable String id,
             @Valid @RequestBody MailFolderRequest request) {
-        return folderService.renameFolder(Integer.parseInt(principal.userId()), id, request);
+        long rawId = encoder.decode(MailFolder.class, id);
+        return commandService.renameFolder(principal.userIdLong(), rawId, request);
     }
 
     /**
@@ -78,8 +84,9 @@ public class MailFolderController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteFolder(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable Integer id) {
-        folderService.deleteFolder(Integer.parseInt(principal.userId()), id);
+            @PathVariable String id) {
+        long rawId = encoder.decode(MailFolder.class, id);
+        commandService.deleteFolder(principal.userIdLong(), rawId);
     }
 
     /**
@@ -88,10 +95,11 @@ public class MailFolderController {
     @GetMapping("/folders/{id}/mails")
     public List<MailSummaryResponse> getMailsInFolder(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable Integer id,
+            @PathVariable String id,
             @ParameterObject MailFolderMailsParams params) {
-        return folderService.getMailsInFolder(
-                Integer.parseInt(principal.userId()), id, params);
+        long rawId = encoder.decode(MailFolder.class, id);
+        return queryService.getMailsInFolder(
+                principal.userIdLong(), rawId, params);
     }
 
     /**
@@ -101,7 +109,7 @@ public class MailFolderController {
     public void moveMails(
             @AuthenticationPrincipal MailPrincipal principal,
             @Valid @RequestBody MoveMailRequest request) {
-        folderService.moveMails(Integer.parseInt(principal.userId()), request);
+        commandService.moveMails(principal.userIdLong(), request);
     }
 
     /**
@@ -113,8 +121,9 @@ public class MailFolderController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMail(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable Integer id) {
-        folderService.deleteMail(Integer.parseInt(principal.userId()), id);
+            @PathVariable String id) {
+        long mailId = encoder.decode(Mail.class, id);
+        commandService.deleteMail(principal.userIdLong(), mailId);
     }
 
     /**
@@ -125,8 +134,9 @@ public class MailFolderController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void restoreMail(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable Integer id) {
-        folderService.restoreMail(Integer.parseInt(principal.userId()), id);
+            @PathVariable String id) {
+        long mailId = encoder.decode(Mail.class, id);
+        commandService.restoreMail(principal.userIdLong(), mailId);
     }
 
     /**
@@ -135,6 +145,7 @@ public class MailFolderController {
     @DeleteMapping("/trash")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void emptyTrash(@AuthenticationPrincipal MailPrincipal principal) {
-        folderService.emptyTrash(Integer.parseInt(principal.userId()));
+        commandService.emptyTrash(principal.userIdLong());
     }
+
 }

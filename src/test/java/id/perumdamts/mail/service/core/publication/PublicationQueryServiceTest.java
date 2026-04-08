@@ -3,8 +3,8 @@ package id.perumdamts.mail.service.core.publication;
 import id.perumdamts.mail.config.StorageProperties;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
-import id.perumdamts.mail.repository.core.jpa.PublicationRepository;
 import id.perumdamts.mail.repository.core.jooq.PublicationQueryRepository;
+import id.perumdamts.mail.repository.core.jpa.PublicationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,9 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @Slf4j
@@ -119,9 +117,8 @@ class PublicationQueryServiceTest {
                 123,
                 "Creator",
                 "Manager",
-                1,
+                "1",
                 null,
-                null
-        );
+                null);
     }
 }

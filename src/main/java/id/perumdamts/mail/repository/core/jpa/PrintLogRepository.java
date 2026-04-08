@@ -9,14 +9,14 @@ import java.util.Optional;
 
 @Repository
 public interface PrintLogRepository extends JpaRepository<PrintLog, Long> {
-    
+
     /**
      * Find print log by auth code untuk verifikasi.
      */
     Optional<PrintLog> findByAuthCode(String authCode);
-    
+
     /**
      * Find all print logs untuk mail tertentu.
      */
-    List<PrintLog> findByMailIdOrderByPrintDateDesc(Integer mailId);
+    List<PrintLog> findByMailIdOrderByPrintDateDesc(Long mailId);
 }

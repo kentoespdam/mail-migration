@@ -32,8 +32,8 @@ public class MailThreadService {
         }
 
         // Map untuk menyimpan node by ID untuk O(1) lookup
-        Map<Integer, MailThreadNode> nodeMap = new HashMap<>();
-        
+        Map<String, MailThreadNode> nodeMap = new HashMap<>();
+
         // Initialize semua node
         for (MailSummaryResponse mail : flatData) {
             nodeMap.put(mail.id(), new MailThreadNode(mail));
@@ -45,7 +45,7 @@ public class MailThreadService {
         // Build tree dengan 2-level fallback strategy
         for (MailSummaryResponse mail : flatData) {
             MailThreadNode node = nodeMap.get(mail.id());
-            Integer parentId = mail.rootMailId() != null ? getParentId(mail) : null;
+            String parentId = mail.rootMailId() != null ? getParentId(mail) : null;
 
             if (parentId == null || parentId.equals(mail.id())) {
                 // Ini adalah root node
@@ -69,14 +69,14 @@ public class MailThreadService {
      * Cari parent node dengan 2-level fallback strategy.
      * Fix bug di source PHP: tidak ada explicit return FALSE.
      * 
-     * @param nodeMap map semua node
-     * @param current node saat ini
+     * @param nodeMap  map semua node
+     * @param current  node saat ini
      * @param parentId ID parent yang dicari
      * @return parent node atau null jika tidak ditemukan
      */
-    private MailThreadNode findNodeWithFallback(Map<Integer, MailThreadNode> nodeMap, 
-                                                 MailSummaryResponse current, 
-                                                 Integer parentId) {
+    private MailThreadNode findNodeWithFallback(Map<String, MailThreadNode> nodeMap,
+            MailSummaryResponse current,
+            String parentId) {
         // Level 1: Cari parent langsung
         MailThreadNode parent = nodeMap.get(parentId);
         if (parent != null) {
@@ -105,7 +105,7 @@ public class MailThreadService {
      * Get parent ID dari mail.
      * Prioritaskan parentMailId, fallback ke rootMailId.
      */
-    private Integer getParentId(MailSummaryResponse mail) {
+    private String getParentId(MailSummaryResponse mail) {
         if (mail.parentMailId() != null) {
             return mail.parentMailId();
         }
