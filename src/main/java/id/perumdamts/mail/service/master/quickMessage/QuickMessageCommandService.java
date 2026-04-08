@@ -1,4 +1,4 @@
-package id.perumdamts.mail.service.master;
+package id.perumdamts.mail.service.master.quickMessage;
 
 import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageRequest;

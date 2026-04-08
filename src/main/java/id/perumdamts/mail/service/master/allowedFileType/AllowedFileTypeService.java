@@ -1,4 +1,4 @@
-package id.perumdamts.mail.service.core.publication;
+package id.perumdamts.mail.service.master.allowedFileType;
 
 import id.perumdamts.mail.dto.core.publication.PublicationMapper;
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;

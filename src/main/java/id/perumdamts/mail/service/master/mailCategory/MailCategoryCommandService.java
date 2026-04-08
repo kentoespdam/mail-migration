@@ -1,4 +1,4 @@
-package id.perumdamts.mail.service.master;
+package id.perumdamts.mail.service.master.mailCategory;
 
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryRequest;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryResponse;

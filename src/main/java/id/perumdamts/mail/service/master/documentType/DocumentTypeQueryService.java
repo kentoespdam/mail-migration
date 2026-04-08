@@ -1,4 +1,4 @@
-package id.perumdamts.mail.service.master;
+package id.perumdamts.mail.service.master.documentType;
 
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeMapper;

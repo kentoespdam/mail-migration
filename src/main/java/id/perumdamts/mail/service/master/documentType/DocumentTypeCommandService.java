@@ -1,4 +1,4 @@
-package id.perumdamts.mail.service.master;
+package id.perumdamts.mail.service.master.documentType;
 
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeRequest;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
