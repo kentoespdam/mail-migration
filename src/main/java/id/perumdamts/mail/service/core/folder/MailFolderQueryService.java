@@ -5,6 +5,7 @@ import id.perumdamts.mail.dto.core.folder.FolderCountDto;
 import id.perumdamts.mail.dto.core.folder.FolderCounterResponse;
 import id.perumdamts.mail.dto.core.folder.MailFolderMailsParams;
 import id.perumdamts.mail.dto.core.folder.MailFolderResponse;
+import id.perumdamts.mail.dto.core.mail.MailComponentDto;
 import id.perumdamts.mail.dto.core.mail.MailSummaryResponse;
 import id.perumdamts.mail.entity.core.MailFolder;
 import id.perumdamts.mail.enums.SystemFolder;
@@ -93,25 +94,31 @@ public class MailFolderQueryService {
         var pattern = java.util.regex.Pattern.compile(
                 "(" + java.util.regex.Pattern.quote(keyword) + ")",
                 java.util.regex.Pattern.CASE_INSENSITIVE);
-        return results.stream().map(r -> new MailSummaryResponse(
-                r.id(),
-                r.mailNumber(),
-                r.mailDate(),
-                wrapMark(r.subject(), pattern),
-                wrapMark(r.createdByName(), pattern),
-                wrapMark(r.toStr(), pattern),
-                r.readStatus(),
-                r.folderId(),
-                r.attachmentQty(),
-                r.createdDate(),
-                r.mailTypeName(),
-                r.mailCategoryName(),
-                r.circulationName(),
-                r.restoreFolderId(),
-                r.restoreFolderName(),
-                r.rootMailId(),
-                r.parentMailId(),
-                r.totalCount())).toList();
+        return results.stream().map(r -> {
+            var newAudit = new MailComponentDto.MailAuditInfoDto(
+                    r.getAudit().createdBy(),
+                    wrapMark(r.getAudit().createdByName(), pattern),
+                    r.getAudit().createdDate(),
+                    r.getAudit().updatedDate());
+            var newSummary = new MailComponentDto.MailSummaryInfoDto(
+                    r.getSummary().attachmentQty(),
+                    wrapMark(r.getSummary().toStr(), pattern));
+            return new MailSummaryResponse(
+                    r.getId(),
+                    r.getMailNumber(),
+                    r.getMailDate(),
+                    wrapMark(r.getSubject(), pattern),
+                    newAudit,
+                    newSummary,
+                    r.getReadStatus(),
+                    r.getFolderId(),
+                    r.getType(),
+                    r.getCategory(),
+                    r.getCirculationName(),
+                    r.getRestoreFolder(),
+                    r.getThread(),
+                    r.getTotalCount());
+        }).toList();
     }
 
     private String wrapMark(String text, java.util.regex.Pattern pattern) {

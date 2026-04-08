@@ -1,6 +1,10 @@
 package id.perumdamts.mail.service.core.mail;
 
+import id.perumdamts.mail.dto.core.folder.MailFolderLookup;
+import id.perumdamts.mail.dto.core.mail.MailComponentDto;
 import id.perumdamts.mail.dto.core.mail.MailSummaryResponse;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
+import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -29,14 +33,14 @@ class MailThreadServiceTest {
         // Then
         assertThat(tree).hasSize(1);
         MailThreadService.MailThreadNode rootNode = tree.getFirst();
-        assertThat(rootNode.getMail().id()).isEqualTo("root");
+        assertThat(rootNode.getMail().getId()).isEqualTo("root");
         assertThat(rootNode.getChildren()).hasSize(2);
 
         MailThreadService.MailThreadNode child1Node = rootNode.getChildren().stream()
-                .filter(n -> n.getMail().id().equals("child1"))
+                .filter(n -> n.getMail().getId().equals("child1"))
                 .findFirst().orElseThrow();
         assertThat(child1Node.getChildren()).hasSize(1);
-        assertThat(child1Node.getChildren().getFirst().getMail().id()).isEqualTo("grandchild");
+        assertThat(child1Node.getChildren().getFirst().getMail().getId()).isEqualTo("grandchild");
         assertThat(child1Node.getDepth()).isEqualTo(1);
         assertThat(child1Node.getChildren().getFirst().getDepth()).isEqualTo(2);
     }
@@ -50,8 +54,14 @@ class MailThreadServiceTest {
     private MailSummaryResponse createSummary(String id, String rootId, String parentId) {
         return new MailSummaryResponse(
                 id, "NO-" + id, LocalDate.now(), "Subject " + id,
-                "Creator", "Recipient", 0, "1", 0, LocalDateTime.now(),
-                "Type", "Category", null, null, null,
-                rootId, parentId, 1L);
+                new MailComponentDto.MailAuditInfoDto(null, "Creator", LocalDateTime.now(), null),
+                new MailComponentDto.MailSummaryInfoDto(0, "Recipient"),
+                0, "1",
+                new MailTypeLookup(null, "Type"),
+                new MailCategoryLookup(null, "Category"),
+                null,
+                new MailFolderLookup(null, null),
+                new MailComponentDto.MailThreadInfoDto(rootId, parentId),
+                1L);
     }
 }

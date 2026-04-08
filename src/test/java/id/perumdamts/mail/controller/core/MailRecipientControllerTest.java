@@ -52,8 +52,10 @@ class MailRecipientControllerTest {
 
     private RecipientResponse sampleResponse() {
         return new RecipientResponse(
-                "10", "100", "1000", "John Doe", "Manager",
-                "1", "TO", 0, 0, false, false, 0);
+                "10",
+                new RecipientComponentDto.EmployeeInfoDto("100", "1000", "John Doe", "Manager"),
+                new RecipientComponentDto.CirculationInfoDto("1", "TO"),
+                new RecipientComponentDto.NotificationInfoDto(0, 0, false, false, 0));
     }
 
     // ── getRecipients ──

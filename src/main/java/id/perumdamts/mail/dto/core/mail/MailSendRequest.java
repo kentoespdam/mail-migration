@@ -9,19 +9,19 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record MailSendRequest(
-        @NotBlank String subject,
-        String content,
-        String note,
-        String mailTypeId,
-        String mailCategoryId,
-        LocalDate mailDate,
-        LocalDate maxResponseDate,
-        String rootMailId,
-        String parentMailId,
-        String noSuratMasuk,
-        String asalSuratMasuk,
-        String tglSuratMasuk,
-        String tujuanSuratKeluar,
-        String penerimaSuratKeluar,
-        @NotEmpty @Valid List<RecipientBatchRequest> recipients
-) {}
+                @NotBlank String subject,
+                String content,
+                String note,
+                @NotBlank String mailTypeId,
+                @NotBlank String mailCategoryId,
+                LocalDate mailDate,
+                LocalDate maxResponseDate,
+                String rootMailId,
+                String parentMailId,
+                String noSuratMasuk,
+                String asalSuratMasuk,
+                String tglSuratMasuk,
+                String tujuanSuratKeluar,
+                String penerimaSuratKeluar,
+                @NotEmpty @Valid List<RecipientBatchRequest> recipients) {
+}

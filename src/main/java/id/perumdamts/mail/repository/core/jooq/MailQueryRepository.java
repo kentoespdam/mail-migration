@@ -1,6 +1,9 @@
 package id.perumdamts.mail.repository.core.jooq;
 
+import id.perumdamts.mail.dto.core.folder.MailFolderLookup;
 import id.perumdamts.mail.dto.core.mail.*;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
+import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.entity.core.MailRecipient;
 import id.perumdamts.mail.entity.master.MailCategory;
@@ -57,6 +60,7 @@ public class MailQueryRepository {
                                 field("m.m_date").as("mailDate"),
                                 field("m.m_subject").as("subject"),
                                 field("m.m_created_by_name").as("createdByName"),
+                                field("m.m_created_by").as("createdBy"),
                                 field("m.m_to_str").as("toStr"),
                                 field("ut.read_status").as("readStatus"),
                                 field("ut.folder_id").as("folderId"),
@@ -125,6 +129,7 @@ public class MailQueryRepository {
                                 field("m.m_date").as("mailDate"),
                                 field("m.m_subject").as("subject"),
                                 field("m.m_created_by_name").as("createdByName"),
+                                field("m.m_created_by").as("createdBy"),
                                 field("m.m_to_str").as("toStr"),
                                 inline(1).as("readStatus"),
                                 inline(0L).as("folderId"),
@@ -162,6 +167,7 @@ public class MailQueryRepository {
                                 field("m.m_date").as("mailDate"),
                                 field("m.m_subject").as("subject"),
                                 field("m.m_created_by_name").as("createdByName"),
+                                field("m.m_created_by").as("createdBy"),
                                 field("m.m_to_str").as("toStr"),
                                 inline(1).as("readStatus"),
                                 inline(0L).as("folderId"),
@@ -307,23 +313,38 @@ public class MailQueryRepository {
                                 r.get("mailNumber", String.class),
                                 r.get("mailDate", LocalDate.class),
                                 r.get("subject", String.class),
-                                r.get("createdByName", String.class),
-                                r.get("toStr", String.class),
+                                new MailComponentDto.MailAuditInfoDto(
+                                                r.get("createdBy") != null
+                                                                ? encoder.encode(Mail.class,
+                                                                                r.get("createdBy", Long.class))
+                                                                : null,
+                                                r.get("createdByName", String.class),
+                                                r.get("createdDate", LocalDateTime.class),
+                                                null),
+                                new MailComponentDto.MailSummaryInfoDto(
+                                                r.get("attachmentQty", Integer.class),
+                                                r.get("toStr", String.class)),
                                 r.get("readStatus", Integer.class),
                                 r.get("folderId") != null ? String.valueOf(r.get("folderId")) : null,
-                                r.get("attachmentQty", Integer.class),
-                                r.get("createdDate", LocalDateTime.class),
-                                r.get("mailTypeName", String.class),
-                                r.get("mailCategoryName", String.class),
+                                new MailTypeLookup(null, r.get("mailTypeName", String.class)),
+                                new MailCategoryLookup(null, r.get("mailCategoryName", String.class)),
                                 r.get("circulationName") != null ? r.get("circulationName", String.class) : null,
-                                r.get("restoreFolderId") != null ? String.valueOf(r.get("restoreFolderId")) : null,
-                                r.get("restoreFolderName") != null ? r.get("restoreFolderName", String.class) : null,
-                                r.get("rootMailId") != null
-                                                ? encoder.encode(Mail.class, r.get("rootMailId", Long.class))
-                                                : null,
-                                r.get("parentMailId") != null
-                                                ? encoder.encode(Mail.class, r.get("parentMailId", Long.class))
-                                                : null,
+                                new MailFolderLookup(
+                                                r.get("restoreFolderId") != null
+                                                                ? String.valueOf(r.get("restoreFolderId"))
+                                                                : null,
+                                                r.get("restoreFolderName") != null
+                                                                ? r.get("restoreFolderName", String.class)
+                                                                : null),
+                                new MailComponentDto.MailThreadInfoDto(
+                                                r.get("rootMailId") != null
+                                                                ? encoder.encode(Mail.class,
+                                                                                r.get("rootMailId", Long.class))
+                                                                : null,
+                                                r.get("parentMailId") != null
+                                                                ? encoder.encode(Mail.class,
+                                                                                r.get("parentMailId", Long.class))
+                                                                : null),
                                 r.get("totalCount") != null ? r.get("totalCount", Long.class) : null);
         }
 }

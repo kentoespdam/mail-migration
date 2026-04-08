@@ -1,7 +1,10 @@
 package id.perumdamts.mail.controller.core;
 
 import id.perumdamts.mail.dto.common.PagedResponse;
+import id.perumdamts.mail.dto.core.folder.MailFolderLookup;
 import id.perumdamts.mail.dto.core.mail.*;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
+import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.mail.MailCommandService;
@@ -52,20 +55,29 @@ class MailControllerTest {
     private MailResponse sampleMailResponse() {
         return new MailResponse(
                 "1", "001/2025", LocalDate.of(2025, 1, 1),
-                "1", "Surat Masuk", "1", "Umum",
+                new MailTypeLookup("1", "Surat Masuk"),
+                new MailCategoryLookup("1", "Umum"),
                 "Test Subject", "content", "note",
-                LocalDate.of(2025, 1, 15), 1, null, null,
-                0, "Recipient", LocalDateTime.now(), LocalDateTime.now(),
-                "1", "Test User", null, null, null, null, null);
+                LocalDate.of(2025, 1, 15), 1,
+                new MailComponentDto.MailThreadInfoDto(null, null),
+                new MailComponentDto.MailSummaryInfoDto(0, "Recipient"),
+                new MailComponentDto.MailAuditInfoDto("1", "Test User", LocalDateTime.now(), LocalDateTime.now()),
+                null, null, null, null, null);
     }
 
     private MailSummaryResponse sampleSummary() {
         return new MailSummaryResponse(
                 "1", "001/2025", LocalDate.of(2025, 1, 1),
-                "Test Subject", "Test User", "Recipient",
-                0, "1", 0, LocalDateTime.now(),
-                "Surat Masuk", "Umum", null,
-                null, null, null, null, 1L);
+                "Test Subject",
+                new MailComponentDto.MailAuditInfoDto(null, "Test User", LocalDateTime.now(), null),
+                new MailComponentDto.MailSummaryInfoDto(0, "Recipient"),
+                0, "1",
+                new MailTypeLookup(null, "Surat Masuk"),
+                new MailCategoryLookup(null, "Umum"),
+                null,
+                new MailFolderLookup(null, null),
+                new MailComponentDto.MailThreadInfoDto(null, null),
+                1L);
     }
 
     private MailCreateRequest sampleCreateRequest() {
@@ -81,7 +93,7 @@ class MailControllerTest {
                 "Updated Subject", "new content", "new note",
                 "1", "1", LocalDate.of(2025, 1, 1),
                 LocalDate.of(2025, 1, 15),
-                null, null, null, null, null);
+                null, null, null, null, null, null, null);
     }
 
     // ── Tests ──
@@ -172,7 +184,7 @@ class MailControllerTest {
         var result = controller.getThread("1");
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().id()).isEqualTo("1");
+        assertThat(result.getFirst().getId()).isEqualTo("1");
     }
 
     @Test
@@ -198,6 +210,6 @@ class MailControllerTest {
         var result = controller.report(request);
 
         assertThat(result.content()).hasSize(1);
-        assertThat(result.content().getFirst().totalMails()).isEqualTo(10);
+        assertThat(result.content().getFirst().getTotalMails()).isEqualTo(10);
     }
 }

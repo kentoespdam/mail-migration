@@ -36,7 +36,7 @@ public class MailThreadService {
 
         // Initialize semua node
         for (MailSummaryResponse mail : flatData) {
-            nodeMap.put(mail.id(), new MailThreadNode(mail));
+            nodeMap.put(mail.getId(), new MailThreadNode(mail));
         }
 
         // Root nodes (yang parent-nya null atau diri sendiri)
@@ -44,10 +44,10 @@ public class MailThreadService {
 
         // Build tree dengan 2-level fallback strategy
         for (MailSummaryResponse mail : flatData) {
-            MailThreadNode node = nodeMap.get(mail.id());
-            String parentId = mail.rootMailId() != null ? getParentId(mail) : null;
+            MailThreadNode node = nodeMap.get(mail.getId());
+            String parentId = mail.getThread().rootMailId() != null ? getParentId(mail) : null;
 
-            if (parentId == null || parentId.equals(mail.id())) {
+            if (parentId == null || parentId.equals(mail.getId())) {
                 // Ini adalah root node
                 roots.add(node);
             } else {
@@ -84,15 +84,15 @@ public class MailThreadService {
         }
 
         // Level 2: Fallback ke root mail
-        if (current.rootMailId() != null && !current.rootMailId().equals(current.id())) {
-            parent = nodeMap.get(current.rootMailId());
+        if (current.getThread().rootMailId() != null && !current.getThread().rootMailId().equals(current.getId())) {
+            parent = nodeMap.get(current.getThread().rootMailId());
             if (parent != null) {
                 return parent;
             }
         }
 
         // Level 3: Fallback ke parent ID jika berbeda dari root
-        if (parentId != null && !parentId.equals(current.rootMailId())) {
+        if (parentId != null && !parentId.equals(current.getThread().rootMailId())) {
             parent = nodeMap.get(parentId);
             return parent;
         }
@@ -106,10 +106,10 @@ public class MailThreadService {
      * Prioritaskan parentMailId, fallback ke rootMailId.
      */
     private String getParentId(MailSummaryResponse mail) {
-        if (mail.parentMailId() != null) {
-            return mail.parentMailId();
+        if (mail.getThread().parentMailId() != null) {
+            return mail.getThread().parentMailId();
         }
-        return mail.rootMailId();
+        return mail.getThread().rootMailId();
     }
 
     /**

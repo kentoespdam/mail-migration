@@ -24,7 +24,7 @@ public class MailQueryService {
 
     public PagedResponse<MailSummaryResponse> search(MailSearchRequest request) {
         List<MailSummaryResponse> items = mailQueryRepository.searchMails(request);
-        long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
+        long total = items.isEmpty() ? 0 : items.getFirst().getTotalCount();
         return PagedResponse.of(items, request, total);
     }
 
@@ -38,7 +38,7 @@ public class MailQueryService {
 
     public PagedResponse<MailReportResponse> getReport(MailReportRequest request) {
         List<MailReportResponse> items = mailQueryRepository.getReport(request);
-        long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
+        long total = items.isEmpty() ? 0 : items.getFirst().getTotalCount();
         return PagedResponse.of(items, request, total);
     }
 }

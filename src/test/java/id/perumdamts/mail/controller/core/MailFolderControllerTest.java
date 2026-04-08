@@ -1,7 +1,10 @@
 package id.perumdamts.mail.controller.core;
 
 import id.perumdamts.mail.dto.core.folder.*;
+import id.perumdamts.mail.dto.core.mail.MailComponentDto;
 import id.perumdamts.mail.dto.core.mail.MailSummaryResponse;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
+import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.entity.core.MailFolder;
 import id.perumdamts.mail.security.MailPrincipal;
@@ -64,10 +67,16 @@ class MailFolderControllerTest {
     private MailSummaryResponse sampleMailSummary() {
         return new MailSummaryResponse(
                 "1", "001/2025", LocalDate.of(2025, 1, 1),
-                "Test Subject", "Test User", "Recipient",
-                0, "1", 0, LocalDateTime.now(),
-                "Surat Masuk", "Umum", null,
-                null, null, null, null, 1L);
+                "Test Subject",
+                new MailComponentDto.MailAuditInfoDto(null, "Test User", LocalDateTime.now(), null),
+                new MailComponentDto.MailSummaryInfoDto(0, "Recipient"),
+                0, "1",
+                new MailTypeLookup(null, "Surat Masuk"),
+                new MailCategoryLookup(null, "Umum"),
+                null,
+                new MailFolderLookup(null, null),
+                new MailComponentDto.MailThreadInfoDto(null, null),
+                1L);
     }
 
     // ── Tests ──
@@ -139,7 +148,7 @@ class MailFolderControllerTest {
         var result = controller.getMailsInFolder(principal, "10", params);
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().subject()).isEqualTo("Test Subject");
+        assertThat(result.getFirst().getSubject()).isEqualTo("Test Subject");
         verify(queryService).getMailsInFolder(1L, 10L, params);
     }
 

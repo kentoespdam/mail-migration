@@ -8,11 +8,14 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * Mapper untuk konversi MailFolder entity ke DTO.
+ * Menggunakan SQIDS untuk meng-encode ID.
+ */
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public abstract class MailFolderMapper extends SqidMapper<MailFolder> {
 
-    @Autowired
-    protected SqidsEncoder encoder;
+    @Autowired protected SqidsEncoder encoder;
 
     @Mapping(target = "id", expression = "java(sqid(entity))")
     @Mapping(target = "parentFolderId", expression = "java(entity.getParentFolderId() > 0 ? encoder.encode(MailFolder.class, entity.getParentFolderId()) : \"0\")")

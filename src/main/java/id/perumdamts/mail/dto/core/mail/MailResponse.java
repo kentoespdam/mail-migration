@@ -1,32 +1,30 @@
 package id.perumdamts.mail.dto.core.mail;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import id.perumdamts.mail.dto.common.HasSqid;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
+import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
+import lombok.Value;
 
-public record MailResponse(
-                String id,
-                String mailNumber,
-                LocalDate mailDate,
-                String mailTypeId,
-                String mailTypeName,
-                String mailCategoryId,
-                String mailCategoryName,
-                String subject,
-                String content,
-                String note,
-                LocalDate maxResponseDate,
-                Integer status,
-                String rootMailId,
-                String parentMailId,
-                Integer attachmentQty,
-                String toStr,
-                LocalDateTime createdDate,
-                LocalDateTime updatedDate,
-                String createdBy,
-                String createdByName,
-                String noSuratMasuk,
-                String asalSuratMasuk,
-                String tglSuratMasuk,
-                String tujuanSuratKeluar,
-                String penerimaSuratKeluar) {
+import java.time.LocalDate;
+
+@Value
+public class MailResponse implements HasSqid {
+        String id;
+        String mailNumber;
+        LocalDate mailDate;
+        MailTypeLookup type;
+        MailCategoryLookup category;
+        String subject;
+        String content;
+        String note;
+        LocalDate maxResponseDate;
+        Integer status;
+        MailComponentDto.MailThreadInfoDto thread;
+        MailComponentDto.MailSummaryInfoDto summary;
+        MailComponentDto.MailAuditInfoDto audit;
+        String noSuratMasuk;
+        String asalSuratMasuk;
+        String tglSuratMasuk;
+        String tujuanSuratKeluar;
+        String penerimaSuratKeluar;
 }

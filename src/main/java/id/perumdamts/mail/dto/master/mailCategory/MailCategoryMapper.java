@@ -12,10 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = MailTypeMapper.class)
 public abstract class MailCategoryMapper extends SqidMapper<MailCategory> {
 
-    @Autowired protected SqidsEncoder encoder;
+    @Autowired
+    protected SqidsEncoder encoder;
 
     @Mapping(target = "id", expression = "java(sqid(entity))")
     @Mapping(source = "mailType", target = "mailType")
     @Mapping(source = "status", target = "status")
     public abstract MailCategoryResponse toResponse(MailCategory entity);
+
+    @Mapping(target = "id", expression = "java(sqid(entity))")
+    public abstract MailCategoryLookup toLookup(MailCategory entity);
 }
