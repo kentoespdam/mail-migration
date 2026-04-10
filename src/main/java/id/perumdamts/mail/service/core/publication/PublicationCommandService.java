@@ -47,12 +47,12 @@ public class PublicationCommandService {
     private final Path storagePath;
 
     public PublicationCommandService(PublicationRepository publicationRepository,
-                                      DocumentTypeRepository documentTypeRepository,
-                                      AllowedFileTypeService allowedFileTypeService,
-                                      ApplicationEventPublisher eventPublisher,
-                                      PublicationMapper mapper,
-                                      SqidsEncoder encoder,
-                                      StorageProperties storageProperties) {
+            DocumentTypeRepository documentTypeRepository,
+            AllowedFileTypeService allowedFileTypeService,
+            ApplicationEventPublisher eventPublisher,
+            PublicationMapper mapper,
+            SqidsEncoder encoder,
+            StorageProperties storageProperties) {
         this.publicationRepository = publicationRepository;
         this.documentTypeRepository = documentTypeRepository;
         this.allowedFileTypeService = allowedFileTypeService;
@@ -134,6 +134,22 @@ public class PublicationCommandService {
         log.info("Publication soft-deleted: id={}, by={}", id, principal.name());
     }
 
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public PublicationResponse publish(Long id, MailPrincipal principal) {
+        var pub = getOrThrow(id);
+        if (!pub.isDraft()) {
+            throw new IllegalStateException("Publication is already published or not in DRAFT status");
+        }
+
+        pub.publish();
+        pub = publicationRepository.save(pub);
+
+        eventPublisher.publishEvent(new PublicationPublishedEvent(pub.getId(), principal.name()));
+
+        return mapper.toDto(pub);
+    }
+
     // ── Helpers ──
 
     private void storeFile(Publication pub, MultipartFile file) {
@@ -178,7 +194,8 @@ public class PublicationCommandService {
     }
 
     private String extractExtension(String filename) {
-        if (filename == null) return "";
+        if (filename == null)
+            return "";
         int dot = filename.lastIndexOf('.');
         return dot >= 0 ? filename.substring(dot + 1).toLowerCase() : "";
     }

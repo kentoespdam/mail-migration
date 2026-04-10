@@ -39,3 +39,6 @@ inspect/
 issue.md
 /plan/
 /issues/
+
+.qwen/
+gha-creds-*.json

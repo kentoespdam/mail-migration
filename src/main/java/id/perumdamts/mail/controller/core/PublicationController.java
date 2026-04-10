@@ -58,6 +58,14 @@ public class PublicationController {
         commandService.delete(rawId, principal);
     }
 
+    @PatchMapping("/{id}/publish")
+    public PublicationResponse publish(
+            @AuthenticationPrincipal MailPrincipal principal,
+            @PathVariable String id) {
+        long rawId = encoder.decode(Publication.class, id);
+        return commandService.publish(rawId, principal);
+    }
+
     @GetMapping
     public PagedModel<PublicationResponse> findAll(@ParameterObject PublicationParams params) {
         return new PagedModel<>(queryService.findAll(params));
