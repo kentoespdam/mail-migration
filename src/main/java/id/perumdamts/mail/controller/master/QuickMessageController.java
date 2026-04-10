@@ -59,5 +59,10 @@ public class QuickMessageController {
         long rawId = encoder.decode(QuickMessage.class, id);
         commandService.delete(rawId);
     }
-}
 
+    @PatchMapping("/{id}/status")
+    public QuickMessageResponse toggleStatus(@PathVariable String id) {
+        long rawId = encoder.decode(QuickMessage.class, id);
+        return commandService.toggleStatus(rawId);
+    }
+}

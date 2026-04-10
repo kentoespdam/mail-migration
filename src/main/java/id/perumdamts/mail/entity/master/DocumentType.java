@@ -40,6 +40,13 @@ public class DocumentType implements SqidEntity {
         this.status = RecordStatus.DELETED;
     }
 
+    public void toggleStatus() {
+        if (status == RecordStatus.DELETED) {
+            throw new IllegalStateException("Cannot toggle status of a DELETED record");
+        }
+        this.status = (status == RecordStatus.ACTIVE) ? RecordStatus.INACTIVE : RecordStatus.ACTIVE;
+    }
+
     public boolean isActive() {
         return this.status == RecordStatus.ACTIVE;
     }

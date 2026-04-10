@@ -60,5 +60,10 @@ public class MailTypeController {
         long rawId = encoder.decode(MailType.class, id);
         commandService.delete(rawId);
     }
-}
 
+    @PatchMapping("/{id}/status")
+    public MailTypeResponse toggleStatus(@PathVariable String id) {
+        long rawId = encoder.decode(MailType.class, id);
+        return commandService.toggleStatus(rawId);
+    }
+}

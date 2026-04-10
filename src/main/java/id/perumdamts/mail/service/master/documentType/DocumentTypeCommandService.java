@@ -46,10 +46,20 @@ public class DocumentTypeCommandService {
 
         long publicationCount = entity.getPublications() != null ? entity.getPublications().size() : 0;
         if (publicationCount > 0) {
-            throw new IllegalStateException("Terdapat " + publicationCount + " Publikasi yang menggunakan Jenis Dokumen ini");
+            throw new IllegalStateException(
+                    "Terdapat " + publicationCount + " Publikasi yang menggunakan Jenis Dokumen ini");
         }
 
         entity.markDeleted();
         repository.save(entity);
+    }
+
+    public DocumentTypeResponse toggleStatus(Long id) {
+        var entity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("DocumentType not found: " + id));
+
+        entity.toggleStatus();
+        repository.save(entity);
+        return queryRepository.findById(id).orElseThrow();
     }
 }

@@ -54,4 +54,13 @@ public class MailTypeCommandService {
         entity.markDeleted();
         repository.save(entity);
     }
+
+    public MailTypeResponse toggleStatus(Long id) {
+        var entity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("MailType not found: " + id));
+
+        entity.toggleStatus();
+        repository.save(entity);
+        return queryRepository.findById(id).orElseThrow();
+    }
 }

@@ -60,4 +60,10 @@ public class DocumentTypeController {
         long rawId = encoder.decode(DocumentType.class, id);
         commandService.delete(rawId);
     }
+
+    @PatchMapping("/{id}/status")
+    public DocumentTypeResponse toggleStatus(@PathVariable String id) {
+        long rawId = encoder.decode(DocumentType.class, id);
+        return commandService.toggleStatus(rawId);
+    }
 }

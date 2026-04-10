@@ -53,4 +53,14 @@ public class QuickMessageCommandService {
         entity.markDeleted();
         repository.save(entity);
     }
+
+    @CacheEvict(value = CacheConfig.CacheNames.TENANT_CONFIG, key = "'quickMessages'")
+    public QuickMessageResponse toggleStatus(Long id) {
+        var entity = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("QuickMessage not found: " + id));
+
+        entity.toggleStatus();
+        repository.save(entity);
+        return queryRepository.findById(id).orElseThrow();
+    }
 }

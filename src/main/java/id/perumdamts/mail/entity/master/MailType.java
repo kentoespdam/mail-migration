@@ -45,4 +45,11 @@ public class MailType implements SqidEntity {
     public void markDeleted() {
         this.status = RecordStatus.DELETED;
     }
+
+    public void toggleStatus() {
+        if (status == RecordStatus.DELETED) {
+            throw new IllegalStateException("Cannot toggle status of a DELETED record");
+        }
+        this.status = (status == RecordStatus.ACTIVE) ? RecordStatus.INACTIVE : RecordStatus.ACTIVE;
+    }
 }

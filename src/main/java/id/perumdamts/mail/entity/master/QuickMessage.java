@@ -14,7 +14,8 @@ import java.time.LocalDateTime;
 /**
  * Entity untuk tabel {@code pesan_singkat}.
  *
- * <p>Legacy schema: hanya {@code id} dan {@code pesan}.
+ * <p>
+ * Legacy schema: hanya {@code id} dan {@code pesan}.
  * Flyway V5 menambahkan {@code status} (varchar) untuk soft-delete.
  */
 @Entity
@@ -65,5 +66,12 @@ public class QuickMessage implements SqidEntity {
 
     public void markDeleted() {
         this.status = RecordStatus.DELETED;
+    }
+
+    public void toggleStatus() {
+        if (status == RecordStatus.DELETED) {
+            throw new IllegalStateException("Cannot toggle status of a DELETED record");
+        }
+        this.status = (status == RecordStatus.ACTIVE) ? RecordStatus.INACTIVE : RecordStatus.ACTIVE;
     }
 }
