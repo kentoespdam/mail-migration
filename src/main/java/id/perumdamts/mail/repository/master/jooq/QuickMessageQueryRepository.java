@@ -31,12 +31,15 @@ public class QuickMessageQueryRepository {
             condition = condition.and(field("ps.pesan").likeIgnoreCase("%" + params.getSearch() + "%"));
         }
 
+        if (params.getStatus() != null) {
+            condition = condition.and(field("ps.status").eq(params.getStatus().name()));
+        }
+
         var records = dsl.select(
                         field("ps.id"),
                         field("ps.pesan"),
                         field("ps.status"),
-                        count().over().as("total_count")
-                )
+                        count().over().as("total_count"))
                 .from(table("pesan_singkat").as("ps"))
                 .where(condition)
                 .orderBy(params.toSortField())
@@ -54,8 +57,7 @@ public class QuickMessageQueryRepository {
         QuickMessageResponse response = dsl.select(
                         field("ps.id"),
                         field("ps.pesan"),
-                        field("ps.status")
-                )
+                        field("ps.status"))
                 .from(table("pesan_singkat").as("ps"))
                 .where(field("ps.id").eq(id))
                 .and(field("ps.status").ne(inline("DELETED")))
@@ -68,8 +70,6 @@ public class QuickMessageQueryRepository {
         Long id = r.get(field("ps.id"), Long.class);
         return new QuickMessageResponse(
                 encoder.encode(QuickMessage.class, id),
-                r.get(field("ps.pesan"), String.class)
-        );
+                r.get(field("ps.pesan"), String.class));
     }
 }
-

@@ -35,18 +35,21 @@ public class DocumentTypeQueryRepository {
             condition = condition.and(field("jd.jenis_dokumen").likeIgnoreCase("%" + params.getSearch() + "%"));
         }
 
+        if (params.getStatus() != null) {
+            condition = condition.and(field("jd.status").eq(params.getStatus().name()));
+        }
+
         var records = dsl.select(
-                        field("jd.id"),
-                        field("jd.jenis_dokumen"),
-                        field("jd.status"),
-                        field(
-                                dsl.selectCount()
-                                        .from(table("area_publik").as("p"))
-                                        .where(field("p.type").eq(field("jd.id")))
-                                        .and(field("p.status").ne(inline("DELETED")))
-                        ).as("publication_count"),
-                        count().over().as("total_count")
-                )
+                field("jd.id"),
+                field("jd.jenis_dokumen"),
+                field("jd.status"),
+                field(
+                        dsl.selectCount()
+                                .from(table("area_publik").as("p"))
+                                .where(field("p.type").eq(field("jd.id")))
+                                .and(field("p.status").ne(inline("DELETED"))))
+                        .as("publication_count"),
+                count().over().as("total_count"))
                 .from(table("jenis_dokumen").as("jd"))
                 .where(condition)
                 .orderBy(params.toSortField())
@@ -62,16 +65,15 @@ public class DocumentTypeQueryRepository {
 
     public Optional<DocumentTypeResponse> findById(Long id) {
         DocumentTypeResponse response = dsl.select(
-                        field("jd.id"),
-                        field("jd.jenis_dokumen"),
-                        field("jd.status"),
-                        field(
-                                dsl.selectCount()
-                                        .from(table("area_publik").as("p"))
-                                        .where(field("p.type").eq(field("jd.id")))
-                                        .and(field("p.status").ne(inline("DELETED")))
-                        ).as("publication_count")
-                )
+                field("jd.id"),
+                field("jd.jenis_dokumen"),
+                field("jd.status"),
+                field(
+                        dsl.selectCount()
+                                .from(table("area_publik").as("p"))
+                                .where(field("p.type").eq(field("jd.id")))
+                                .and(field("p.status").ne(inline("DELETED"))))
+                        .as("publication_count"))
                 .from(table("jenis_dokumen").as("jd"))
                 .where(field("jd.id").eq(id))
                 .and(field("jd.status").ne(inline("DELETED")))
@@ -86,7 +88,6 @@ public class DocumentTypeQueryRepository {
                 encoder.encode(DocumentType.class, docId),
                 r.get(field("jd.jenis_dokumen"), String.class),
                 RecordStatus.valueOf(r.get(field("jd.status"), String.class)),
-                r.get(field("publication_count"), Long.class)
-        );
+                r.get(field("publication_count"), Long.class));
     }
 }

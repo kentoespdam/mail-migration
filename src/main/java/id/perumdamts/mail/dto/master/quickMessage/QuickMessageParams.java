@@ -1,6 +1,7 @@
 package id.perumdamts.mail.dto.master.quickMessage;
 
 import id.perumdamts.mail.dto.common.PagedRequest;
+import id.perumdamts.mail.enums.RecordStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,10 +13,10 @@ public class QuickMessageParams extends PagedRequest {
 
     private static final Map<String, String> ALLOWED = Map.of(
             "message", "ps.pesan",
-            "status", "ps.status"
-    );
+            "status", "ps.status");
 
     private String search;
+    private RecordStatus status;
 
     @Override
     protected Map<String, String> allowedSorts() {
@@ -27,4 +28,3 @@ public class QuickMessageParams extends PagedRequest {
         return "ps.pesan";
     }
 }
-

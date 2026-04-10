@@ -32,18 +32,21 @@ public class MailTypeQueryRepository {
             condition = condition.and(field("mt.mail_type").likeIgnoreCase("%" + params.getSearch() + "%"));
         }
 
+        if (params.getStatus() != null) {
+            condition = condition.and(field("mt.mail_type_status").eq(params.getStatus().name()));
+        }
+
         var records = dsl.select(
-                        field("mt.mail_type_id"),
-                        field("mt.mail_type"),
-                        field("mt.mail_type_status"),
-                        field(
-                                dsl.selectCount()
-                                        .from(table("mail_category").as("mc"))
-                                        .where(field("mc.mail_type_id").eq(field("mt.mail_type_id")))
-                                        .and(field("mc.mcat_status").ne(inline("Deleted")))
-                        ).as("category_count"),
-                        count().over().as("total_count")
-                )
+                field("mt.mail_type_id"),
+                field("mt.mail_type"),
+                field("mt.mail_type_status"),
+                field(
+                        dsl.selectCount()
+                                .from(table("mail_category").as("mc"))
+                                .where(field("mc.mail_type_id").eq(field("mt.mail_type_id")))
+                                .and(field("mc.mcat_status").ne(inline("Deleted"))))
+                        .as("category_count"),
+                count().over().as("total_count"))
                 .from(table("mail_type").as("mt"))
                 .where(condition)
                 .orderBy(params.toSortField())
@@ -59,16 +62,15 @@ public class MailTypeQueryRepository {
 
     public Optional<MailTypeResponse> findById(Long id) {
         MailTypeResponse response = dsl.select(
-                        field("mt.mail_type_id"),
-                        field("mt.mail_type"),
-                        field("mt.mail_type_status"),
-                        field(
-                                dsl.selectCount()
-                                        .from(table("mail_category").as("mc"))
-                                        .where(field("mc.mail_type_id").eq(field("mt.mail_type_id")))
-                                        .and(field("mc.mcat_status").ne(inline("Deleted")))
-                        ).as("category_count")
-                )
+                field("mt.mail_type_id"),
+                field("mt.mail_type"),
+                field("mt.mail_type_status"),
+                field(
+                        dsl.selectCount()
+                                .from(table("mail_category").as("mc"))
+                                .where(field("mc.mail_type_id").eq(field("mt.mail_type_id")))
+                                .and(field("mc.mcat_status").ne(inline("Deleted"))))
+                        .as("category_count"))
                 .from(table("mail_type").as("mt"))
                 .where(field("mt.mail_type_id").eq(id))
                 .and(field("mt.mail_type_status").ne(inline("DELETED")))
@@ -83,8 +85,6 @@ public class MailTypeQueryRepository {
                 encoder.encode(MailType.class, id),
                 r.get(field("mt.mail_type"), String.class),
                 RecordStatus.valueOf(r.get(field("mt.mail_type_status"), String.class)),
-                r.get(field("category_count"), Long.class)
-        );
+                r.get(field("category_count"), Long.class));
     }
 }
-
