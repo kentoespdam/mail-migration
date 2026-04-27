@@ -13,7 +13,7 @@
 | **DB** | MariaDB `192.168.230.84:3307` · db `smartoffice_mail` · Flyway migrations |
 | **Cache** | Redis `localhost:6379` · `hrEmployee` 60m · `mailFolder` 10m · `tenantConfig` 6h · `mailStats` 5m · `appwrite-tokens` 5m |
 | **Tenant** | Single-instance · `TenantConfig` via `app.tenant.*` |
-| **Storage** | `/data/attachments` · configurable via `storage.base-path` |
+| **Storage** | `/data/attachments` · configurable via `storage.base-path` (MUST be absolute in production) |
 
 ---
 

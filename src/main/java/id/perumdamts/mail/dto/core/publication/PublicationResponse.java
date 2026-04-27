@@ -14,11 +14,11 @@ public class PublicationResponse implements HasSqid {
     DocumentTypeLookup documentType;
     String status;
     LocalDateTime publishedDate;
-    String fileName;
+    String originalFileName;
     Integer fileSize;
     String createdByName;
     String createdByTitle;
-    String createdByUserId;
+    Integer createdByUserId;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 }

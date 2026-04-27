@@ -48,6 +48,7 @@ public class CacheConfig {
         public static final String TENANT_CONFIG   = "tenantConfig";
         public static final String MAIL_STATS      = "mailStats";
         public static final String APPWRITE_TOKENS = "appwrite-tokens";
+        public static final String PUBLICATIONS    = "publications";
     }
 
     /**
@@ -61,6 +62,7 @@ public class CacheConfig {
         public static final Duration TENANT_CONFIG   = Duration.ofHours(6);
         public static final Duration MAIL_STATS      = Duration.ofMinutes(5);
         public static final Duration APPWRITE_TOKENS = Duration.ofMinutes(5);
+        public static final Duration PUBLICATIONS    = Duration.ofMinutes(10);
         public static final Duration DEFAULT         = Duration.ofMinutes(30);
     }
 
@@ -95,7 +97,8 @@ public class CacheConfig {
                 CacheNames.MAIL_FOLDER,     buildConfig(CacheTtl.MAIL_FOLDER),
                 CacheNames.TENANT_CONFIG,   buildConfig(CacheTtl.TENANT_CONFIG),
                 CacheNames.MAIL_STATS,      buildConfig(CacheTtl.MAIL_STATS),
-                CacheNames.APPWRITE_TOKENS, buildConfig(CacheTtl.APPWRITE_TOKENS)
+                CacheNames.APPWRITE_TOKENS, buildConfig(CacheTtl.APPWRITE_TOKENS),
+                CacheNames.PUBLICATIONS,    buildConfig(CacheTtl.PUBLICATIONS)
         );
     }
 

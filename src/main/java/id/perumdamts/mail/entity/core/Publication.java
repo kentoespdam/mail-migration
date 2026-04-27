@@ -45,19 +45,19 @@ public class Publication implements SqidEntity {
     @Column(name = "notif_flag", nullable = false)
     private Integer notifFlag = 0;
 
-    @Column(name = "file_name")
-    private String fileName;
+    @Column(name = "file_name", length = 256)
+    private String originalFileName;
 
-    @Column(name = "file_path")
-    private String filePath;
+    @Column(name = "file_path", length = 256)
+    private String systemFileName;
 
     @Column(name = "file_size")
     private Integer fileSize;
 
-    @Column(name = "created_by_name", length = 100)
+    @Column(name = "created_by_name", length = 128)
     private String createdByName;
 
-    @Column(name = "created_by_title", length = 100)
+    @Column(name = "created_by_title", length = 128)
     private String createdByTitle;
 
     @Column(name = "created_by_user_id")
@@ -79,11 +79,15 @@ public class Publication implements SqidEntity {
         return this.status == PublicationStatus.PUBLISHED;
     }
 
-    public void publish() {
+    public boolean publish() {
+        if (this.status != PublicationStatus.DRAFT) {
+            return false;
+        }
         this.status = PublicationStatus.PUBLISHED;
         this.publishedDate = LocalDateTime.now();
         this.notifFlag = 1;
         this.updatedAt = LocalDateTime.now();
+        return true;
     }
 
     public void softDelete() {

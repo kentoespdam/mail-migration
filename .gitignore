@@ -35,7 +35,7 @@ application-dev.properties
 application-dev.yml
 inspect/
 /.ollamassist/
-/dummy_prompt.txt
+/dummy_prompt.md
 issue.md
 /plan/
 /issues/

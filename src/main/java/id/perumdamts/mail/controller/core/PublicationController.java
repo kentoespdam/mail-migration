@@ -6,8 +6,8 @@ import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.dto.core.publication.UpdatePublicationRequest;
 import id.perumdamts.mail.entity.core.Publication;
 import id.perumdamts.mail.security.MailPrincipal;
-import id.perumdamts.mail.service.core.publication.PublicationCommandService;
-import id.perumdamts.mail.service.core.publication.PublicationQueryService;
+import id.perumdamts.mail.service.core.publication.PublicationCommandHandler;
+import id.perumdamts.mail.service.core.publication.PublicationQueryHandler;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,16 +28,18 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class PublicationController {
 
-    private final PublicationCommandService commandService;
-    private final PublicationQueryService queryService;
+    private final PublicationCommandHandler commandHandler;
+    private final PublicationQueryHandler queryHandler;
     private final SqidsEncoder encoder;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<PublicationResponse> create(
             @AuthenticationPrincipal MailPrincipal principal,
             @Valid @ModelAttribute CreatePublicationRequest request) {
+        var result = commandHandler.create(request, principal);
+        long rawId = encoder.decode(Publication.class, result.id());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(commandService.create(request, principal));
+                .body(queryHandler.findById(rawId));
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -46,7 +48,8 @@ public class PublicationController {
             @PathVariable String id,
             @Valid @ModelAttribute UpdatePublicationRequest request) {
         long rawId = encoder.decode(Publication.class, id);
-        return commandService.update(rawId, request, principal);
+        commandHandler.update(rawId, request, principal);
+        return queryHandler.findById(rawId);
     }
 
     @DeleteMapping("/{id}")
@@ -55,7 +58,7 @@ public class PublicationController {
             @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable String id) {
         long rawId = encoder.decode(Publication.class, id);
-        commandService.delete(rawId, principal);
+        commandHandler.delete(rawId, principal);
     }
 
     @PatchMapping("/{id}/publish")
@@ -63,24 +66,25 @@ public class PublicationController {
             @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable String id) {
         long rawId = encoder.decode(Publication.class, id);
-        return commandService.publish(rawId, principal);
+        commandHandler.publish(rawId, principal);
+        return queryHandler.findById(rawId);
     }
 
     @GetMapping
     public PagedModel<PublicationResponse> findAll(@ParameterObject PublicationParams params) {
-        return new PagedModel<>(queryService.findAll(params));
+        return new PagedModel<>(queryHandler.findAll(params));
     }
 
     @GetMapping("/{id}")
     public PublicationResponse findById(@PathVariable String id) {
         long rawId = encoder.decode(Publication.class, id);
-        return queryService.findById(rawId);
+        return queryHandler.findById(rawId);
     }
 
     @GetMapping("/{id}/download")
     public ResponseEntity<Resource> download(@PathVariable String id) {
         long rawId = encoder.decode(Publication.class, id);
-        var result = queryService.download(rawId);
+        var result = queryHandler.download(rawId);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION,

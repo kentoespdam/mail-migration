@@ -1,10 +1,8 @@
 package id.perumdamts.mail.service.core.publication;
 
-import id.perumdamts.mail.config.StorageProperties;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.repository.core.jooq.PublicationQueryRepository;
-import id.perumdamts.mail.repository.core.jpa.PublicationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,14 +31,13 @@ class PublicationQueryServiceTest {
     private PublicationQueryRepository queryRepository;
 
     @Mock
-    private PublicationRepository publicationRepository;
+    private PublicationFileStorageService fileStorageService;
 
-    private PublicationQueryService service;
+    private PublicationQueryServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new PublicationQueryService(queryRepository, publicationRepository,
-                new StorageProperties("/tmp/test-storage"));
+        service = new PublicationQueryServiceImpl(queryRepository, fileStorageService);
     }
 
     @Test
@@ -105,6 +102,22 @@ class PublicationQueryServiceTest {
         verifyNoMoreInteractions(queryRepository);
     }
 
+    @Test
+    void download_shouldReturnResultWhenFileExists() {
+        Long id = 10L;
+        var meta = new id.perumdamts.mail.repository.core.jooq.PublicationQueryRepository.PublicationFileMeta(
+                "original.pdf", "system.pdf", null);
+        org.springframework.core.io.Resource resource = mock(org.springframework.core.io.Resource.class);
+
+        when(queryRepository.findFileMeta(id)).thenReturn(Optional.of(meta));
+        when(fileStorageService.load("system.pdf", null)).thenReturn(resource);
+
+        var result = service.download(id);
+
+        assertThat(result.filename()).isEqualTo("original.pdf");
+        assertThat(result.resource()).isEqualTo(resource);
+    }
+
     private static PublicationResponse publicationResponse(String id) {
         return new PublicationResponse(
                 id,
@@ -117,7 +130,7 @@ class PublicationQueryServiceTest {
                 123,
                 "Creator",
                 "Manager",
-                "1",
+                1,
                 null,
                 null);
     }

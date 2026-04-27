@@ -15,7 +15,7 @@ public class PublicationParams extends PagedRequest {
     private static final Map<String, String> ALLOWED = Map.of(
             "id", "p.id",
             "publishedDate", "p.published_date",
-            "title", "p.judul");
+            "title", "p.title");
     private static final String DEFAULT_SORT_COLUMN = "p.id";
 
     private PublicationStatus status;

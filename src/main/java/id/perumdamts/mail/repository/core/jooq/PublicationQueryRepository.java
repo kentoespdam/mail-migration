@@ -43,8 +43,8 @@ public class PublicationQueryRepository {
         if (params.getKeyword() != null && !params.getKeyword().isBlank()) {
             String kw = "%" + params.getKeyword() + "%";
             condition = condition.and(
-                    field("p.judul").likeIgnoreCase(kw)
-                            .or(field("p.desk").likeIgnoreCase(kw)));
+                    field("p.title").likeIgnoreCase(kw)
+                            .or(field("p.description").likeIgnoreCase(kw)));
         }
         if (params.getTypeId() != null && !params.getTypeId().isBlank()) {
             condition = condition.and(field("p.type").eq(encoder.decode(DocumentType.class, params.getTypeId())));
@@ -57,13 +57,14 @@ public class PublicationQueryRepository {
 
         var records = dsl.select(
                 field("p.id"),
-                field("p.judul"),
-                field("p.desk"),
+                field("p.title"),
+                field("p.description"),
                 field("p.type"),
                 field("jd.jenis_dokumen"),
                 field("p.status"),
                 field("p.published_date"),
                 field("p.file_name"),
+                field("p.file_path"),
                 field("p.file_size"),
                 field("p.created_by_name"),
                 field("p.created_by_title"),
@@ -90,13 +91,14 @@ public class PublicationQueryRepository {
     public Optional<PublicationResponse> findById(Long id) {
         var result = dsl.select(
                 field("p.id"),
-                field("p.judul"),
-                field("p.desk"),
+                field("p.title"),
+                field("p.description"),
                 field("p.type"),
                 field("jd.jenis_dokumen"),
                 field("p.status"),
                 field("p.published_date"),
                 field("p.file_name"),
+                field("p.file_path"),
                 field("p.file_size"),
                 field("p.created_by_name"),
                 field("p.created_by_title"),
@@ -112,6 +114,24 @@ public class PublicationQueryRepository {
         return Optional.ofNullable(result);
     }
 
+    public record PublicationFileMeta(String originalFileName, String systemFileName, LocalDateTime createdAt) {
+    }
+
+    public Optional<PublicationFileMeta> findFileMeta(Long id) {
+        return dsl.select(
+                field("p.file_name"),
+                field("p.file_path"),
+                field("p.created_at"))
+                .from(table("area_publik").as("p"))
+                .where(field("p.id").eq(id))
+                .and(field("p.status").ne(inline("DELETED")))
+                .fetchOptional(r -> new PublicationFileMeta(
+                        r.get(field("p.file_name"), String.class),
+                        r.get(field("p.file_path"), String.class),
+                        r.get(field("p.created_at"), LocalDateTime.class)
+                ));
+    }
+
     private PublicationResponse toDto(Record r) {
         Long id = r.get(field("p.id"), Long.class);
         if (id == null) {
@@ -125,12 +145,12 @@ public class PublicationQueryRepository {
                 ? new DocumentTypeLookup(encoder.encode(DocumentType.class, docTypeId), docTypeName)
                 : null;
 
-        Long createdByUserId = r.get(field("p.created_by_user_id"), Long.class);
+        Integer createdByUserId = r.get(field("p.created_by_user_id"), Integer.class);
 
         return new PublicationResponse(
                 encoder.encode(Publication.class, id),
-                r.get(field("p.judul"), String.class),
-                r.get(field("p.desk"), String.class),
+                r.get(field("p.title"), String.class),
+                r.get(field("p.description"), String.class),
                 docType,
                 r.get(field("p.status"), String.class),
                 r.get(field("p.published_date"), LocalDateTime.class),
@@ -138,7 +158,7 @@ public class PublicationQueryRepository {
                 r.get(field("p.file_size"), Integer.class),
                 r.get(field("p.created_by_name"), String.class),
                 r.get(field("p.created_by_title"), String.class),
-                createdByUserId != null ? encoder.encode(Publication.class, createdByUserId) : null,
+                createdByUserId,
                 r.get(field("p.created_at"), LocalDateTime.class),
                 r.get(field("p.updated_at"), LocalDateTime.class));
     }
