@@ -1,5 +1,9 @@
 package id.perumdamts.mail.util;
 
+import id.perumdamts.mail.dto.core.publication.PublicationParams;
+
+import java.util.Objects;
+
 /**
  * Utility konstanta dan helper untuk Redis cache key generation.
  *
@@ -49,5 +53,22 @@ public final class CacheKeyUtil {
      */
     public static String tenantKey(String tenantCode) {
         return TENANT_PREFIX + tenantCode;
+    }
+
+    /**
+     * Key untuk daftar publication.
+     * Semua filter dan paging ikut masuk agar hasil cache tidak saling tabrakan.
+     */
+    public static String publicationKey(PublicationParams params) {
+        return "publication:"
+                + params.getPage() + ':'
+                + params.getSize() + ':'
+                + Objects.toString(params.getSortBy(), "") + ':'
+                + Objects.toString(params.getSortDir(), "") + ':'
+                + Objects.toString(params.getStatus(), "") + ':'
+                + Objects.toString(params.getKeyword(), "") + ':'
+                + Objects.toString(params.getTypeId(), "") + ':'
+                + Objects.toString(params.getStartDate(), "") + ':'
+                + Objects.toString(params.getEndDate(), "");
     }
 }

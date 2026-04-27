@@ -22,7 +22,7 @@ public class PublicationQueryServiceImpl implements PublicationQueryHandler {
     private final PublicationFileStorageService fileStorageService;
 
     @Override
-    @Cacheable(key = "#params")
+    @Cacheable(key = "T(id.perumdamts.mail.util.CacheKeyUtil).publicationKey(#params)")
     public Page<PublicationResponse> findAll(PublicationParams params) {
         return queryRepository.findAll(params);
     }
