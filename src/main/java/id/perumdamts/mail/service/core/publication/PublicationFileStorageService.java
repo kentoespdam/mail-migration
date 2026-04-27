@@ -9,13 +9,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -55,21 +55,63 @@ public class PublicationFileStorageService {
 
     public StoredFile store(MultipartFile file) {
         String monthDir = LocalDateTime.now().format(MONTH_DIR);
-        String ext = extractExtension(file.getOriginalFilename());
-        String systemFileName = UUID.randomUUID() + (ext.isEmpty() ? "" : "." + ext);
         Path dir = storagePath.resolve(monthDir);
 
         try {
             Files.createDirectories(dir);
-            Path target = dir.resolve(systemFileName).normalize();
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to create directory: " + dir, e);
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        String basename = getBasename(originalFilename);
+        int dot = basename.lastIndexOf('.');
+        String stem = (dot >= 0) ? basename.substring(0, dot) : basename;
+        String ext = (dot >= 0) ? basename.substring(dot + 1).toLowerCase() : "";
+
+        String normalizedStem = normalizeStem(stem);
+        String finalExt = ext.isEmpty() ? "" : "." + ext;
+
+        String systemFileName = normalizedStem + finalExt;
+        Path target = dir.resolve(systemFileName).normalize();
+
+        int counter = 1;
+        while (counter <= 10000) {
             if (!target.startsWith(storagePath)) {
                 throw new IllegalArgumentException("Invalid file path");
             }
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-            return new StoredFile(systemFileName, file.getOriginalFilename(), file.getSize());
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to store file: " + file.getOriginalFilename(), e);
+
+            try {
+                try (var is = file.getInputStream();
+                     var os = Files.newOutputStream(target, StandardOpenOption.CREATE_NEW)) {
+                    is.transferTo(os);
+                }
+                return new StoredFile(target.getFileName().toString(), originalFilename, file.getSize());
+            } catch (FileAlreadyExistsException e) {
+                systemFileName = normalizedStem + "_" + counter + finalExt;
+                target = dir.resolve(systemFileName).normalize();
+                counter++;
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to store file: " + originalFilename, e);
+            }
         }
+
+        throw new IllegalStateException("Could not generate a unique file name after 10000 attempts for: " + originalFilename);
+    }
+
+    private String normalizeStem(String stem) {
+        if (stem == null || stem.isBlank()) {
+            return "file";
+        }
+        // Replace whitespace with underscore
+        String normalized = stem.replaceAll("\\s+", "_")
+                .replaceAll("[\\p{Cntrl}]", "")
+                .trim();
+
+        if (normalized.isEmpty()) {
+            return "file";
+        }
+        return normalized;
     }
 
     public void delete(String systemFileName, LocalDateTime createdAt) {
@@ -159,9 +201,4 @@ public class PublicationFileStorageService {
         return basename.trim();
     }
 
-    private String extractExtension(String filename) {
-        if (filename == null) return "";
-        int dot = filename.lastIndexOf('.');
-        return dot >= 0 ? filename.substring(dot + 1).toLowerCase() : "";
-    }
 }

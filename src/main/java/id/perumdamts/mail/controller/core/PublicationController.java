@@ -1,5 +1,6 @@
 package id.perumdamts.mail.controller.core;
 
+import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.publication.CreatePublicationRequest;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
@@ -14,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.core.io.Resource;
-import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -71,9 +71,10 @@ public class PublicationController {
     }
 
     @GetMapping
-    public PagedModel<PublicationResponse> findAll(@ParameterObject PublicationParams params) {
-        return new PagedModel<>(queryHandler.findAll(params));
+    public PagedResponse<PublicationResponse> findAll(@ParameterObject PublicationParams params) {
+        return queryHandler.findAll(params);
     }
+
 
     @GetMapping("/{id}")
     public PublicationResponse findById(@PathVariable String id) {

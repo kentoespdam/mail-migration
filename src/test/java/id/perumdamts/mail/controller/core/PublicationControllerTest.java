@@ -50,7 +50,7 @@ class PublicationControllerTest {
                 "1", "Test Publication", "Description",
                 new DocumentTypeLookup("1", "Internal"),
                 status, LocalDateTime.now(), "file.pdf", 1024,
-                "Test User", "Staff", 1,
+                "Test User", "Staff",
                 LocalDateTime.now(), LocalDateTime.now());
     }
 

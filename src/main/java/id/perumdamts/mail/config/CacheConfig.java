@@ -1,5 +1,7 @@
 package id.perumdamts.mail.config;
 
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,16 +41,19 @@ public class CacheConfig {
      * Konstanta nama cache — dipakai di {@code @Cacheable}, {@code @CacheEvict},
      * dan {@link org.springframework.data.redis.cache.RedisCacheManager}.
      * Tidak boleh ada string literal cache name di luar class ini.
+     *
+     * <p>Versi (:v2) ditambahkan untuk menghindari ClassCastException akibat
+     * perubahan serializer ke type-aware.
      */
     public static final class CacheNames {
         private CacheNames() {}
 
-        public static final String HR_EMPLOYEE     = "hrEmployee";
-        public static final String MAIL_FOLDER     = "mailFolder";
-        public static final String TENANT_CONFIG   = "tenantConfig";
-        public static final String MAIL_STATS      = "mailStats";
-        public static final String APPWRITE_TOKENS = "appwrite-tokens";
-        public static final String PUBLICATIONS    = "publications";
+        public static final String HR_EMPLOYEE     = "hrEmployee:v2";
+        public static final String MAIL_FOLDER     = "mailFolder:v2";
+        public static final String TENANT_CONFIG   = "tenantConfig:v2";
+        public static final String MAIL_STATS      = "mailStats:v2";
+        public static final String APPWRITE_TOKENS = "appwrite-tokens:v2";
+        public static final String PUBLICATIONS    = "publications:v2";
     }
 
     /**
@@ -71,9 +76,12 @@ public class CacheConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(GenericJacksonJsonRedisSerializer.builder().build());
+
+        var serializer = buildSerializer();
+        template.setValueSerializer(serializer);
         template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(GenericJacksonJsonRedisSerializer.builder().build());
+        template.setHashValueSerializer(serializer);
+
         return template;
     }
 
@@ -106,14 +114,26 @@ public class CacheConfig {
      * Base cache configuration: JSON serialization + null value disallow.
      */
     private RedisCacheConfiguration buildConfig(Duration ttl) {
-        GenericJacksonJsonRedisSerializer serializer = GenericJacksonJsonRedisSerializer.builder()
-                .build();
-
         return RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(ttl)
                 .disableCachingNullValues()
                 .serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(serializer)
+                        RedisSerializationContext.SerializationPair.fromSerializer(buildSerializer())
                 );
     }
+
+    private GenericJacksonJsonRedisSerializer buildSerializer() {
+        PolymorphicTypeValidator validator = BasicPolymorphicTypeValidator.builder()
+                .allowIfBaseType(Object.class)
+                .allowIfSubType("id.perumdamts.mail")
+                .allowIfSubType("java.util")
+                .allowIfSubType("java.time")
+                .allowIfSubType("org.springframework.data.domain")
+                .build();
+
+        return GenericJacksonJsonRedisSerializer.builder()
+                .enableDefaultTyping(validator)
+                .build();
+    }
 }
+

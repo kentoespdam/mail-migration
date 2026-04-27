@@ -145,8 +145,6 @@ public class PublicationQueryRepository {
                 ? new DocumentTypeLookup(encoder.encode(DocumentType.class, docTypeId), docTypeName)
                 : null;
 
-        Integer createdByUserId = r.get(field("p.created_by_user_id"), Integer.class);
-
         return new PublicationResponse(
                 encoder.encode(Publication.class, id),
                 r.get(field("p.title"), String.class),
@@ -158,7 +156,6 @@ public class PublicationQueryRepository {
                 r.get(field("p.file_size"), Integer.class),
                 r.get(field("p.created_by_name"), String.class),
                 r.get(field("p.created_by_title"), String.class),
-                createdByUserId,
                 r.get(field("p.created_at"), LocalDateTime.class),
                 r.get(field("p.updated_at"), LocalDateTime.class));
     }

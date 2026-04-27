@@ -13,7 +13,8 @@
 | **DB** | MariaDB `192.168.230.84:3307` · db `smartoffice_mail` · Flyway migrations |
 | **Cache** | Redis `localhost:6379` · `hrEmployee` 60m · `mailFolder` 10m · `tenantConfig` 6h · `mailStats` 5m · `appwrite-tokens` 5m |
 | **Tenant** | Single-instance · `TenantConfig` via `app.tenant.*` |
-| **Storage** | `/data/attachments` · configurable via `storage.base-path` (MUST be absolute in production) |
+- **Storage**: `/data/attachments` · configurable via `storage.base-path` (MUST be absolute in production) · **Publication files**: use normalized original filename with numeric suffix for collisions (e.g., `file_1.ext`), replacing UUID.
+
 
 ---
 
@@ -388,11 +389,14 @@ app:
 
 | Cache Name | Key Pattern | TTL |
 |------------|-------------|-----|
-| `hrEmployee` | `hrEmployee::emp:{id}` | 60 min |
-| `mailFolder` | `mailFolder::tree:{userId}` | 10 min |
-| `tenantConfig` | `tenantConfig::tenant:{code}` | 6 hours |
-| `mailStats` | `mailStats::user:{userId}` | 5 min |
-| `appwrite-tokens` | `appwrite-tokens::{tokenPrefix}` | 5 min |
+| `hrEmployee:v2` | `hrEmployee::emp:{id}` | 60 min |
+| `mailFolder:v2` | `mailFolder::tree:{userId}` | 10 min |
+| `tenantConfig:v2` | `tenantConfig::tenant:{code}` | 6 hours |
+| `mailStats:v2` | `mailStats::user:{userId}` | 5 min |
+| `appwrite-tokens:v2` | `appwrite-tokens::{tokenPrefix}` | 5 min |
+| `publications:v2` | `publications::pub:{id}` | 10 min |
+
+> **Note**: All caches use `GenericJacksonJsonRedisSerializer` with `PolymorphicTypeValidator` (type-aware) restricted to `id.perumdamts.mail`. Cache version `:v2` ensures compatibility.
 
 ---
 

@@ -1,5 +1,6 @@
 package id.perumdamts.mail.service.core.publication;
 
+import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.repository.core.jooq.PublicationQueryRepository;
@@ -49,10 +50,10 @@ class PublicationQueryServiceTest {
 
         when(queryRepository.findAll(any(PublicationParams.class))).thenReturn(page);
 
-        Page<PublicationResponse> result = service.findAll(params);
+        PagedResponse<PublicationResponse> result = service.findAll(params);
 
-        assertThat(result.getContent()).containsExactly(first, second);
-        assertThat(result.getTotalElements()).isEqualTo(12);
+        assertThat(result.content()).containsExactly(first, second);
+        assertThat(result.totalElements()).isEqualTo(12);
         verify(queryRepository).findAll(eq(params));
         verifyNoMoreInteractions(queryRepository);
 
@@ -66,15 +67,16 @@ class PublicationQueryServiceTest {
 
         when(queryRepository.findAll(any(PublicationParams.class))).thenReturn(emptyPage);
 
-        Page<PublicationResponse> result = service.findAll(params);
+        PagedResponse<PublicationResponse> result = service.findAll(params);
 
-        assertThat(result.getContent()).isEmpty();
-        assertThat(result.getTotalElements()).isZero();
+        assertThat(result.content()).isEmpty();
+        assertThat(result.totalElements()).isZero();
         verify(queryRepository).findAll(eq(params));
         verifyNoMoreInteractions(queryRepository);
 
         log.info("empty paged, {}", result);
     }
+
 
     @Test
     void findById_shouldReturnPublicationWhenExists() {
@@ -130,7 +132,6 @@ class PublicationQueryServiceTest {
                 123,
                 "Creator",
                 "Manager",
-                1,
                 null,
                 null);
     }

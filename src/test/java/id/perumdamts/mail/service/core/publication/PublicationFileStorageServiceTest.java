@@ -29,21 +29,57 @@ class PublicationFileStorageServiceTest {
     }
 
     @Test
-    void store_shouldSaveFileAndReturnMetadata() throws IOException {
+    void store_shouldSaveFileWithNormalizedName() throws IOException {
         MockMultipartFile file = new MockMultipartFile(
-                "file", "test.pdf", "application/pdf", "test content".getBytes());
+                "file", "test file.pdf", "application/pdf", "test content".getBytes());
 
         var result = service.store(file);
 
-        assertThat(result.originalFileName()).isEqualTo("test.pdf");
-        assertThat(result.systemFileName()).endsWith(".pdf");
+        assertThat(result.originalFileName()).isEqualTo("test file.pdf");
+        assertThat(result.systemFileName()).isEqualTo("test_file.pdf");
         assertThat(result.fileSize()).isEqualTo(file.getSize());
 
         Path storedFile = tempDir.resolve("publik")
                 .resolve(LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMM")))
-                .resolve(result.systemFileName());
+                .resolve("test_file.pdf");
         assertThat(Files.exists(storedFile)).isTrue();
         assertThat(Files.readAllBytes(storedFile)).isEqualTo(file.getBytes());
+    }
+
+    @Test
+    void store_shouldHandleCollisions() {
+        String fileName = "test.pdf";
+        MockMultipartFile file1 = new MockMultipartFile("file", fileName, "application/pdf", "content 1".getBytes());
+        MockMultipartFile file2 = new MockMultipartFile("file", fileName, "application/pdf", "content 2".getBytes());
+        MockMultipartFile file3 = new MockMultipartFile("file", fileName, "application/pdf", "content 3".getBytes());
+
+        var res1 = service.store(file1);
+        var res2 = service.store(file2);
+        var res3 = service.store(file3);
+
+        assertThat(res1.systemFileName()).isEqualTo("test.pdf");
+        assertThat(res2.systemFileName()).isEqualTo("test_1.pdf");
+        assertThat(res3.systemFileName()).isEqualTo("test_2.pdf");
+    }
+
+    @Test
+    void store_shouldSanitizePathTraversal() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "../../../etc/passwd.txt", "text/plain", "content".getBytes());
+
+        var result = service.store(file);
+
+        assertThat(result.systemFileName()).isEqualTo("passwd.txt");
+    }
+
+    @Test
+    void store_shouldFallbackWhenStemIsEmpty() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", " .pdf", "application/pdf", "content".getBytes());
+
+        var result = service.store(file);
+
+        assertThat(result.systemFileName()).isEqualTo("file.pdf");
     }
 
     @Test
