@@ -48,3 +48,4 @@ data/attachments/*
 .dolt/
 *.db
 .beads-credential-key
+/.claude_export

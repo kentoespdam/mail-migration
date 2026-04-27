@@ -172,7 +172,7 @@ id.perumdamts.mail/
 | 7 | Attachment | `attachments`, `attachment_download_history` | F4 🟡 |
 | 8 | MailArchive | `mail_archive`, `mail_archive_access`, `archive_location` | F5 🟡 |
 | 9 | Archive Notif | `mail_archive_notif`, `mail_archive_notif_log` | F5 🟡 |
-| 10 | Publication | `publication`, `document_type`, `allowed_file_type` | F5 🟡 |
+| 10 | Publication | `area_publik`, `document_type`, `allowed_file_type` | F5 🟡 |
 | 11–14 | Auxiliary | `mail_respontime`, `print_log`, `*_statistic` | F6 🟢 |
 
 ---
@@ -191,6 +191,9 @@ id.perumdamts.mail/
 | V8 | `V8__publication_schema.sql` | Publication module |
 | V9 | `V9__document_type_enhancement.sql` | Document type enhancement |
 | V10 | `V10__mail_search_indexes.sql` | FULLTEXT index for mail search |
+| V11 | `V11__publication_align_legacy.sql` | Align area_publik with legacy (title, description, file_name) |
+| V12 | `V12__publication_backfill_created_at.sql` | Backfill created_at from published_date |
+| V13 | `V13__publication_system_filename_normalization.sql` | Normalize system_file_name to basename |
 | V99 | `V99__data_migration.sql` | Idempotent data fixes (root_id, typos, trial exclusion) |
 
 ---

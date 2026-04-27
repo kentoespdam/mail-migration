@@ -63,8 +63,8 @@ public class PublicationQueryRepository {
                 field("jd.jenis_dokumen"),
                 field("p.status"),
                 field("p.published_date"),
-                field("p.file_name"),
-                field("p.file_path"),
+                field("p.original_file_name"),
+                field("p.system_file_name"),
                 field("p.file_size"),
                 field("p.created_by_name"),
                 field("p.created_by_title"),
@@ -97,8 +97,8 @@ public class PublicationQueryRepository {
                 field("jd.jenis_dokumen"),
                 field("p.status"),
                 field("p.published_date"),
-                field("p.file_name"),
-                field("p.file_path"),
+                field("p.original_file_name"),
+                field("p.system_file_name"),
                 field("p.file_size"),
                 field("p.created_by_name"),
                 field("p.created_by_title"),
@@ -119,15 +119,15 @@ public class PublicationQueryRepository {
 
     public Optional<PublicationFileMeta> findFileMeta(Long id) {
         return dsl.select(
-                field("p.file_name"),
-                field("p.file_path"),
+                field("p.original_file_name"),
+                field("p.system_file_name"),
                 field("p.created_at"))
                 .from(table("area_publik").as("p"))
                 .where(field("p.id").eq(id))
                 .and(field("p.status").ne(inline("DELETED")))
                 .fetchOptional(r -> new PublicationFileMeta(
-                        r.get(field("p.file_name"), String.class),
-                        r.get(field("p.file_path"), String.class),
+                        r.get(field("p.original_file_name"), String.class),
+                        r.get(field("p.system_file_name"), String.class),
                         r.get(field("p.created_at"), LocalDateTime.class)
                 ));
     }
@@ -154,7 +154,7 @@ public class PublicationQueryRepository {
                 docType,
                 r.get(field("p.status"), String.class),
                 r.get(field("p.published_date"), LocalDateTime.class),
-                r.get(field("p.file_name"), String.class),
+                r.get(field("p.original_file_name"), String.class),
                 r.get(field("p.file_size"), Integer.class),
                 r.get(field("p.created_by_name"), String.class),
                 r.get(field("p.created_by_title"), String.class),

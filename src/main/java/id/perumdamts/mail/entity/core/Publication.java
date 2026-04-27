@@ -25,10 +25,10 @@ public class Publication implements SqidEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "judul", nullable = false)
+    @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "desk", columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -45,10 +45,10 @@ public class Publication implements SqidEntity {
     @Column(name = "notif_flag", nullable = false)
     private Integer notifFlag = 0;
 
-    @Column(name = "file_name", length = 256)
+    @Column(name = "original_file_name", length = 256)
     private String originalFileName;
 
-    @Column(name = "file_path", length = 256)
+    @Column(name = "system_file_name", length = 256)
     private String systemFileName;
 
     @Column(name = "file_size")
