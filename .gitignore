@@ -37,8 +37,14 @@ inspect/
 /.ollamassist/
 /dummy_prompt.md
 issue.md
-/plan/
 /issues/
 
 .qwen/
 gha-creds-*.json
+
+data/attachments/*
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
