@@ -26,6 +26,7 @@
 - **Tenant**: Replace `CLIENT_CODE if-else` with `TenantConfig`
 - **Virtual Threads**: `spring.threads.virtual.enabled: true` — avoid `synchronized` (use `ReentrantLock`)
 - **CQRS Split**: All core modules now follow Command/Query separation (Folder, Recipient, Mail, Archive, Publication)
+- **Performance**: FULLTEXT index on `mail` (subject, content) for optimized global search via `MATCH ... AGAINST`
 
 ---
 
@@ -188,6 +189,8 @@ id.perumdamts.mail/
 | V6 | `V6__pesan_singkat_improvements.sql` | Quick message improvements |
 | V7 | `V7__mail_recipient_constraints.sql` | Recipient constraints |
 | V8 | `V8__publication_schema.sql` | Publication module |
+| V9 | `V9__document_type_enhancement.sql` | Document type enhancement |
+| V10 | `V10__mail_search_indexes.sql` | FULLTEXT index for mail search |
 | V99 | `V99__data_migration.sql` | Idempotent data fixes (root_id, typos, trial exclusion) |
 
 ---

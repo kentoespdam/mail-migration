@@ -8,6 +8,7 @@ import id.perumdamts.mail.service.core.mail.MailCommandService;
 import id.perumdamts.mail.service.core.mail.MailQueryService;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -108,12 +109,12 @@ public class MailController {
     }
 
     @GetMapping("/search")
-    public PagedResponse<MailSummaryResponse> search(MailSearchRequest request) {
+    public PagedResponse<MailSummaryResponse> search(@ParameterObject MailSearchRequest request) {
         return queryService.search(request);
     }
 
     @GetMapping("/report")
-    public PagedResponse<MailReportResponse> report(MailReportRequest request) {
+    public PagedResponse<MailReportResponse> report(@ParameterObject  MailReportRequest request) {
         return queryService.getReport(request);
     }
 

@@ -47,11 +47,9 @@ public class MailQueryRepository {
                 if (keyword != null && !keyword.isBlank()) {
                         String kw = "%" + keyword + "%";
                         condition = condition.and(
-                                        field("m.m_subject").likeIgnoreCase(kw)
+                                        condition("MATCH(m.m_subject, m.m_content) AGAINST (? IN BOOLEAN MODE)", keyword)
                                                         .or(field("m.m_no").likeIgnoreCase(kw))
-                                                        .or(field("m.m_content").likeIgnoreCase(kw))
-                                                        .or(field("m.m_created_by_name").likeIgnoreCase(kw))
-                                                        .or(field("m.m_to_str").likeIgnoreCase(kw)));
+                                                        .or(field("m.m_created_by_name").likeIgnoreCase(kw)));
                 }
 
                 return dsl.select(
@@ -94,9 +92,8 @@ public class MailQueryRepository {
                 if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
                         String kw = "%" + request.getKeyword() + "%";
                         condition = condition.and(
-                                        field("m.m_subject").likeIgnoreCase(kw)
+                                        condition("MATCH(m.m_subject, m.m_content) AGAINST (? IN BOOLEAN MODE)", request.getKeyword())
                                                         .or(field("m.m_no").likeIgnoreCase(kw))
-                                                        .or(field("m.m_content").likeIgnoreCase(kw))
                                                         .or(field("m.m_created_by_name").likeIgnoreCase(kw))
                                                         .or(field("m.m_to_str").likeIgnoreCase(kw)));
                 }
