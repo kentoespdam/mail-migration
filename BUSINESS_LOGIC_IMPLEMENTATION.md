@@ -105,6 +105,29 @@ Fix: Explicit return null jika parent tidak ditemukan.
 - `MailCommandService.send()` di-refactor untuk delegate ke `MailSendService`
 - Domain event `MailSentEvent` dipublish untuk async processing
 
+### 5. Attachment Implementation (CQRS-lite)
+
+**Location**: `service/core/attachment/`
+
+**Components**:
+- `AttachmentFileStorageService` - Storage handler using `mail/{yyyyMM}/` structure.
+- `AttachmentCommandService` - Write operations (upload, delete) with access validation.
+- `AttachmentQueryService` - Read operations (list, detail, download) with caching.
+- `AttachmentQueryRepository` - JOOQ optimized queries.
+
+**Key Logic**:
+- **Storage Structure**: Files are stored in monthly folders (e.g., `mail/202604/`) with normalized filenames and numeric suffixes for collisions.
+- **Access Validation**: Every operation validates that the user has access to the associated `Mail` via `UserTask`.
+- **Soft Delete**: Attachments are soft-deleted by setting `status = 2` (Deleted).
+- **Caching**: Attachment details are cached with key `attachments::detail:{userId}:{attachmentId}:v1` for 10 minutes.
+
+**Endpoints**:
+- `POST /api/v1/mails/{mailId}/attachments` - Upload
+- `GET /api/v1/mails/{mailId}/attachments` - List
+- `GET /api/v1/mails/{mailId}/attachments/{id}` - Detail
+- `GET /api/v1/mails/{mailId}/attachments/{id}/download` - Download
+- `DELETE /api/v1/mails/{mailId}/attachments/{id}` - Delete
+
 ## Migration Notes
 
 ### From PHP Monolith to Spring Boot Microservice

@@ -34,7 +34,7 @@ public class MailRecipientController {
     @GetMapping
     public List<RecipientResponse> getRecipients(@PathVariable String mailId) {
         long id = encoder.decode(Mail.class, mailId);
-        return queryService.getRecipients(id);
+        return queryService.findRecipients(id);
     }
 
     @PostMapping

@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.Record;
-import org.jooq.impl.DSL;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -143,7 +142,7 @@ public class UserTaskQueryService {
                 r.get("categoryName", String.class),
                 r.get("circulationName", String.class),
                 r.get("maxResponseDate", LocalDate.class),
-                ReadStatus.READ.getDbValue().equals(r.get("readStatus", Integer.class))
+                ReadStatus.READ.getDbValue() == r.get("readStatus", Integer.class)
         );
     }
 

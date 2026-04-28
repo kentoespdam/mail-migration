@@ -1,5 +1,6 @@
 package id.perumdamts.mail.service.core.attachment;
 
+import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.core.attachment.AttachmentDetailResponse;
 import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
 import id.perumdamts.mail.entity.core.Attachment;
@@ -37,7 +38,7 @@ public class AttachmentQueryService {
         return queryRepository.findByRef(AttachmentRefType.MAIL, mailId);
     }
 
-    @Cacheable(value = "attachments", key = "'detail:' + #principal.userId() + ':' + #attachmentId + ':v1'")
+    @Cacheable(value = CacheConfig.CacheNames.ATTACHMENTS, key = "'detail:' + #principal.userId() + ':' + #attachmentId + ':v1'")
     public AttachmentDetailResponse getAttachmentDetail(Integer attachmentId, Long mailId, MailPrincipal principal) {
         validateMailAccess(mailId, principal);
 

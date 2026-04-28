@@ -1,15 +1,17 @@
 package id.perumdamts.mail.service.core.mail;
 
-import id.perumdamts.mail.dto.common.PagedResponse;
+import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.core.mail.*;
 import id.perumdamts.mail.enums.AttachmentRefType;
+import id.perumdamts.mail.repository.core.jooq.AttachmentQueryRepository;
 import id.perumdamts.mail.repository.core.jooq.MailQueryRepository;
-import id.perumdamts.mail.repository.core.jpa.AttachmentRepository;
-import id.perumdamts.mail.repository.core.jpa.MailRepository;
 import id.perumdamts.mail.service.core.usertask.UserTaskQueryService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,49 +23,64 @@ import java.util.List;
 public class MailQueryService {
 
     private final MailQueryRepository mailQueryRepository;
-    private final MailRepository mailRepository;
-    private final AttachmentRepository attachmentRepository;
+    private final AttachmentQueryRepository attachmentQueryRepository;
     private final UserTaskQueryService userTaskQueryService;
-    private final MailMapper mailMapper;
 
-    public MailResponse getDetail(Long mailId) {
-        var mail = mailRepository.findById(mailId)
+    public MailResponse getDetail(Long mailId, Long userId) {
+        MailResponse mail = mailQueryRepository.findById(mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
-        var attachments = attachmentRepository.findByRefTypeAndRefId(
-                AttachmentRefType.MAIL.getDbValue(), mailId);
-        return mailMapper.toResponse(mail, attachments);
+
+        if (!userTaskQueryService.existsActive(userId, mailId)) {
+            throw new EntityNotFoundException("Mail not found or access denied: " + mailId);
+        }
+
+        var attachments = attachmentQueryRepository.findByRef(AttachmentRefType.MAIL, mailId);
+        return new MailResponse(
+                mail.getId(),
+                mail.getMailNumber(),
+                mail.getMailDate(),
+                mail.getType(),
+                mail.getCategory(),
+                mail.getSubject(),
+                mail.getContent(),
+                mail.getNote(),
+                mail.getMaxResponseDate(),
+                mail.getStatus(),
+                mail.getThread(),
+                mail.getSummary(),
+                mail.getAudit(),
+                mail.getNoSuratMasuk(),
+                mail.getAsalSuratMasuk(),
+                mail.getTglSuratMasuk(),
+                mail.getTujuanSuratKeluar(),
+                mail.getPenerimaSuratKeluar(),
+                attachments
+        );
     }
 
-    public Page<MailLookupResponse> lookup(Long userId, MailLookupParams params) {
+    public Page<MailLookupResponse> findLookup(Long userId, MailLookupParams params) {
         return userTaskQueryService.findAll(userId, params);
     }
 
-    public List<MailTrackingItemResponse> findThreadTracking(Long mailId) {
-        Long rootId = userTaskQueryService.resolveRootId(mailId);
-        return userTaskQueryService.findThread(rootId);
+    public List<MailSummaryResponse> findThread(Long mailId) {
+        Long rootId = mailQueryRepository.resolveRootId(mailId);
+        return findThreadByRootId(rootId);
     }
 
-    public List<MailSummaryResponse> getThread(Long mailId) {
-        return mailQueryRepository.findThread(mailId);
+    @Cacheable(value = CacheConfig.CacheNames.MAIL_THREAD, key = "#rootId")
+    public List<MailSummaryResponse> findThreadByRootId(Long rootId) {
+        return mailQueryRepository.findThreadByRootId(rootId);
     }
 
-    public PagedResponse<MailSummaryResponse> search(MailSearchRequest request) {
+    public Page<MailSummaryResponse> search(MailSearchRequest request) {
         List<MailSummaryResponse> items = mailQueryRepository.searchMails(request);
         long total = items.isEmpty() ? 0 : items.getFirst().getTotalCount();
-        return PagedResponse.of(items, request, total);
+        return new PageImpl<>(items, PageRequest.of(request.getPage(), request.getSize()), total);
     }
 
-    public List<MailTrackingResponse> getTracking(Long mailId) {
-        return mailQueryRepository.findTracking(mailId);
-    }
-
-    public List<RecipientReadStatusResponse> getReadStatus(Long mailId) {
-        return mailQueryRepository.findReadStatus(mailId);
-    }
-
-    public PagedResponse<MailReportResponse> getReport(MailReportRequest request) {
+    public Page<MailReportResponse> findReport(MailReportRequest request) {
         List<MailReportResponse> items = mailQueryRepository.getReport(request);
-        long total = items.isEmpty() ? 0 : items.getFirst().getTotalCount();
-        return PagedResponse.of(items, request, total);
+        long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
+        return new PageImpl<>(items, PageRequest.of(request.getPage(), request.getSize()), total);
     }
 }

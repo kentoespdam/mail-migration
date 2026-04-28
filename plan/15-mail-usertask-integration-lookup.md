@@ -24,20 +24,20 @@ Prompt meminta `UserTask` dipakai sebagai pintu filter "mail milik user login" u
 
 ## Keputusan Desain (hasil klarifikasi sebelumnya)
 
-| Area | Keputusan |
-|---|---|
-| Scope lookup | Param `folderId` opsional. Kosong → seluruh `UserTask` user yang `folderId NOT IN (DELETED, PURGED)` dan mail-nya `status = SENT`. Diisi → filter ke folder itu. |
-| `circulationName` | Bersumber dari `MailRecipient.circulation` baris milik user login (TO/CC/BCC). Untuk mail di mana user login adalah *creator*, label khusus (lihat keputusan terbuka). |
-| Tracking | Endpoint menerima `id` mail apa pun → resolver mengambil `rootMailId` dari mail tsb (jika `rootMail` null, gunakan `id` itu sendiri) → fetch semua mail dengan `m_root_id = rootMailId` (atau `m_id = rootMailId` untuk root itu sendiri). Tanpa filter user. |
-| Pagination | `PagedModel<T>` (Spring `org.springframework.data.web.PagedModel`) mengikuti pattern `MailTypeController.findAll`. Service mengembalikan `Page<T>`, controller bungkus dengan `new PagedModel<>(...)`. Request DTO turunan `JpaPageRequest`. Hindari cache `Page<T>` mentah. |
-| Flag read/unread | Field tunggal `isRead: boolean` di `MailLookupResponse`, bersumber dari `UserTask.readStatus` user login. |
-| Auto mark-read | Endpoint detail otomatis menandai `UserTask.readStatus=READ` + `readDate=now` untuk user login saat dipanggil. Side-effect tulis di GET diakui dan didokumentasikan. Endpoint `POST /{id}/read` lama tetap ada untuk kompatibilitas. |
-| Label `circulationName` creator | `SENDER` saat user login = `m_created_by` dan tidak ada baris `mail_recipient` miliknya. |
-| Path tracking | **Ganti perilaku** `GET /{id}/tracking` lama: id boleh non-root → server resolve `rootMailId`, lalu kembalikan seluruh mail dalam thread. Breaking change untuk konsumen lama; perlu disepakati di catatan rilis. |
-| Akses `UserTaskRepository` | Wajib lewat `UserTaskCommandService` / `UserTaskQueryService`. Repository JPA `UserTask` hanya di-inject di kedua service tersebut. Service domain lain (`MailFolderCommandService`, `MailCommandService`, dll) berhenti meng-inject `UserTaskRepository` setelah migrasi. |
-| Detail access policy | User boleh akses detail kalau: (a) `m.m_created_by = userId` (creator), atau (b) ada `UserTask` aktif untuk pasangan user-mail. Auto mark-read hanya berjalan ketika kondisi (b) terpenuhi (creator tanpa `UserTask` tidak men-trigger update). |
-| Status lookup | Hanya mail dengan `m.m_status = SENT`. Draft tidak ikut di lookup. |
-| PR strategy | Dua PR terpisah: PR-1 refactor CQRS `UserTask` + migrasi pemanggilan; PR-2 endpoint lookup/detail/tracking + DTO baru. PR-2 dependent pada PR-1 merge dulu. |
+| Area                            | Keputusan                                                                                                                                                                                                                                                                    |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Scope lookup                    | Param `folderId` opsional. Kosong → seluruh `UserTask` user yang `folderId NOT IN (DELETED, PURGED)` dan mail-nya `status = SENT`. Diisi → filter ke folder itu.                                                                                                             |
+| `circulationName`               | Bersumber dari `MailRecipient.circulation` baris milik user login (TO/CC/BCC). Untuk mail di mana user login adalah *creator*, label khusus (lihat keputusan terbuka).                                                                                                       |
+| Tracking                        | Endpoint menerima `id` mail apa pun → resolver mengambil `rootMailId` dari mail tsb (jika `rootMail` null, gunakan `id` itu sendiri) → fetch semua mail dengan `m_root_id = rootMailId` (atau `m_id = rootMailId` untuk root itu sendiri). Tanpa filter user.                |
+| Pagination                      | `PagedModel<T>` (Spring `org.springframework.data.web.PagedModel`) mengikuti pattern `MailTypeController.findAll`. Service mengembalikan `Page<T>`, controller bungkus dengan `new PagedModel<>(...)`. Request DTO turunan `JpaPageRequest`. Hindari cache `Page<T>` mentah. |
+| Flag read/unread                | Field tunggal `isRead: boolean` di `MailLookupResponse`, bersumber dari `UserTask.readStatus` user login.                                                                                                                                                                    |
+| Auto mark-read                  | Endpoint detail otomatis menandai `UserTask.readStatus=READ` + `readDate=now` untuk user login saat dipanggil. Side-effect tulis di GET diakui dan didokumentasikan. Endpoint `POST /{id}/read` lama tetap ada untuk kompatibilitas.                                         |
+| Label `circulationName` creator | `SENDER` saat user login = `m_created_by` dan tidak ada baris `mail_recipient` miliknya.                                                                                                                                                                                     |
+| Path tracking                   | **Ganti perilaku** `GET /{id}/tracking` lama: id boleh non-root → server resolve `rootMailId`, lalu kembalikan seluruh mail dalam thread. Breaking change untuk konsumen lama; perlu disepakati di catatan rilis.                                                            |
+| Akses `UserTaskRepository`      | Wajib lewat `UserTaskCommandService` / `UserTaskQueryService`. Repository JPA `UserTask` hanya di-inject di kedua service tersebut. Service domain lain (`MailFolderCommandService`, `MailCommandService`, dll) berhenti meng-inject `UserTaskRepository` setelah migrasi.   |
+| Detail access policy            | User boleh akses detail kalau: (a) `m.m_created_by = userId` (creator), atau (b) ada `UserTask` aktif untuk pasangan user-mail. Auto mark-read hanya berjalan ketika kondisi (b) terpenuhi (creator tanpa `UserTask` tidak men-trigger update).                              |
+| Status lookup                   | Hanya mail dengan `m.m_status = SENT`. Draft tidak ikut di lookup.                                                                                                                                                                                                           |
+| PR strategy                     | Dua PR terpisah: PR-1 refactor CQRS `UserTask` + migrasi pemanggilan; PR-2 endpoint lookup/detail/tracking + DTO baru. PR-2 dependent pada PR-1 merge dulu.                                                                                                                  |
 
 ## Tujuan
 
@@ -102,11 +102,11 @@ Prompt meminta `UserTask` dipakai sebagai pintu filter "mail milik user login" u
 
 Tambahkan ke `MailController` (atau pisahkan ke `MailLookupController` agar tidak terlalu besar):
 
-| Method | Path | Deskripsi |
-|---|---|---|
-| `GET` | `/api/v1/mails/lookup` | Lookup per user; query param `folderId?`, paging via `JpaPageRequest` (`page`, `size`, `sortBy`, `sortDir`). Return `PagedModel<MailLookupResponse>`. Controller signature mengikuti `MailTypeController.findAll`. |
-| `GET` | `/api/v1/mails/{id}` | Detail mail + attachments. Auto mark-read untuk user yang punya `UserTask`. |
-| `GET` | `/api/v1/mails/{id}/tracking` | **Mengganti perilaku endpoint lama**. Server resolve `rootMailId` dari `id` (jika `m_root_id` null → id itu sendiri), lalu kembalikan seluruh mail dengan `m_root_id = rootMailId` (termasuk root) urut `m_created_date ASC`. Tanpa filter user. |
+| Method | Path                          | Deskripsi                                                                                                                                                                                                                                        |
+|--------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `GET`  | `/api/v1/mails/lookup`        | Lookup per user; query param `folderId?`, paging via `JpaPageRequest` (`page`, `size`, `sortBy`, `sortDir`). Return `PagedModel<MailLookupResponse>`. Controller signature mengikuti `MailTypeController.findAll`.                               |
+| `GET`  | `/api/v1/mails/{id}`          | Detail mail + attachments. Auto mark-read untuk user yang punya `UserTask`.                                                                                                                                                                      |
+| `GET`  | `/api/v1/mails/{id}/tracking` | **Mengganti perilaku endpoint lama**. Server resolve `rootMailId` dari `id` (jika `m_root_id` null → id itu sendiri), lalu kembalikan seluruh mail dengan `m_root_id = rootMailId` (termasuk root) urut `m_created_date ASC`. Tanpa filter user. |
 
 **Catatan konflik path detail:** belum ada `GET /{id}` di `MailController` (yang ada `PUT /{id}` & `POST /{id}/...`). Aman ditambah. Verifikasi tidak bentrok dengan path literal `/search`, `/report`, `/lookup` — Spring routing menyelesaikan literal sebelum variable, jadi urutan tidak masalah, tapi pastikan path literal tidak tertangkap oleh `{id}`.
 

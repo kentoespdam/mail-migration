@@ -1,19 +1,36 @@
 package id.perumdamts.mail.config;
 
-import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.module.SimpleModule;
+import id.perumdamts.mail.dto.core.attachment.AttachmentDetailResponse;
+import id.perumdamts.mail.dto.core.folder.MailFolderResponse;
+import id.perumdamts.mail.dto.core.mail.MailSummaryResponse;
+import id.perumdamts.mail.dto.core.mail.MailTrackingResponse;
+import id.perumdamts.mail.dto.core.mail.RecipientReadStatusResponse;
+import id.perumdamts.mail.dto.core.publication.PublicationResponse;
+import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;
+import id.perumdamts.mail.dto.master.quickMessage.QuickMessageResponse;
+import id.perumdamts.mail.integration.hr.EmployeeDto;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
+import org.springframework.data.redis.serializer.JacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,6 +52,7 @@ import java.util.Map;
  */
 @Configuration
 @EnableCaching
+@SuppressWarnings("removal")
 public class CacheConfig {
 
     /**
@@ -54,6 +72,11 @@ public class CacheConfig {
         public static final String MAIL_STATS      = "mailStats:v2";
         public static final String APPWRITE_TOKENS = "appwrite-tokens:v2";
         public static final String PUBLICATIONS    = "publications:v2";
+        public static final String MAIL_THREAD     = "mailThread:v2";
+        public static final String MAIL_TRACKING   = "mailTracking:v2";
+        public static final String MAIL_READ_STATUS = "mailReadStatus:v2";
+        public static final String ATTACHMENTS     = "attachments";
+        public static final String ALLOWED_FILE_TYPES = "allowedFileTypes";
     }
 
     /**
@@ -68,16 +91,23 @@ public class CacheConfig {
         public static final Duration MAIL_STATS      = Duration.ofMinutes(5);
         public static final Duration APPWRITE_TOKENS = Duration.ofMinutes(5);
         public static final Duration PUBLICATIONS    = Duration.ofMinutes(10);
+        public static final Duration MAIL_THREAD     = Duration.ofMinutes(30);
+        public static final Duration MAIL_TRACKING   = Duration.ofMinutes(15);
+        public static final Duration MAIL_READ_STATUS = Duration.ofMinutes(15);
+        public static final Duration ATTACHMENTS     = Duration.ofMinutes(30);
+        public static final Duration ALLOWED_FILE_TYPES = Duration.ofHours(1);
         public static final Duration DEFAULT         = Duration.ofMinutes(30);
     }
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory, ObjectMapper objectMapper) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
 
-        var serializer = buildSerializer();
+        // Untuk RedisTemplate generic, kita gunakan JacksonJsonRedisSerializer<Object>
+        // Tanpa activateDefaultTyping agar aman dan tidak deprecated.
+        var serializer = new JacksonJsonRedisSerializer<>(objectMapper, Object.class);
         template.setValueSerializer(serializer);
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(serializer);
@@ -86,12 +116,12 @@ public class CacheConfig {
     }
 
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        RedisCacheConfiguration defaultConfig = buildConfig(CacheTtl.DEFAULT);
+    public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory, ObjectMapper objectMapper) {
+        RedisCacheConfiguration defaultConfig = buildConfig(CacheTtl.DEFAULT, new JacksonJsonRedisSerializer<>(objectMapper, Object.class));
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
-                .withInitialCacheConfigurations(perCacheConfigs())
+                .withInitialCacheConfigurations(perCacheConfigs(objectMapper))
                 .build();
     }
 
@@ -99,41 +129,77 @@ public class CacheConfig {
      * TTL spesifik per cache name.
      * Semua cache name diambil dari {@link CacheNames} — no magic string.
      */
-    private Map<String, RedisCacheConfiguration> perCacheConfigs() {
-        return Map.of(
-                CacheNames.HR_EMPLOYEE,     buildConfig(CacheTtl.HR_EMPLOYEE),
-                CacheNames.MAIL_FOLDER,     buildConfig(CacheTtl.MAIL_FOLDER),
-                CacheNames.TENANT_CONFIG,   buildConfig(CacheTtl.TENANT_CONFIG),
-                CacheNames.MAIL_STATS,      buildConfig(CacheTtl.MAIL_STATS),
-                CacheNames.APPWRITE_TOKENS, buildConfig(CacheTtl.APPWRITE_TOKENS),
-                CacheNames.PUBLICATIONS,    buildConfig(CacheTtl.PUBLICATIONS)
+    private Map<String, RedisCacheConfiguration> perCacheConfigs(ObjectMapper mapper) {
+        return Map.ofEntries(
+                Map.entry(CacheNames.HR_EMPLOYEE, buildConfig(CacheTtl.HR_EMPLOYEE, new JacksonJsonRedisSerializer<>(mapper, EmployeeDto.class))),
+                Map.entry(CacheNames.MAIL_FOLDER, buildConfig(CacheTtl.MAIL_FOLDER, createListSerializer(mapper, MailFolderResponse.class))),
+                Map.entry(CacheNames.TENANT_CONFIG, buildConfig(CacheTtl.TENANT_CONFIG, createListSerializer(mapper, QuickMessageResponse.class))),
+                Map.entry(CacheNames.MAIL_STATS, buildConfig(CacheTtl.MAIL_STATS, new JacksonJsonRedisSerializer<>(mapper, Object.class))),
+                Map.entry(CacheNames.APPWRITE_TOKENS, buildConfig(CacheTtl.APPWRITE_TOKENS, new JacksonJsonRedisSerializer<>(mapper, Object.class))),
+                Map.entry(CacheNames.PUBLICATIONS, buildConfig(CacheTtl.PUBLICATIONS, createPageSerializer(mapper, PublicationResponse.class))),
+                Map.entry(CacheNames.MAIL_THREAD, buildConfig(CacheTtl.MAIL_THREAD, createListSerializer(mapper, MailSummaryResponse.class))),
+                Map.entry(CacheNames.MAIL_TRACKING, buildConfig(CacheTtl.MAIL_TRACKING, createListSerializer(mapper, MailTrackingResponse.class))),
+                Map.entry(CacheNames.MAIL_READ_STATUS, buildConfig(CacheTtl.MAIL_READ_STATUS, createListSerializer(mapper, RecipientReadStatusResponse.class))),
+                Map.entry(CacheNames.ATTACHMENTS, buildConfig(CacheTtl.ATTACHMENTS, new JacksonJsonRedisSerializer<>(mapper, AttachmentDetailResponse.class))),
+                Map.entry(CacheNames.ALLOWED_FILE_TYPES, buildConfig(CacheTtl.ALLOWED_FILE_TYPES, createListSerializer(mapper, AllowedFileTypeDto.class)))
         );
     }
 
     /**
      * Base cache configuration: JSON serialization + null value disallow.
      */
-    private RedisCacheConfiguration buildConfig(Duration ttl) {
+    private RedisCacheConfiguration buildConfig(Duration ttl, JacksonJsonRedisSerializer<?> serializer) {
         return RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(ttl)
                 .disableCachingNullValues()
                 .serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(buildSerializer())
+                        RedisSerializationContext.SerializationPair.fromSerializer(serializer)
                 );
     }
 
-    private GenericJacksonJsonRedisSerializer buildSerializer() {
-        PolymorphicTypeValidator validator = BasicPolymorphicTypeValidator.builder()
-                .allowIfBaseType(Object.class)
-                .allowIfSubType("id.perumdamts.mail")
-                .allowIfSubType("java.util")
-                .allowIfSubType("java.time")
-                .allowIfSubType("org.springframework.data.domain")
-                .build();
+    private <T> JacksonJsonRedisSerializer<List<T>> createListSerializer(ObjectMapper mapper, Class<T> type) {
+        JavaType javaType = mapper.getTypeFactory().constructCollectionType(List.class, type);
+        return new JacksonJsonRedisSerializer<>(mapper, javaType);
+    }
 
-        return GenericJacksonJsonRedisSerializer.builder()
-                .enableDefaultTyping(validator)
-                .build();
+    private <T> JacksonJsonRedisSerializer<PageImpl<T>> createPageSerializer(ObjectMapper mapper, Class<T> type) {
+        JavaType javaType = mapper.getTypeFactory().constructParametricType(PageImpl.class, type);
+        return new JacksonJsonRedisSerializer<>(mapper, javaType);
+    }
+
+
+
+    // ── Jackson Mixins for Spring Data Page ──────────────────────────────────
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static abstract class PageImplMixin<T> extends PageImpl<T> {
+        @JsonCreator(mode = com.fasterxml.jackson.annotation.JsonCreator.Mode.PROPERTIES)
+        public PageImplMixin(@JsonProperty("content") List<T> content,
+                             @JsonProperty("pageable") Pageable pageable,
+                             @JsonProperty("totalElements") long total) {
+            super(content, pageable, total);
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static abstract class PageRequestMixin {
+        @JsonCreator
+        public static PageRequest of(@JsonProperty("pageNumber") int page,
+                                   @JsonProperty("pageSize") int size) {
+            return PageRequest.of(page, size);
+        }
+
+        @com.fasterxml.jackson.annotation.JsonIgnore
+        public abstract org.springframework.data.domain.Sort getSort();
+    }
+
+    public static class PageJacksonModule extends SimpleModule {
+        public PageJacksonModule() {
+            setMixInAnnotation(PageImpl.class, PageImplMixin.class);
+            setMixInAnnotation(PageRequest.class, PageRequestMixin.class);
+            setMixInAnnotation(Pageable.class, PageRequestMixin.class);
+            addAbstractTypeMapping(Pageable.class, PageRequest.class);
+        }
     }
 }
 

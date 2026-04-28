@@ -64,8 +64,7 @@ public class MailSignatureService {
         PrintLog printLog = PrintLog.create(
                 mailId,
                 principal.name(),
-                ipAddress,
-                userAgent != null ? userAgent : "Unknown");
+                ipAddress);
         printLog.setAuthCode(authCode);
 
         printLogRepository.save(printLog);

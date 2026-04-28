@@ -97,6 +97,11 @@ public class Mail implements SqidEntity {
     @Column(name = "m_penerima_surat_keluar", length = 200)
     private String penerimaSuratKeluar;
 
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "ref_id", referencedColumnName = "m_id")
+    @org.hibernate.annotations.SQLRestriction("ref_type = 1")
+    private List<Attachment> attachments;
+
     // ── Domain Methods ──
 
     public MailStatus getMailStatus() {

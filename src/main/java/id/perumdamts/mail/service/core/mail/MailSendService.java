@@ -2,14 +2,12 @@ package id.perumdamts.mail.service.core.mail;
 
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.entity.core.MailRecipient;
-import id.perumdamts.mail.entity.core.UserTask;
-import id.perumdamts.mail.enums.SystemFolder;
 import id.perumdamts.mail.event.MailSentEvent;
 import id.perumdamts.mail.repository.core.jpa.MailRecipientRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
-import id.perumdamts.mail.service.core.usertask.UserTaskCommandService;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.mail.numbering.MailNumberGenerator;
+import id.perumdamts.mail.service.core.usertask.UserTaskCommandService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +53,7 @@ public class MailSendService {
      * 8. Mark parent sebagai read (jika reply)
      * 9. Track response time (async)
      * 10. Build toStr (recipient list)
-     * 
+     *
      * @param mailId    ID mail yang akan dikirim
      * @param principal user yang mengirim
      * @return mail yang sudah dikirim

@@ -1,23 +1,29 @@
 package id.perumdamts.mail.dto.core.mail;
 
-import id.perumdamts.mail.dto.common.JpaPageRequest;
+import id.perumdamts.mail.dto.common.PagedRequest;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Set;
+import java.util.Map;
 
 @Getter
 @Setter
-public class MailLookupParams extends JpaPageRequest {
+public class MailLookupParams extends PagedRequest {
     private String folderId;
 
+    private static final Map<String, String> ALLOWED = Map.of(
+            "mailDate", "m.m_date",
+            "subject", "m.m_subject",
+            "createdByName", "m.m_created_by_name"
+    );
+
     @Override
-    protected Set<String> allowedSorts() {
-        return Set.of("mailDate", "subject", "createdByName");
+    protected Map<String, String> allowedSorts() {
+        return ALLOWED;
     }
 
     @Override
-    protected String defaultSort() {
-        return "mailDate";
+    protected String defaultSortColumn() {
+        return "m.m_date";
     }
 }

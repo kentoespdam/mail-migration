@@ -35,6 +35,13 @@ public abstract class MailMapper extends SqidMapper<Mail> {
     @Mapping(target = "attachments", expression = "java(toAttachmentDtos(attachments))")
     public abstract MailResponse toResponse(Mail entity, List<Attachment> attachments);
 
+    @Mapping(target = "id", expression = "java(sqid(entity))")
+    @Mapping(target = "type", expression = "java(toTypeDto(entity))")
+    @Mapping(target = "category", expression = "java(toCategoryDto(entity))")
+    @Mapping(target = "thread", expression = "java(toThreadDto(entity))")
+    @Mapping(target = "audit", expression = "java(toAuditDto(entity))")
+    @Mapping(target = "summary", expression = "java(toSummaryDto(entity))")
+    @Mapping(target = "attachments", ignore = true)
     public abstract MailResponse toResponse(Mail entity);
 
     protected List<AttachmentResponse> toAttachmentDtos(List<Attachment> attachments) {

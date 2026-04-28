@@ -179,7 +179,7 @@ CREATE TABLE `sys_reference` (
   `seq` int(11) DEFAULT NULL,
   `status` enum('Enable','Disable','Deleted') DEFAULT NULL,
   `num_1` int(11) DEFAULT 0,
-  `vchar_1` varchar(32) DEFAULT '',
+  vchar1 varchar(32) DEFAULT '',
   `time_1` time DEFAULT NULL,
   `time_2` time DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -253,7 +253,7 @@ CREATE TABLE `mail_archive_notif_log` (
   `user_id` int(11) DEFAULT NULL,
   `notif_date` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `manl_archive_id` (`mail_archive_id`, `user_id`)
+  KEY mmanlyarchive_id (`mail_archive_id`, `user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================

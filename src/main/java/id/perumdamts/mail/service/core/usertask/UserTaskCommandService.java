@@ -2,9 +2,11 @@ package id.perumdamts.mail.service.core.usertask;
 
 import id.perumdamts.mail.entity.core.UserTask;
 import id.perumdamts.mail.enums.SystemFolder;
+import id.perumdamts.mail.event.RecipientReadEvent;
 import id.perumdamts.mail.repository.core.jpa.UserTaskRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserTaskCommandService {
     private final UserTaskRepository userTaskRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void createDraft(Long userId, Long mailId) {
@@ -69,6 +72,7 @@ public class UserTaskCommandService {
         UserTask userTask = getUserTaskOrThrow(userId, mailId);
         userTask.markRead();
         userTaskRepository.save(userTask);
+        eventPublisher.publishEvent(new RecipientReadEvent(mailId, userId));
     }
 
     @Transactional
