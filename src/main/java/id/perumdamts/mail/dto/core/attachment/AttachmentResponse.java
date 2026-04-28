@@ -3,9 +3,9 @@ package id.perumdamts.mail.dto.core.attachment;
 import java.time.LocalDateTime;
 
 public record AttachmentResponse(
-        Integer id,
+        String id,
         Integer refType,
-        Long refId,
+        String refId,
         String originalFilename,
         String fileExt,
         Integer fileSize,

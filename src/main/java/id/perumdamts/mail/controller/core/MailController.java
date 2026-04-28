@@ -1,14 +1,15 @@
 package id.perumdamts.mail.controller.core;
 
-import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.mail.*;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.mail.MailCommandService;
 import id.perumdamts.mail.service.core.mail.MailQueryService;
+import id.perumdamts.mail.service.core.recipient.MailRecipientQueryService;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,11 +23,16 @@ public class MailController {
 
     private final MailCommandService commandService;
     private final MailQueryService queryService;
+    private final MailRecipientQueryService recipientQueryService;
     private final SqidsEncoder encoder;
 
-    public MailController(MailCommandService commandService, MailQueryService queryService, SqidsEncoder encoder) {
+    public MailController(MailCommandService commandService,
+            MailQueryService queryService,
+            MailRecipientQueryService recipientQueryService,
+            SqidsEncoder encoder) {
         this.commandService = commandService;
         this.queryService = queryService;
+        this.recipientQueryService = recipientQueryService;
         this.encoder = encoder;
     }
 
@@ -90,32 +96,53 @@ public class MailController {
         commandService.markRead(mailId, principal);
     }
 
+    @GetMapping("/lookup")
+    public PagedModel<MailLookupResponse> lookup(
+            @AuthenticationPrincipal MailPrincipal principal,
+            @Valid @ParameterObject MailLookupParams params) {
+        return new PagedModel<>(queryService.findLookup(principal.userIdLong(), params));
+    }
+
+    @GetMapping("/{id}")
+    public MailResponse getById(
+            @AuthenticationPrincipal MailPrincipal principal,
+            @PathVariable String id) {
+        long mailId = encoder.decode(Mail.class, id);
+        // Auto mark-read
+        try {
+            commandService.markRead(mailId, principal);
+        } catch (Exception e) {
+            // Ignore if UserTask not found (e.g. creator accessing detail)
+        }
+        return queryService.getDetail(mailId, principal.userIdLong());
+    }
+
     @GetMapping("/{id}/tracking")
     public List<MailTrackingResponse> getTracking(@PathVariable String id) {
         long mailId = encoder.decode(Mail.class, id);
-        return queryService.getTracking(mailId);
+        return recipientQueryService.findTracking(mailId);
     }
 
     @GetMapping("/{id}/read-status")
     public List<RecipientReadStatusResponse> getReadStatus(@PathVariable String id) {
         long mailId = encoder.decode(Mail.class, id);
-        return queryService.getReadStatus(mailId);
+        return recipientQueryService.findReadStatus(mailId);
     }
 
     @GetMapping("/{id}/thread")
     public List<MailSummaryResponse> getThread(@PathVariable String id) {
         long mailId = encoder.decode(Mail.class, id);
-        return queryService.getThread(mailId);
+        return queryService.findThread(mailId);
     }
 
     @GetMapping("/search")
-    public PagedResponse<MailSummaryResponse> search(@ParameterObject MailSearchRequest request) {
-        return queryService.search(request);
+    public PagedModel<MailSummaryResponse> search(@Valid @ParameterObject MailSearchRequest request) {
+        return new PagedModel<>(queryService.search(request));
     }
 
     @GetMapping("/report")
-    public PagedResponse<MailReportResponse> report(@ParameterObject  MailReportRequest request) {
-        return queryService.getReport(request);
+    public PagedModel<MailReportResponse> report(@Valid @ParameterObject  MailReportRequest request) {
+        return new PagedModel<>(queryService.findReport(request));
     }
 
 }

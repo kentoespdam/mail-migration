@@ -1,11 +1,13 @@
 package id.perumdamts.mail.dto.core.mail;
 
 import id.perumdamts.mail.dto.common.HasSqid;
+import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
 import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import lombok.Value;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Value
 public class MailResponse implements HasSqid {
@@ -27,4 +29,5 @@ public class MailResponse implements HasSqid {
         String tglSuratMasuk;
         String tujuanSuratKeluar;
         String penerimaSuratKeluar;
+        List<AttachmentResponse> attachments;
 }

@@ -1,5 +1,6 @@
 package id.perumdamts.mail.service.master.mailCategory;
 
+import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryRequest;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryResponse;
 import id.perumdamts.mail.entity.master.MailCategory;
@@ -10,6 +11,7 @@ import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class MailCategoryCommandService {
     private final MailCategoryQueryRepository queryRepository;
     private final SqidsEncoder encoder;
 
+    @CacheEvict(value = CacheConfig.CacheNames.MAIL_CATEGORIES, allEntries = true)
     public MailCategoryResponse create(MailCategoryRequest request) {
         long mailTypeId = encoder.decode(MailType.class, request.mailTypeId());
         MailType mailType = getMailTypeOrThrow(mailTypeId);
@@ -36,6 +39,7 @@ public class MailCategoryCommandService {
         return queryRepository.findById(saved.getId()).orElseThrow();
     }
 
+    @CacheEvict(value = CacheConfig.CacheNames.MAIL_CATEGORIES, allEntries = true)
     public MailCategoryResponse update(Long id, MailCategoryRequest request) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MailCategory not found: " + id));
@@ -58,6 +62,7 @@ public class MailCategoryCommandService {
         return queryRepository.findById(id).orElseThrow();
     }
 
+    @CacheEvict(value = CacheConfig.CacheNames.MAIL_CATEGORIES, allEntries = true)
     public void delete(Long id) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MailCategory not found: " + id));

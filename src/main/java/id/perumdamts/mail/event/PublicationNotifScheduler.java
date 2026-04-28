@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Component
-@ConditionalOnProperty(name = "app.scheduler.publication-notif.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(name = "app.scheduler.publication-notif.enabled", havingValue = "true")
 public class PublicationNotifScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(PublicationNotifScheduler.class);

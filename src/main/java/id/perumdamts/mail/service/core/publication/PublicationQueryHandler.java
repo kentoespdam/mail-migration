@@ -1,12 +1,12 @@
 package id.perumdamts.mail.service.core.publication;
 
-import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.publication.PublicationDownloadResult;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
+import org.springframework.data.domain.Page;
 
 public interface PublicationQueryHandler {
-    PagedResponse<PublicationResponse> findAll(PublicationParams params);
+    Page<PublicationResponse> findAll(PublicationParams params);
 
     PublicationResponse findById(Long id);
 

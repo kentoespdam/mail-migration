@@ -1,5 +1,6 @@
 package id.perumdamts.mail.service.master.mailType;
 
+import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import id.perumdamts.mail.dto.master.mailType.MailTypeMapper;
 import id.perumdamts.mail.dto.master.mailType.MailTypeParams;
@@ -27,6 +28,7 @@ public class MailTypeQueryService {
         return repository.findAll(params);
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = CacheConfig.CacheNames.MAIL_TYPES, key = "'lookup'")
     public List<MailTypeLookup> lookup() {
         return jpaRepository.findAllByStatusOrderByIdAsc(RecordStatus.ACTIVE).stream()
                 .map(mapper::toLookup)

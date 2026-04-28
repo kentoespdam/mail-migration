@@ -4,7 +4,6 @@ import id.perumdamts.mail.dto.core.mail.*;
 import id.perumdamts.mail.dto.core.recipient.RecipientBatchRequest;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.entity.core.MailRecipient;
-import id.perumdamts.mail.entity.core.UserTask;
 import id.perumdamts.mail.enums.CirculationType;
 import id.perumdamts.mail.integration.hr.BatchIdsRequest;
 import id.perumdamts.mail.integration.hr.EmployeeDto;
@@ -12,10 +11,11 @@ import id.perumdamts.mail.integration.hr.EmployeeResponse;
 import id.perumdamts.mail.integration.hr.HrServiceClient;
 import id.perumdamts.mail.repository.core.jpa.MailRecipientRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
-import id.perumdamts.mail.repository.core.jpa.UserTaskRepository;
 import id.perumdamts.mail.repository.master.jpa.MailCategoryRepository;
 import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
 import id.perumdamts.mail.security.MailPrincipal;
+import id.perumdamts.mail.service.core.usertask.UserTaskCommandService;
+import id.perumdamts.mail.service.core.usertask.UserTaskQueryService;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Service untuk operasi Command pada domain Surat (Mail).
+ * Menangani pembuatan draft, pengiriman surat, dan manipulasi status surat.
+ */
 @Service
 @Transactional(readOnly = true)
 public class MailCommandService {
@@ -37,30 +41,36 @@ public class MailCommandService {
     private final MailTypeRepository mailTypeRepository;
     private final MailCategoryRepository mailCategoryRepository;
     private final MailRecipientRepository recipientRepository;
-    private final UserTaskRepository userTaskRepository;
+    private final UserTaskCommandService userTaskCommandService;
+    private final UserTaskQueryService userTaskQueryService;
     private final MailMapper mailMapper;
     private final MailSendService mailSendService;
     private final HrServiceClient hrServiceClient;
     private final SqidsEncoder encoder;
+    private final AuditTrailService auditTrailService;
 
     public MailCommandService(MailRepository mailRepository,
             MailTypeRepository mailTypeRepository,
             MailCategoryRepository mailCategoryRepository,
             MailRecipientRepository recipientRepository,
-            UserTaskRepository userTaskRepository,
+            UserTaskCommandService userTaskCommandService,
+            UserTaskQueryService userTaskQueryService,
             MailMapper mailMapper,
             MailSendService mailSendService,
             HrServiceClient hrServiceClient,
-            SqidsEncoder encoder) {
+            SqidsEncoder encoder,
+            AuditTrailService auditTrailService) {
         this.mailRepository = mailRepository;
         this.mailTypeRepository = mailTypeRepository;
         this.mailCategoryRepository = mailCategoryRepository;
         this.recipientRepository = recipientRepository;
-        this.userTaskRepository = userTaskRepository;
+        this.userTaskCommandService = userTaskCommandService;
+        this.userTaskQueryService = userTaskQueryService;
         this.mailMapper = mailMapper;
         this.mailSendService = mailSendService;
         this.hrServiceClient = hrServiceClient;
         this.encoder = encoder;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -83,7 +93,9 @@ public class MailCommandService {
                 principal);
 
         // Create draft UserTask for sender
-        userTaskRepository.save(UserTask.draft(principal.userIdLong(), mail.getId()));
+        userTaskCommandService.createDraft(principal.userIdLong(), mail.getId());
+
+        auditTrailService.logAction(mail.getId(), "CREATE_DRAFT", principal.getUsername(), "Membuat draft surat");
 
         return mailMapper.toResponse(mail);
     }
@@ -129,12 +141,16 @@ public class MailCommandService {
         List<MailRecipient> recipients = recipientRepository.findByMailId(mailId);
         mail.setToStr(Mail.buildToStr(recipients));
 
-        return mailMapper.toResponse(mailRepository.save(mail));
+        Mail saved = mailRepository.save(mail);
+        auditTrailService.logAction(mailId, "UPDATE_DRAFT", principal.getUsername(), "Memperbarui draft surat");
+
+        return mailMapper.toResponse(saved);
     }
 
     @Transactional
     public MailResponse send(Long mailId, MailPrincipal principal) {
         Mail mail = mailSendService.send(mailId, principal);
+        auditTrailService.logAction(mailId, "SEND", principal.getUsername(), "Mengirim surat");
         return mailMapper.toResponse(mail);
     }
 
@@ -167,36 +183,34 @@ public class MailCommandService {
     @Transactional
     public void deleteMail(Long mailId, MailPrincipal principal) {
         Long userId = principal.userIdLong();
-        var task = userTaskRepository.findActiveByUserIdAndMailId(userId, mailId)
-                .orElseThrow(() -> new EntityNotFoundException("Mail not found in your mailbox: " + mailId));
-
-        if (task.isInTrash()) {
-            task.purge();
-        } else {
-            task.softDelete();
-        }
-        userTaskRepository.save(task);
+        userTaskQueryService.findUserTask(userId, mailId)
+                .ifPresentOrElse(
+                        task -> {
+                            if (task.isInTrash()) {
+                                userTaskCommandService.purge(userId, mailId);
+                                auditTrailService.logAction(mailId, "PURGE", principal.getUsername(), "Menghapus surat secara permanen dari kotak sampah");
+                            } else {
+                                userTaskCommandService.softDelete(userId, mailId);
+                                auditTrailService.logAction(mailId, "DELETE", principal.getUsername(), "Memindahkan surat ke kotak sampah");
+                            }
+                        },
+                        () -> {
+                            throw new EntityNotFoundException("Mail not found in your mailbox: " + mailId);
+                        });
     }
 
     @Transactional
     public void restoreMail(Long mailId, MailPrincipal principal) {
         Long userId = principal.userIdLong();
-        var task = userTaskRepository.findByUserIdAndMailId(userId, mailId)
-                .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
-        if (!task.isInTrash()) {
-            throw new IllegalStateException("Mail is not in trash");
-        }
-        task.restore();
-        userTaskRepository.save(task);
+        userTaskCommandService.restore(userId, mailId);
+        auditTrailService.logAction(mailId, "RESTORE", principal.getUsername(), "Mengembalikan surat dari kotak sampah");
     }
 
     @Transactional
     public void markRead(Long mailId, MailPrincipal principal) {
         Long userId = principal.userIdLong();
-        var task = userTaskRepository.findActiveByUserIdAndMailId(userId, mailId)
-                .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
-        task.markRead();
-        userTaskRepository.save(task);
+        userTaskCommandService.markRead(userId, mailId);
+        auditTrailService.logAction(mailId, "READ", principal.getUsername(), "Membaca surat");
     }
 
     private Mail createAndPersistMail(String subject,

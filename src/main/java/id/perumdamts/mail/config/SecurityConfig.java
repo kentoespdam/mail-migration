@@ -28,7 +28,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           AppWriteAuthFilter appWriteAuthFilter) throws Exception {
+                                           AppWriteAuthFilter appWriteAuthFilter) {
         http
             // Stateless — tidak ada session
             .sessionManagement(session ->

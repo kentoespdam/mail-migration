@@ -11,6 +11,7 @@ import id.perumdamts.mail.integration.hr.HrServiceClient;
 import id.perumdamts.mail.repository.core.jooq.RecipientQueryRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRecipientRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
+import id.perumdamts.mail.service.core.usertask.UserTaskCommandService;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
@@ -33,6 +34,7 @@ public class MailRecipientCommandService {
     private final HrServiceClient hrServiceClient;
     private final RecipientMapper recipientMapper;
     private final RecipientQueryRepository recipientQueryRepository;
+    private final UserTaskCommandService userTaskCommandService;
     private final SqidsEncoder encoder;
 
     public MailRecipientCommandService(MailRecipientRepository recipientRepository,
@@ -40,12 +42,14 @@ public class MailRecipientCommandService {
             HrServiceClient hrServiceClient,
             RecipientMapper recipientMapper,
             RecipientQueryRepository recipientQueryRepository,
+            UserTaskCommandService userTaskCommandService,
             SqidsEncoder encoder) {
         this.recipientRepository = recipientRepository;
         this.mailRepository = mailRepository;
         this.hrServiceClient = hrServiceClient;
         this.recipientMapper = recipientMapper;
         this.recipientQueryRepository = recipientQueryRepository;
+        this.userTaskCommandService = userTaskCommandService;
         this.encoder = encoder;
     }
 
@@ -67,6 +71,11 @@ public class MailRecipientCommandService {
 
         var recipient = createRecipientFromEmployee(mail, emp, circulationType);
         var saved = recipientRepository.save(recipient);
+
+        if (mail.isSent()) {
+            userTaskCommandService.createInboxes(mailId, List.of(userId));
+        }
+
         rebuildToStr(mail);
         return recipientMapper.toResponse(saved);
     }
@@ -117,6 +126,11 @@ public class MailRecipientCommandService {
         List<RecipientResponse> succeeded = recipientRepository.saveAll(toSave).stream()
                 .map(recipientMapper::toResponse)
                 .toList();
+
+        if (mail.isSent()) {
+            List<Long> userIds = toSave.stream().map(MailRecipient::getUserId).toList();
+            userTaskCommandService.createInboxes(mailId, userIds);
+        }
 
         rebuildToStr(mail);
         return BatchRecipientResponse.of(succeeded, failed, request.empIds().size());
@@ -180,6 +194,12 @@ public class MailRecipientCommandService {
         var saved = recipientRepository.saveAll(toSave).stream()
                 .map(recipientMapper::toResponse)
                 .toList();
+
+        if (mail.isSent()) {
+            List<Long> userIds = toSave.stream().map(MailRecipient::getUserId).toList();
+            userTaskCommandService.createInboxes(mailId, userIds);
+        }
+
         rebuildToStr(mail);
         return saved;
     }
@@ -228,6 +248,12 @@ public class MailRecipientCommandService {
         var saved = recipientRepository.saveAll(toSave).stream()
                 .map(recipientMapper::toResponse)
                 .toList();
+
+        if (mail.isSent()) {
+            List<Long> userIds = toSave.stream().map(MailRecipient::getUserId).toList();
+            userTaskCommandService.createInboxes(mailId, userIds);
+        }
+
         rebuildToStr(mail);
         return saved;
     }

@@ -28,4 +28,9 @@ public enum AttachmentRefType {
         }
         throw new IllegalArgumentException("Unknown AttachmentRefType: " + value);
     }
+
+    public static AttachmentRefType fromDbValue(Integer value) {
+        if (value == null) return null;
+        return fromDbValue(value.intValue());
+    }
 }

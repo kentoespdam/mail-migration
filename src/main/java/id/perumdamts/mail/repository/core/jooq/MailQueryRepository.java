@@ -17,6 +17,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.jooq.impl.DSL.*;
 
@@ -149,15 +150,21 @@ public class MailQueryRepository {
                                 .fetch(this::mapToSummaryResponse);
         }
 
-        public List<MailSummaryResponse> findThread(Long mailId) {
+        public Long resolveRootId(Long mailId) {
                 Long rootId = dsl.select(field("m_root_id", Long.class))
                                 .from(table("mail"))
                                 .where(field("m_id").eq(mailId))
                                 .fetchOneInto(Long.class);
 
-                if (rootId == null)
-                        rootId = mailId;
+                return rootId != null ? rootId : mailId;
+        }
 
+        public List<MailSummaryResponse> findThread(Long mailId) {
+                Long rootId = resolveRootId(mailId);
+                return findThreadByRootId(rootId);
+        }
+
+        public List<MailSummaryResponse> findThreadByRootId(Long rootId) {
                 return dsl.select(
                                 field("m.m_id").as("id"),
                                 field("m.m_no").as("mailNumber"),
@@ -188,70 +195,6 @@ public class MailQueryRepository {
                                 .and(field("m.m_status").gt(0))
                                 .orderBy(field("m.m_created_date").asc())
                                 .fetch(this::mapToSummaryResponse);
-        }
-
-        public List<MailTrackingResponse> findTracking(Long mailId) {
-                return dsl.select(
-                                field("r.id").as("recipientId"),
-                                field("r.emp_name").as("empName"),
-                                field("r.pos_name").as("posName"),
-                                case_()
-                                                .when(field("r.circulation").eq(1), inline("DISPOSISI"))
-                                                .when(field("r.circulation").eq(2), inline("MEMO_MANDIRI"))
-                                                .when(field("r.circulation").eq(3), inline("MEMO"))
-                                                .when(field("r.circulation").eq(4), inline("CC"))
-                                                .when(field("r.circulation").eq(5), inline("REPLY"))
-                                                .when(field("r.circulation").eq(6), inline("FORWARD"))
-                                                .otherwise(inline("UNKNOWN"))
-                                                .as("circulationName"),
-                                field("r.is_read").as("isRead"),
-                                field("ut.read_date").as("readDate"))
-                                .from(table("mail_recipient").as("r"))
-                                .leftJoin(table("sys_user_task").as("ut"))
-                                .on(field("ut.user_id").eq(field("r.user_id"))
-                                                .and(field("ut.tm_id").eq(field("r.mail_id"))))
-                                .where(field("r.mail_id").eq(mailId))
-                                .orderBy(field("r.id").asc())
-                                .fetch(r -> new MailTrackingResponse(
-                                                encoder.encode(MailRecipient.class, r.get("recipientId", Long.class)),
-                                                r.get("empName", String.class),
-                                                r.get("posName", String.class),
-                                                r.get("circulationName", String.class),
-                                                r.get("isRead", Boolean.class),
-                                                r.get("readDate", LocalDateTime.class)));
-        }
-
-        public List<RecipientReadStatusResponse> findReadStatus(Long mailId) {
-                return dsl.select(
-                                field("r.id").as("recipientId"),
-                                field("r.user_id").as("userId"),
-                                field("r.emp_name").as("empName"),
-                                field("r.pos_name").as("posName"),
-                                case_()
-                                                .when(field("r.circulation").eq(1), inline("DISPOSISI"))
-                                                .when(field("r.circulation").eq(2), inline("MEMO_MANDIRI"))
-                                                .when(field("r.circulation").eq(3), inline("MEMO"))
-                                                .when(field("r.circulation").eq(4), inline("CC"))
-                                                .when(field("r.circulation").eq(5), inline("REPLY"))
-                                                .when(field("r.circulation").eq(6), inline("FORWARD"))
-                                                .otherwise(inline("UNKNOWN"))
-                                                .as("circulationName"),
-                                field("ut.read_status").as("readStatus"),
-                                field("ut.read_date").as("readDate"))
-                                .from(table("mail_recipient").as("r"))
-                                .leftJoin(table("sys_user_task").as("ut"))
-                                .on(field("ut.user_id").eq(field("r.user_id"))
-                                                .and(field("ut.tm_id").eq(field("r.mail_id"))))
-                                .where(field("r.mail_id").eq(mailId))
-                                .orderBy(field("r.id").asc())
-                                .fetch(r -> new RecipientReadStatusResponse(
-                                                encoder.encode(MailRecipient.class, r.get("recipientId", Long.class)),
-                                                encoder.encode(MailRecipient.class, r.get("userId", Long.class)), // Placeholder
-                                                r.get("empName", String.class),
-                                                r.get("posName", String.class),
-                                                r.get("circulationName", String.class),
-                                                r.get("readStatus", Integer.class),
-                                                r.get("readDate", LocalDateTime.class)));
         }
 
         public List<MailReportResponse> getReport(MailReportRequest request) {
@@ -302,6 +245,94 @@ public class MailQueryRepository {
                                                 r.get("totalRead", Long.class),
                                                 r.get("totalUnread", Long.class),
                                                 r.get("totalCount", Long.class)));
+        }
+
+        public Optional<MailResponse> findById(Long id) {
+                return dsl.select(
+                                field("m.m_id").as("id"),
+                                field("m.m_no").as("mailNumber"),
+                                field("m.m_date").as("mailDate"),
+                                field("m.m_subject").as("subject"),
+                                field("m.m_content").as("content"),
+                                field("m.m_note").as("note"),
+                                field("m.m_max_response_date").as("maxResponseDate"),
+                                field("m.m_status").as("status"),
+                                field("m.m_created_by_name").as("createdByName"),
+                                field("m.m_created_by").as("createdBy"),
+                                field("m.m_to_str").as("toStr"),
+                                field("m.m_attachment_qty").as("attachmentQty"),
+                                field("m.m_created_date").as("createdDate"),
+                                field("m.m_updated_date").as("updatedDate"),
+                                field("mt.mail_type").as("mailTypeName"),
+                                field("mt.mail_type_id").as("mailTypeId"),
+                                field("mc.mcat_name").as("mailCategoryName"),
+                                field("mc.mcat_id").as("mailCategoryId"),
+                                field("m.m_root_id").as("rootMailId"),
+                                field("m.m_parent_id").as("parentMailId"),
+                                field("m.m_no_surat_masuk").as("noSuratMasuk"),
+                                field("m.m_asal_surat_masuk").as("asalSuratMasuk"),
+                                field("m.m_tgl_surat_masuk").as("tglSuratMasuk"),
+                                field("m.m_tujuan_surat_keluar").as("tujuanSuratKeluar"),
+                                field("m.m_penerima_surat_keluar").as("penerimaSuratKeluar"))
+                                .from(table("mail").as("m"))
+                                .leftJoin(table("mail_type").as("mt"))
+                                .on(field("mt.mail_type_id").eq(field("m.m_type")))
+                                .leftJoin(table("mail_category").as("mc"))
+                                .on(field("mc.mcat_id").eq(field("m.m_category")))
+                                .where(field("m.m_id").eq(id))
+                                .and(field("m.m_status").ge(0))
+                                .fetchOptional(this::mapToResponse);
+        }
+
+        private MailResponse mapToResponse(org.jooq.Record r) {
+                return new MailResponse(
+                                encoder.encode(Mail.class, r.get("id", Long.class)),
+                                r.get("mailNumber", String.class),
+                                r.get("mailDate", LocalDate.class),
+                                new MailTypeLookup(
+                                                r.get("mailTypeId") != null
+                                                                ? encoder.encode(MailType.class,
+                                                                                r.get("mailTypeId", Long.class))
+                                                                : null,
+                                                r.get("mailTypeName", String.class)),
+                                new MailCategoryLookup(
+                                                r.get("mailCategoryId") != null
+                                                                ? encoder.encode(MailCategory.class,
+                                                                                r.get("mailCategoryId", Long.class))
+                                                                : null,
+                                                r.get("mailCategoryName", String.class)),
+                                r.get("subject", String.class),
+                                r.get("content", String.class),
+                                r.get("note", String.class),
+                                r.get("maxResponseDate", LocalDate.class),
+                                r.get("status", Integer.class),
+                                new MailComponentDto.MailThreadInfoDto(
+                                                r.get("rootMailId") != null
+                                                                ? encoder.encode(Mail.class,
+                                                                                r.get("rootMailId", Long.class))
+                                                                : null,
+                                                r.get("parentMailId") != null
+                                                                ? encoder.encode(Mail.class,
+                                                                                r.get("parentMailId", Long.class))
+                                                                : null),
+                                new MailComponentDto.MailSummaryInfoDto(
+                                                r.get("attachmentQty", Integer.class),
+                                                r.get("toStr", String.class)),
+                                new MailComponentDto.MailAuditInfoDto(
+                                                r.get("createdBy") != null
+                                                                ? encoder.encode(Mail.class,
+                                                                                r.get("createdBy", Long.class))
+                                                                : null,
+                                                r.get("createdByName", String.class),
+                                                r.get("createdDate", LocalDateTime.class),
+                                                r.get("updatedDate", LocalDateTime.class)),
+                                r.get("noSuratMasuk", String.class),
+                                r.get("asalSuratMasuk", String.class),
+                                r.get("tglSuratMasuk", String.class),
+                                r.get("tujuanSuratKeluar", String.class),
+                                r.get("penerimaSuratKeluar", String.class),
+                                null // attachments to be filled by service
+                );
         }
 
         private MailSummaryResponse mapToSummaryResponse(org.jooq.Record r) {

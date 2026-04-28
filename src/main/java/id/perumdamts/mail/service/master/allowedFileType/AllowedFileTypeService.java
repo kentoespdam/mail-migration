@@ -1,5 +1,6 @@
 package id.perumdamts.mail.service.master.allowedFileType;
 
+import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.core.publication.PublicationMapper;
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeParams;
@@ -29,7 +30,7 @@ public class AllowedFileTypeService {
         this.mapper = mapper;
     }
 
-    @Cacheable(value = "allowedFileTypes", key = "#context")
+    @Cacheable(value = CacheConfig.CacheNames.ALLOWED_FILE_TYPES, key = "#context")
     public List<AllowedFileTypeDto> listByContext(String context) {
         return repository.findByContextAndIsActiveTrue(context).stream()
                 .map(mapper::toDto)
@@ -42,7 +43,7 @@ public class AllowedFileTypeService {
     }
 
     @Transactional
-    @CacheEvict(value = "allowedFileTypes", allEntries = true)
+    @CacheEvict(value = CacheConfig.CacheNames.ALLOWED_FILE_TYPES, allEntries = true)
     public AllowedFileTypeDto create(AllowedFileTypeRequest request) {
         var entity = new AllowedFileType();
         entity.setContext(request.context().toUpperCase());
@@ -53,7 +54,7 @@ public class AllowedFileTypeService {
     }
 
     @Transactional
-    @CacheEvict(value = "allowedFileTypes", allEntries = true)
+    @CacheEvict(value = CacheConfig.CacheNames.ALLOWED_FILE_TYPES, allEntries = true)
     public AllowedFileTypeDto update(Long id, AllowedFileTypeRequest request) {
         var entity = getOrThrow(id);
         entity.setContext(request.context().toUpperCase());
@@ -66,7 +67,7 @@ public class AllowedFileTypeService {
     }
 
     @Transactional
-    @CacheEvict(value = "allowedFileTypes", allEntries = true)
+    @CacheEvict(value = CacheConfig.CacheNames.ALLOWED_FILE_TYPES, allEntries = true)
     public void delete(Long id) {
         var entity = getOrThrow(id);
         entity.setIsActive(false);

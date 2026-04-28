@@ -1,5 +1,6 @@
 package id.perumdamts.mail.service.master.documentType;
 
+import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeMapper;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeParams;
@@ -28,6 +29,7 @@ public class DocumentTypeQueryService {
         return repository.findAll(params);
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = CacheConfig.CacheNames.DOCUMENT_TYPES, key = "'lookup'")
     public List<DocumentTypeLookup> lookup() {
         return jpaRepository.findAllByStatusOrderByIdAsc(RecordStatus.ACTIVE).stream()
                 .map(mapper::toLookup)

@@ -63,17 +63,17 @@ class MailRecipientControllerTest {
     @Test
     void getRecipients_returnsList() {
         var expected = List.of(sampleResponse());
-        when(queryService.getRecipients(1L)).thenReturn(expected);
+        when(queryService.findRecipients(1L)).thenReturn(expected);
 
         var result = controller.getRecipients("1");
 
         assertThat(result).isEqualTo(expected);
-        verify(queryService).getRecipients(1L);
+        verify(queryService).findRecipients(1L);
     }
 
     @Test
     void getRecipients_emptyList() {
-        when(queryService.getRecipients(1L)).thenReturn(List.of());
+        when(queryService.findRecipients(1L)).thenReturn(List.of());
 
         var result = controller.getRecipients("1");
 

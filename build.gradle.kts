@@ -96,6 +96,9 @@ dependencies {
     // == Configuration Metadata ==
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
+    // == Jackson 3 (for Spring Data Redis 4.x migration) ==
+    implementation("tools.jackson.core:jackson-databind:3.1.0")
+
     // == Lombok ==
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

@@ -1,6 +1,5 @@
 package id.perumdamts.mail.controller.core;
 
-import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.folder.MailFolderLookup;
 import id.perumdamts.mail.dto.core.mail.*;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
@@ -9,12 +8,15 @@ import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.mail.MailCommandService;
 import id.perumdamts.mail.service.core.mail.MailQueryService;
+import id.perumdamts.mail.service.core.recipient.MailRecipientQueryService;
 import id.perumdamts.mail.util.SqidsEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,6 +40,9 @@ class MailControllerTest {
     private MailQueryService queryService;
 
     @Mock
+    private MailRecipientQueryService recipientQueryService;
+
+    @Mock
     private SqidsEncoder encoder;
 
     private MailController controller;
@@ -45,7 +51,7 @@ class MailControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new MailController(commandService, queryService, encoder);
+        controller = new MailController(commandService, queryService, recipientQueryService, encoder);
         principal = new MailPrincipal("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
@@ -62,7 +68,12 @@ class MailControllerTest {
                 new MailComponentDto.MailThreadInfoDto(null, null),
                 new MailComponentDto.MailSummaryInfoDto(0, "Recipient"),
                 new MailComponentDto.MailAuditInfoDto("1", "Test User", LocalDateTime.now(), LocalDateTime.now()),
-                null, null, null, null, null);
+                null,
+                null,
+                null,
+                null,
+                null,
+                java.util.Collections.emptyList());
     }
 
     private MailSummaryResponse sampleSummary() {
@@ -179,7 +190,7 @@ class MailControllerTest {
     void getThread_shouldReturnList() {
         var summaries = List.of(sampleSummary());
         when(encoder.decode(Mail.class, "1")).thenReturn(1L);
-        when(queryService.getThread(1L)).thenReturn(summaries);
+        when(queryService.findThread(1L)).thenReturn(summaries);
 
         var result = controller.getThread("1");
 
@@ -188,28 +199,64 @@ class MailControllerTest {
     }
 
     @Test
-    void search_shouldReturnPagedResponse() {
-        var request = new MailSearchRequest();
-        request.setKeyword("test");
-        var paged = PagedResponse.of(List.of(sampleSummary()), 0, 20, 1L);
-        when(queryService.search(request)).thenReturn(paged);
+    void getById_shouldReturnResponse() {
+        var response = sampleMailResponse();
+        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
+        when(queryService.getDetail(eq(1L), anyLong())).thenReturn(response);
 
-        var result = controller.search(request);
+        var result = controller.getById(principal, "1");
 
-        assertThat(result.content()).hasSize(1);
-        assertThat(result.totalElements()).isEqualTo(1L);
+        assertThat(result).isEqualTo(response);
+        verify(queryService).getDetail(eq(1L), eq(principal.userIdLong()));
     }
 
     @Test
-    void report_shouldReturnPagedResponse() {
+    void getTracking_shouldReturnList() {
+        var tracking = List.of(new MailTrackingResponse("1", "Emp", "Pos", "MEMO", false, null));
+        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
+        when(recipientQueryService.findTracking(1L)).thenReturn(tracking);
+
+        var result = controller.getTracking("1");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().recipientId()).isEqualTo("1");
+    }
+
+    @Test
+    void getReadStatus_shouldReturnList() {
+        var status = List.of(new RecipientReadStatusResponse("1", "1", "Emp", "Pos", "MEMO", 0, null));
+        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
+        when(recipientQueryService.findReadStatus(1L)).thenReturn(status);
+
+        var result = controller.getReadStatus("1");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().recipientId()).isEqualTo("1");
+    }
+
+    @Test
+    void search_shouldReturnPagedModel() {
+        var request = new MailSearchRequest();
+        request.setKeyword("test");
+        var page = new PageImpl<>(List.of(sampleSummary()), PageRequest.of(0, 20), 1L);
+        when(queryService.search(request)).thenReturn(page);
+
+        var result = controller.search(request);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getMetadata().totalElements()).isEqualTo(1L);
+    }
+
+    @Test
+    void report_shouldReturnPagedModel() {
         var request = new MailReportRequest();
         var reportItem = new MailReportResponse("Surat Masuk", "Umum", 10, 8, 2, 1);
-        var paged = PagedResponse.of(List.of(reportItem), 0, 20, 1L);
-        when(queryService.getReport(request)).thenReturn(paged);
+        var page = new PageImpl<>(List.of(reportItem), PageRequest.of(0, 20), 1L);
+        when(queryService.findReport(request)).thenReturn(page);
 
         var result = controller.report(request);
 
-        assertThat(result.content()).hasSize(1);
-        assertThat(result.content().getFirst().getTotalMails()).isEqualTo(10);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().getFirst().totalMails()).isEqualTo(10);
     }
 }

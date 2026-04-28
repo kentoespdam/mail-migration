@@ -90,6 +90,7 @@ public class Attachment {
     }
 
     public AttachmentRefType getRefType() {
+        if (refType == null) return null;
         return AttachmentRefType.fromDbValue(refType);
     }
 
