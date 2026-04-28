@@ -29,6 +29,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * Service untuk operasi Command pada domain Surat (Mail).
+ * Menangani pembuatan draft, pengiriman surat, dan manipulasi status surat.
+ */
 @Service
 @Transactional(readOnly = true)
 public class MailCommandService {
@@ -43,6 +47,7 @@ public class MailCommandService {
     private final MailSendService mailSendService;
     private final HrServiceClient hrServiceClient;
     private final SqidsEncoder encoder;
+    private final AuditTrailService auditTrailService;
 
     public MailCommandService(MailRepository mailRepository,
             MailTypeRepository mailTypeRepository,
@@ -53,7 +58,8 @@ public class MailCommandService {
             MailMapper mailMapper,
             MailSendService mailSendService,
             HrServiceClient hrServiceClient,
-            SqidsEncoder encoder) {
+            SqidsEncoder encoder,
+            AuditTrailService auditTrailService) {
         this.mailRepository = mailRepository;
         this.mailTypeRepository = mailTypeRepository;
         this.mailCategoryRepository = mailCategoryRepository;
@@ -64,6 +70,7 @@ public class MailCommandService {
         this.mailSendService = mailSendService;
         this.hrServiceClient = hrServiceClient;
         this.encoder = encoder;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -87,6 +94,8 @@ public class MailCommandService {
 
         // Create draft UserTask for sender
         userTaskCommandService.createDraft(principal.userIdLong(), mail.getId());
+
+        auditTrailService.logAction(mail.getId(), "CREATE_DRAFT", principal.getUsername(), "Membuat draft surat");
 
         return mailMapper.toResponse(mail);
     }
@@ -132,12 +141,16 @@ public class MailCommandService {
         List<MailRecipient> recipients = recipientRepository.findByMailId(mailId);
         mail.setToStr(Mail.buildToStr(recipients));
 
-        return mailMapper.toResponse(mailRepository.save(mail));
+        Mail saved = mailRepository.save(mail);
+        auditTrailService.logAction(mailId, "UPDATE_DRAFT", principal.getUsername(), "Memperbarui draft surat");
+
+        return mailMapper.toResponse(saved);
     }
 
     @Transactional
     public MailResponse send(Long mailId, MailPrincipal principal) {
         Mail mail = mailSendService.send(mailId, principal);
+        auditTrailService.logAction(mailId, "SEND", principal.getUsername(), "Mengirim surat");
         return mailMapper.toResponse(mail);
     }
 
@@ -175,8 +188,10 @@ public class MailCommandService {
                         task -> {
                             if (task.isInTrash()) {
                                 userTaskCommandService.purge(userId, mailId);
+                                auditTrailService.logAction(mailId, "PURGE", principal.getUsername(), "Menghapus surat secara permanen dari kotak sampah");
                             } else {
                                 userTaskCommandService.softDelete(userId, mailId);
+                                auditTrailService.logAction(mailId, "DELETE", principal.getUsername(), "Memindahkan surat ke kotak sampah");
                             }
                         },
                         () -> {
@@ -188,12 +203,14 @@ public class MailCommandService {
     public void restoreMail(Long mailId, MailPrincipal principal) {
         Long userId = principal.userIdLong();
         userTaskCommandService.restore(userId, mailId);
+        auditTrailService.logAction(mailId, "RESTORE", principal.getUsername(), "Mengembalikan surat dari kotak sampah");
     }
 
     @Transactional
     public void markRead(Long mailId, MailPrincipal principal) {
         Long userId = principal.userIdLong();
         userTaskCommandService.markRead(userId, mailId);
+        auditTrailService.logAction(mailId, "READ", principal.getUsername(), "Membaca surat");
     }
 
     private Mail createAndPersistMail(String subject,

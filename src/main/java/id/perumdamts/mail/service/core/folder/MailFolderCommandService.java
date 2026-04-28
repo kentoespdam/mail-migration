@@ -6,6 +6,7 @@ import id.perumdamts.mail.dto.core.folder.MailFolderRequest;
 import id.perumdamts.mail.dto.core.folder.MailFolderResponse;
 import id.perumdamts.mail.dto.core.folder.MoveMailRequest;
 import id.perumdamts.mail.entity.core.Mail;
+import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.entity.core.MailFolder;
 import id.perumdamts.mail.enums.SystemFolder;
 import id.perumdamts.mail.repository.core.jpa.MailFolderRepository;
@@ -26,17 +27,20 @@ public class MailFolderCommandService {
     private final UserTaskQueryService userTaskQueryService;
     private final MailFolderMapper folderMapper;
     private final SqidsEncoder encoder;
+    private final id.perumdamts.mail.service.core.mail.AuditTrailService auditTrailService;
 
     public MailFolderCommandService(MailFolderRepository folderRepository,
             UserTaskCommandService userTaskCommandService,
             UserTaskQueryService userTaskQueryService,
             MailFolderMapper folderMapper,
-            SqidsEncoder encoder) {
+            SqidsEncoder encoder,
+            id.perumdamts.mail.service.core.mail.AuditTrailService auditTrailService) {
         this.folderRepository = folderRepository;
         this.userTaskCommandService = userTaskCommandService;
         this.userTaskQueryService = userTaskQueryService;
         this.folderMapper = folderMapper;
         this.encoder = encoder;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -86,25 +90,30 @@ public class MailFolderCommandService {
     }
 
     @Transactional
-    public void moveMails(Long userId, MoveMailRequest request) {
+    public void moveMails(MailPrincipal principal, MoveMailRequest request) {
+        Long userId = principal.userIdLong();
         Long toFolderId = encoder.decode(MailFolder.class, request.toFolderId());
         Long fromFolderId = encoder.decode(MailFolder.class, request.fromFolderId());
         validateTargetFolder(userId, toFolderId);
         for (String mailSqid : request.mailIds()) {
             Long mailId = encoder.decode(Mail.class, mailSqid);
             userTaskCommandService.updateFolder(userId, mailId, fromFolderId, toFolderId);
+            auditTrailService.logAction(mailId, "MOVE", principal.getUsername(), "Memindahkan surat ke folder lain");
         }
     }
 
     @Transactional
-    public void deleteMail(Long userId, Long mailId) {
+    public void deleteMail(MailPrincipal principal, Long mailId) {
+        Long userId = principal.userIdLong();
         userTaskQueryService.findUserTask(userId, mailId)
                 .ifPresentOrElse(
                         ut -> {
                             if (ut.isInTrash()) {
                                 userTaskCommandService.purge(userId, mailId);
+                                auditTrailService.logAction(mailId, "PURGE", principal.getUsername(), "Menghapus surat secara permanen");
                             } else {
                                 userTaskCommandService.softDelete(userId, mailId);
+                                auditTrailService.logAction(mailId, "DELETE", principal.getUsername(), "Memindahkan surat ke kotak sampah");
                             }
                         },
                         () -> {
@@ -113,8 +122,9 @@ public class MailFolderCommandService {
     }
 
     @Transactional
-    public void restoreMail(Long userId, Long mailId) {
-        userTaskCommandService.restore(userId, mailId);
+    public void restoreMail(MailPrincipal principal, Long mailId) {
+        userTaskCommandService.restore(principal.userIdLong(), mailId);
+        auditTrailService.logAction(mailId, "RESTORE", principal.getUsername(), "Mengembalikan surat dari kotak sampah");
     }
 
     @Transactional

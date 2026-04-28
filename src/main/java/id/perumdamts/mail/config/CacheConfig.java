@@ -13,6 +13,9 @@ import id.perumdamts.mail.dto.core.mail.MailTrackingResponse;
 import id.perumdamts.mail.dto.core.mail.RecipientReadStatusResponse;
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;
+import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
+import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
+import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageResponse;
 import id.perumdamts.mail.integration.hr.EmployeeDto;
 import org.springframework.cache.annotation.EnableCaching;
@@ -52,7 +55,6 @@ import java.util.Map;
  */
 @Configuration
 @EnableCaching
-@SuppressWarnings("removal")
 public class CacheConfig {
 
     /**
@@ -66,17 +68,20 @@ public class CacheConfig {
     public static final class CacheNames {
         private CacheNames() {}
 
-        public static final String HR_EMPLOYEE     = "hrEmployee:v2";
-        public static final String MAIL_FOLDER     = "mailFolder:v2";
-        public static final String TENANT_CONFIG   = "tenantConfig:v2";
-        public static final String MAIL_STATS      = "mailStats:v2";
-        public static final String APPWRITE_TOKENS = "appwrite-tokens:v2";
-        public static final String PUBLICATIONS    = "publications:v2";
-        public static final String MAIL_THREAD     = "mailThread:v2";
-        public static final String MAIL_TRACKING   = "mailTracking:v2";
-        public static final String MAIL_READ_STATUS = "mailReadStatus:v2";
-        public static final String ATTACHMENTS     = "attachments";
-        public static final String ALLOWED_FILE_TYPES = "allowedFileTypes";
+        public static final String HR_EMPLOYEE     = "hrEmployee:v3";
+        public static final String MAIL_FOLDER     = "mailFolder:v3";
+        public static final String TENANT_CONFIG   = "tenantConfig:v3";
+        public static final String MAIL_STATS      = "mailStats:v3";
+        public static final String APPWRITE_TOKENS = "appwrite-tokens:v3";
+        public static final String PUBLICATIONS    = "publications:v3";
+        public static final String MAIL_THREAD     = "mailThread:v3";
+        public static final String MAIL_TRACKING   = "mailTracking:v3";
+        public static final String MAIL_READ_STATUS = "mailReadStatus:v3";
+        public static final String ATTACHMENTS     = "attachments:v3";
+        public static final String ALLOWED_FILE_TYPES = "allowedFileTypes:v3";
+        public static final String MAIL_CATEGORIES = "mailCategories:v3";
+        public static final String MAIL_TYPES      = "mailTypes:v3";
+        public static final String DOCUMENT_TYPES  = "documentTypes:v3";
     }
 
     /**
@@ -96,6 +101,9 @@ public class CacheConfig {
         public static final Duration MAIL_READ_STATUS = Duration.ofMinutes(15);
         public static final Duration ATTACHMENTS     = Duration.ofMinutes(30);
         public static final Duration ALLOWED_FILE_TYPES = Duration.ofHours(1);
+        public static final Duration MAIL_CATEGORIES = Duration.ofHours(1);
+        public static final Duration MAIL_TYPES      = Duration.ofHours(1);
+        public static final Duration DOCUMENT_TYPES  = Duration.ofHours(1);
         public static final Duration DEFAULT         = Duration.ofMinutes(30);
     }
 
@@ -141,7 +149,10 @@ public class CacheConfig {
                 Map.entry(CacheNames.MAIL_TRACKING, buildConfig(CacheTtl.MAIL_TRACKING, createListSerializer(mapper, MailTrackingResponse.class))),
                 Map.entry(CacheNames.MAIL_READ_STATUS, buildConfig(CacheTtl.MAIL_READ_STATUS, createListSerializer(mapper, RecipientReadStatusResponse.class))),
                 Map.entry(CacheNames.ATTACHMENTS, buildConfig(CacheTtl.ATTACHMENTS, new JacksonJsonRedisSerializer<>(mapper, AttachmentDetailResponse.class))),
-                Map.entry(CacheNames.ALLOWED_FILE_TYPES, buildConfig(CacheTtl.ALLOWED_FILE_TYPES, createListSerializer(mapper, AllowedFileTypeDto.class)))
+                Map.entry(CacheNames.ALLOWED_FILE_TYPES, buildConfig(CacheTtl.ALLOWED_FILE_TYPES, createListSerializer(mapper, AllowedFileTypeDto.class))),
+                Map.entry(CacheNames.MAIL_CATEGORIES, buildConfig(CacheTtl.MAIL_CATEGORIES, createListSerializer(mapper, MailCategoryLookup.class))),
+                Map.entry(CacheNames.MAIL_TYPES, buildConfig(CacheTtl.MAIL_TYPES, createListSerializer(mapper, MailTypeLookup.class))),
+                Map.entry(CacheNames.DOCUMENT_TYPES, buildConfig(CacheTtl.DOCUMENT_TYPES, createListSerializer(mapper, DocumentTypeLookup.class)))
         );
     }
 

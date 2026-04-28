@@ -158,21 +158,21 @@ class MailFolderControllerTest {
 
         controller.moveMails(principal, request);
 
-        verify(commandService).moveMails(1L, request);
+        verify(commandService).moveMails(principal, request);
     }
 
     @Test
     void deleteMail_shouldDelegateToService() {
         controller.deleteMail(principal, "5");
 
-        verify(commandService).deleteMail(1L, 5L);
+        verify(commandService).deleteMail(principal, 5L);
     }
 
     @Test
     void restoreMail_shouldDelegateToService() {
         controller.restoreMail(principal, "5");
 
-        verify(commandService).restoreMail(1L, 5L);
+        verify(commandService).restoreMail(principal, 5L);
     }
 
     @Test

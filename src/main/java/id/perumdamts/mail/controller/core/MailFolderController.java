@@ -111,7 +111,7 @@ public class MailFolderController {
     public void moveMails(
             @AuthenticationPrincipal MailPrincipal principal,
             @Valid @RequestBody MoveMailRequest request) {
-        commandService.moveMails(principal.userIdLong(), request);
+        commandService.moveMails(principal, request);
     }
 
     /**
@@ -125,7 +125,7 @@ public class MailFolderController {
             @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable String id) {
         long mailId = encoder.decode(Mail.class, id);
-        commandService.deleteMail(principal.userIdLong(), mailId);
+        commandService.deleteMail(principal, mailId);
     }
 
     /**
@@ -138,7 +138,7 @@ public class MailFolderController {
             @AuthenticationPrincipal MailPrincipal principal,
             @PathVariable String id) {
         long mailId = encoder.decode(Mail.class, id);
-        commandService.restoreMail(principal.userIdLong(), mailId);
+        commandService.restoreMail(principal, mailId);
     }
 
     /**
