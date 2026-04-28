@@ -2,7 +2,14 @@ package id.perumdamts.mail.service.core.mail;
 
 import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.mail.*;
+import id.perumdamts.mail.enums.AttachmentRefType;
 import id.perumdamts.mail.repository.core.jooq.MailQueryRepository;
+import id.perumdamts.mail.repository.core.jpa.AttachmentRepository;
+import id.perumdamts.mail.repository.core.jpa.MailRepository;
+import id.perumdamts.mail.service.core.usertask.UserTaskQueryService;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,12 +17,30 @@ import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class MailQueryService {
 
     private final MailQueryRepository mailQueryRepository;
+    private final MailRepository mailRepository;
+    private final AttachmentRepository attachmentRepository;
+    private final UserTaskQueryService userTaskQueryService;
+    private final MailMapper mailMapper;
 
-    public MailQueryService(MailQueryRepository mailQueryRepository) {
-        this.mailQueryRepository = mailQueryRepository;
+    public MailResponse getDetail(Long mailId) {
+        var mail = mailRepository.findById(mailId)
+                .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
+        var attachments = attachmentRepository.findByRefTypeAndRefId(
+                AttachmentRefType.MAIL.getDbValue(), mailId);
+        return mailMapper.toResponse(mail, attachments);
+    }
+
+    public Page<MailLookupResponse> lookup(Long userId, MailLookupParams params) {
+        return userTaskQueryService.findAll(userId, params);
+    }
+
+    public List<MailTrackingItemResponse> findThreadTracking(Long mailId) {
+        Long rootId = userTaskQueryService.resolveRootId(mailId);
+        return userTaskQueryService.findThread(rootId);
     }
 
     public List<MailSummaryResponse> getThread(Long mailId) {

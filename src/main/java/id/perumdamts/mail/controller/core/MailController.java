@@ -9,6 +9,7 @@ import id.perumdamts.mail.service.core.mail.MailQueryService;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -90,10 +91,31 @@ public class MailController {
         commandService.markRead(mailId, principal);
     }
 
-    @GetMapping("/{id}/tracking")
-    public List<MailTrackingResponse> getTracking(@PathVariable String id) {
+    @GetMapping("/lookup")
+    public PagedModel<MailLookupResponse> lookup(
+            @AuthenticationPrincipal MailPrincipal principal,
+            @ParameterObject MailLookupParams params) {
+        return new PagedModel<>(queryService.lookup(principal.userIdLong(), params));
+    }
+
+    @GetMapping("/{id}")
+    public MailResponse getById(
+            @AuthenticationPrincipal MailPrincipal principal,
+            @PathVariable String id) {
         long mailId = encoder.decode(Mail.class, id);
-        return queryService.getTracking(mailId);
+        // Auto mark-read
+        try {
+            commandService.markRead(mailId, principal);
+        } catch (Exception e) {
+            // Ignore if UserTask not found (e.g. creator accessing detail)
+        }
+        return queryService.getDetail(mailId);
+    }
+
+    @GetMapping("/{id}/tracking")
+    public List<MailTrackingItemResponse> getTracking(@PathVariable String id) {
+        long mailId = encoder.decode(Mail.class, id);
+        return queryService.findThreadTracking(mailId);
     }
 
     @GetMapping("/{id}/read-status")

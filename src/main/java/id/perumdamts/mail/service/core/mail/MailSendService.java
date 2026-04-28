@@ -7,7 +7,7 @@ import id.perumdamts.mail.enums.SystemFolder;
 import id.perumdamts.mail.event.MailSentEvent;
 import id.perumdamts.mail.repository.core.jpa.MailRecipientRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
-import id.perumdamts.mail.repository.core.jpa.UserTaskRepository;
+import id.perumdamts.mail.service.core.usertask.UserTaskCommandService;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.mail.numbering.MailNumberGenerator;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ public class MailSendService {
 
     private final MailRepository mailRepository;
     private final MailRecipientRepository recipientRepository;
-    private final UserTaskRepository userTaskRepository;
+    private final UserTaskCommandService userTaskCommandService;
     private final MailNumberGenerator mailNumberGenerator;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -89,26 +89,20 @@ public class MailSendService {
 
         // Side-effect 4: Create inbox per recipient (batch INSERT)
         Long senderId = Long.parseLong(principal.userId());
-        List<UserTask> inboxTasks = recipients.stream()
-                .map(r -> UserTask.inbox(r.getUserId(), mailId))
-                .toList();
-        userTaskRepository.saveAll(inboxTasks);
-
-        // Side-effect 7: Move sender's task dari DRAFT ke SENT
-        userTaskRepository.updateFolder(senderId, mailId,
-                SystemFolder.DRAFT.getId(), SystemFolder.SENT.getId());
-
-        // Side-effect 8: Jika reply, mark parent sebagai read untuk sender
-        if (mail.getParentMail() != null) {
-            userTaskRepository.updateFolder(senderId, mail.getParentMail().getId(),
-                    SystemFolder.INBOX.getId(), SystemFolder.READ.getId());
-        }
-
-        // Side-effect 5, 6, 9: Publish event untuk async processing
         List<Long> recipientUserIds = recipients.stream()
                 .map(MailRecipient::getUserId)
                 .toList();
+        userTaskCommandService.createInboxes(mailId, recipientUserIds);
 
+        // Side-effect 7: Move sender's task dari DRAFT ke SENT
+        userTaskCommandService.moveFromDraftToSent(senderId, mailId);
+
+        // Side-effect 8: Jika reply, mark parent sebagai read untuk sender
+        if (mail.getParentMail() != null) {
+            userTaskCommandService.markParentAsRead(senderId, mail.getParentMail().getId());
+        }
+
+        // Side-effect 5, 6, 9: Publish event untuk async processing
         eventPublisher.publishEvent(new MailSentEvent(
                 mailId, senderId, principal.name(), recipientUserIds));
 

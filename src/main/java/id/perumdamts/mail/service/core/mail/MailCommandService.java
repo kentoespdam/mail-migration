@@ -12,10 +12,8 @@ import id.perumdamts.mail.integration.hr.EmployeeResponse;
 import id.perumdamts.mail.integration.hr.HrServiceClient;
 import id.perumdamts.mail.repository.core.jpa.MailRecipientRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
-import id.perumdamts.mail.repository.core.jpa.UserTaskRepository;
-import id.perumdamts.mail.repository.master.jpa.MailCategoryRepository;
-import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
-import id.perumdamts.mail.security.MailPrincipal;
+import id.perumdamts.mail.service.core.usertask.UserTaskCommandService;
+import id.perumdamts.mail.service.core.usertask.UserTaskQueryService;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -37,7 +35,8 @@ public class MailCommandService {
     private final MailTypeRepository mailTypeRepository;
     private final MailCategoryRepository mailCategoryRepository;
     private final MailRecipientRepository recipientRepository;
-    private final UserTaskRepository userTaskRepository;
+    private final UserTaskCommandService userTaskCommandService;
+    private final UserTaskQueryService userTaskQueryService;
     private final MailMapper mailMapper;
     private final MailSendService mailSendService;
     private final HrServiceClient hrServiceClient;
@@ -47,7 +46,8 @@ public class MailCommandService {
             MailTypeRepository mailTypeRepository,
             MailCategoryRepository mailCategoryRepository,
             MailRecipientRepository recipientRepository,
-            UserTaskRepository userTaskRepository,
+            UserTaskCommandService userTaskCommandService,
+            UserTaskQueryService userTaskQueryService,
             MailMapper mailMapper,
             MailSendService mailSendService,
             HrServiceClient hrServiceClient,
@@ -56,7 +56,8 @@ public class MailCommandService {
         this.mailTypeRepository = mailTypeRepository;
         this.mailCategoryRepository = mailCategoryRepository;
         this.recipientRepository = recipientRepository;
-        this.userTaskRepository = userTaskRepository;
+        this.userTaskCommandService = userTaskCommandService;
+        this.userTaskQueryService = userTaskQueryService;
         this.mailMapper = mailMapper;
         this.mailSendService = mailSendService;
         this.hrServiceClient = hrServiceClient;
@@ -83,7 +84,7 @@ public class MailCommandService {
                 principal);
 
         // Create draft UserTask for sender
-        userTaskRepository.save(UserTask.draft(principal.userIdLong(), mail.getId()));
+        userTaskCommandService.createDraft(principal.userIdLong(), mail.getId());
 
         return mailMapper.toResponse(mail);
     }
@@ -167,36 +168,30 @@ public class MailCommandService {
     @Transactional
     public void deleteMail(Long mailId, MailPrincipal principal) {
         Long userId = principal.userIdLong();
-        var task = userTaskRepository.findActiveByUserIdAndMailId(userId, mailId)
-                .orElseThrow(() -> new EntityNotFoundException("Mail not found in your mailbox: " + mailId));
-
-        if (task.isInTrash()) {
-            task.purge();
-        } else {
-            task.softDelete();
-        }
-        userTaskRepository.save(task);
+        userTaskQueryService.findUserTask(userId, mailId)
+                .ifPresentOrElse(
+                        task -> {
+                            if (task.isInTrash()) {
+                                userTaskCommandService.purge(userId, mailId);
+                            } else {
+                                userTaskCommandService.softDelete(userId, mailId);
+                            }
+                        },
+                        () -> {
+                            throw new EntityNotFoundException("Mail not found in your mailbox: " + mailId);
+                        });
     }
 
     @Transactional
     public void restoreMail(Long mailId, MailPrincipal principal) {
         Long userId = principal.userIdLong();
-        var task = userTaskRepository.findByUserIdAndMailId(userId, mailId)
-                .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
-        if (!task.isInTrash()) {
-            throw new IllegalStateException("Mail is not in trash");
-        }
-        task.restore();
-        userTaskRepository.save(task);
+        userTaskCommandService.restore(userId, mailId);
     }
 
     @Transactional
     public void markRead(Long mailId, MailPrincipal principal) {
         Long userId = principal.userIdLong();
-        var task = userTaskRepository.findActiveByUserIdAndMailId(userId, mailId)
-                .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
-        task.markRead();
-        userTaskRepository.save(task);
+        userTaskCommandService.markRead(userId, mailId);
     }
 
     private Mail createAndPersistMail(String subject,
