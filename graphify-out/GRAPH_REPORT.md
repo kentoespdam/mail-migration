@@ -1,12 +1,12 @@
 # Graph Report - mail-service  (2026-05-04)
 
 ## Corpus Check
-- 298 files · ~456,891 words
+- 299 files · ~456,922 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1445 nodes · 2265 edges · 80 communities detected
-- Extraction: 63% EXTRACTED · 37% INFERRED · 0% AMBIGUOUS · INFERRED: 835 edges (avg confidence: 0.8)
+- 1447 nodes · 2270 edges · 80 communities detected
+- Extraction: 63% EXTRACTED · 37% INFERRED · 0% AMBIGUOUS · INFERRED: 837 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -66,7 +66,7 @@
 - [[_COMMUNITY_Community 57|Community 57]]
 - [[_COMMUNITY_Community 58|Community 58]]
 - [[_COMMUNITY_Community 59|Community 59]]
-- [[_COMMUNITY_Community 60|Community 60]]
+- [[_COMMUNITY_Community 61|Community 61]]
 - [[_COMMUNITY_Community 62|Community 62]]
 - [[_COMMUNITY_Community 63|Community 63]]
 - [[_COMMUNITY_Community 64|Community 64]]
@@ -119,91 +119,91 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.03
-Nodes (13): MailAttachmentController, MailController, MailControllerTest, MailFolderController, MailRecipientController, PublicationController, AllowedFileTypeController, DocumentTypeController (+5 more)
+Nodes (20): ArchiveNumberGenerator, PagedRequest, CacheSerializationTest, MailQueryCacheListener, MailFolderQueryService, ArchiveQueryRepository, DocumentTypeQueryRepository, FolderCounterRepository (+12 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.03
-Nodes (18): PagedRequest, CacheSerializationTest, MailQueryCacheListener, MailFolderQueryService, ArchiveQueryRepository, DocumentTypeQueryRepository, FolderCounterRepository, MailCategoryQueryRepository (+10 more)
+Nodes (17): MailArchiveCommandService, MailFolderController, MailFolderControllerTest, isMovable(), isPersonalFolder(), MailFolderCommandService, MailArchiveAccessRepository, MailArchiveNotifLogRepository (+9 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.04
-Nodes (15): MailArchiveQueryService, DocumentTypeCommandService, DocumentTypeCommandServiceTest, findById(), HrServiceClientFallback, DocumentTypeRepository, MailCategoryRepository, QuickMessageRepository (+7 more)
+Cohesion: 0.03
+Nodes (16): MailArchiveQueryService, DocumentTypeCommandService, DocumentTypeCommandServiceTest, findById(), HrServiceClientFallback, DocumentTypeRepository, MailCategoryRepository, QuickMessageRepository (+8 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.04
-Nodes (11): AttachmentFileStorageService, AttachmentFileStorageServiceTest, AttachmentService, AttachmentMapper, PageRequest, resolve(), PublicationQueryRepositoryTest, PublicationFileStorageService (+3 more)
+Cohesion: 0.03
+Nodes (11): MailAttachmentController, MailController, MailControllerTest, MailRecipientController, PublicationController, AllowedFileTypeController, DocumentTypeController, MailCategoryController (+3 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.04
 Nodes (17): ArchiveMapperImpl, ArchiveMapper, HasSqid, PrintLog, PrintLogTest, PublicationControllerTest, UserTask, PublicationNotifScheduler (+9 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.05
-Nodes (11): MailFolderControllerTest, isMovable(), isPersonalFolder(), MailFolderCommandService, MailFolderRepository, AuditTrailService, MailCommandService, RecipientMapperImpl (+3 more)
+Cohesion: 0.06
+Nodes (8): AttachmentFileStorageService, AttachmentFileStorageServiceTest, AttachmentService, AttachmentMapper, resolve(), PublicationQueryRepositoryTest, PublicationFileStorageService, PublicationFileStorageServiceTest
 
 ### Community 6 - "Community 6"
 Cohesion: 0.03
-Nodes (23): SqidMapper, CacheConfig, CacheNames, CacheTtl, PageImplMixin, PageJacksonModule, PageRequestMixin, DocumentTypeMapperImpl (+15 more)
+Nodes (21): SqidMapper, CacheConfig, CacheNames, CacheTtl, PageImplMixin, PageJacksonModule, PageRequestMixin, DocumentTypeMapperImpl (+13 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.06
-Nodes (10): MailRecipientControllerTest, jabatanId(), jabatanNama(), getData(), HrServiceClient, HrServiceClient, MailRecipientRepository, MailSendService (+2 more)
-
-### Community 8 - "Community 8"
 Cohesion: 0.04
 Nodes (12): AttachmentCommandService, AttachmentCommandServiceTest, AttachmentMapper, AttachmentMapperImpl, AttachmentQueryService, Attachment, Mail, MailArchive (+4 more)
 
-### Community 9 - "Community 9"
+### Community 8 - "Community 8"
 Cohesion: 0.04
-Nodes (11): MailFolder, MailFolderTest, Publication, AllowedFileType, DocumentType, MailCategory, MailCategoryTest, MailType (+3 more)
+Nodes (14): MailFolder, MailFolderTest, Publication, MailFolderMapperImpl, MailFolderMapper, AllowedFileType, DocumentType, MailCategory (+6 more)
+
+### Community 9 - "Community 9"
+Cohesion: 0.06
+Nodes (9): MailRecipientControllerTest, jabatanId(), jabatanNama(), getData(), HrServiceClient, HrServiceClient, MailRecipientRepository, MailRecipientCommandService (+1 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.05
 Nodes (12): ArchiveReportRequest, ArchiveSearchRequest, DocumentTypeParams, MailFolderMailsParams, MailLookupParams, MailReportRequest, MailSearchRequest, MailCategoryParams (+4 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.07
-Nodes (6): MailArchiveCommandService, ArchiveNumberGenerator, MailArchiveController, MailArchiveAccessRepository, MailArchiveNotifLogRepository, DefaultArchiveNumberGenerator
-
-### Community 12 - "Community 12"
 Cohesion: 0.09
 Nodes (14): AllowedFileTypeDto, DocumentTypeLookup, DocumentTypeResponse, MailFolderLookup, HasSqid, MailResponse, MailSummaryResponse, MailCategoryLookup (+6 more)
 
-### Community 13 - "Community 13"
+### Community 12 - "Community 12"
 Cohesion: 0.1
 Nodes (7): AllowedFileTypeService, JpaPageRequest, JpaSearchRequest, AllowedFileTypeRepository, JpaPageRequest, PublicationMapperImpl, PublicationMapper
 
-### Community 14 - "Community 14"
+### Community 13 - "Community 13"
 Cohesion: 0.08
 Nodes (5): AbstractMailNumberGenerator, BmsMailNumberGenerator, BpnMailNumberGenerator, DefaultMailNumberGenerator, SmdMailNumberGenerator
 
-### Community 15 - "Community 15"
+### Community 14 - "Community 14"
 Cohesion: 0.13
 Nodes (4): MailRecipient, RecipientReadStatusListener, RecipientReadStatusListenerTest, RecipientMapper
 
-### Community 16 - "Community 16"
+### Community 15 - "Community 15"
 Cohesion: 0.13
 Nodes (4): MailThreadNode, MailThreadService, MailThreadServiceTest, MailTrackService
 
-### Community 17 - "Community 17"
+### Community 16 - "Community 16"
 Cohesion: 0.13
 Nodes (10): getValue(), OncePerRequestFilter, AppWriteAuthFilter, getRoles(), isAdmin(), isSystem(), toMailPrincipal(), from() (+2 more)
 
-### Community 18 - "Community 18"
-Cohesion: 0.15
-Nodes (3): PublicationTest, QuickMessageTest, MailOrgStatistic
-
-### Community 19 - "Community 19"
+### Community 17 - "Community 17"
 Cohesion: 0.17
 Nodes (3): MailNumberGenerator, AbstractMailNumberGenerator, MailNumberGeneratorDelegator
 
-### Community 20 - "Community 20"
+### Community 18 - "Community 18"
+Cohesion: 0.15
+Nodes (3): PublicationTest, MailCategoryStatisticTest, MailOrgStatistic
+
+### Community 19 - "Community 19"
 Cohesion: 0.17
 Nodes (3): MessageTemplateService, MessageTemplateMapperImpl, MessageTemplateMapper
 
-### Community 21 - "Community 21"
+### Community 20 - "Community 20"
 Cohesion: 0.17
 Nodes (4): PrintLogRepository, MailSignatureService, invalid(), valid()
+
+### Community 21 - "Community 21"
+Cohesion: 0.14
+Nodes (3): PageRequest, CacheKeyUtil, CacheKeyUtilTest
 
 ### Community 22 - "Community 22"
 Cohesion: 0.17
@@ -214,72 +214,72 @@ Cohesion: 0.18
 Nodes (1): UserTaskRepository
 
 ### Community 24 - "Community 24"
+Cohesion: 0.18
+Nodes (1): MailArchiveController
+
+### Community 25 - "Community 25"
 Cohesion: 0.2
 Nodes (6): ErrorDecoder, HrServiceConfig, HrServiceErrorDecoder, HrServiceException, RuntimeException, UnauthorizedException
 
-### Community 25 - "Community 25"
+### Community 26 - "Community 26"
 Cohesion: 0.22
 Nodes (1): GlobalExceptionHandler
 
-### Community 26 - "Community 26"
+### Community 27 - "Community 27"
 Cohesion: 0.22
 Nodes (1): MessageTemplateController
 
-### Community 27 - "Community 27"
+### Community 28 - "Community 28"
 Cohesion: 0.25
 Nodes (1): AttachmentController
 
-### Community 28 - "Community 28"
+### Community 29 - "Community 29"
 Cohesion: 0.33
 Nodes (1): PublicationCommandHandler
 
-### Community 29 - "Community 29"
+### Community 30 - "Community 30"
 Cohesion: 0.4
 Nodes (1): MailTypeRepository
 
-### Community 30 - "Community 30"
+### Community 31 - "Community 31"
 Cohesion: 0.4
 Nodes (1): MessageTemplateMapper
 
-### Community 31 - "Community 31"
+### Community 32 - "Community 32"
 Cohesion: 0.4
 Nodes (1): AllowedFileTypeParams
 
-### Community 32 - "Community 32"
+### Community 33 - "Community 33"
 Cohesion: 0.4
 Nodes (1): OpenApiConfig
 
-### Community 33 - "Community 33"
+### Community 34 - "Community 34"
 Cohesion: 0.5
 Nodes (1): JooqConfig
 
-### Community 34 - "Community 34"
+### Community 35 - "Community 35"
 Cohesion: 0.4
 Nodes (1): PublicationQueryHandler
 
-### Community 35 - "Community 35"
+### Community 36 - "Community 36"
 Cohesion: 0.5
 Nodes (1): BooleanYesNoConverter
 
-### Community 36 - "Community 36"
+### Community 37 - "Community 37"
 Cohesion: 0.5
 Nodes (1): MailArchiveNotif
 
-### Community 37 - "Community 37"
+### Community 38 - "Community 38"
 Cohesion: 0.5
 Nodes (1): MailResponseTime
 
-### Community 38 - "Community 38"
+### Community 39 - "Community 39"
 Cohesion: 0.5
 Nodes (1): MailArchiveNotifRepository
 
-### Community 39 - "Community 39"
-Cohesion: 0.5
-Nodes (1): MailResponseTimeRepository
-
 ### Community 40 - "Community 40"
 Cohesion: 0.5
-Nodes (1): MailCategoryStatisticRepository
+Nodes (1): MailResponseTimeRepository
 
 ### Community 41 - "Community 41"
 Cohesion: 0.5
@@ -341,17 +341,17 @@ Nodes (1): MailArchiveAccess
 Cohesion: 0.67
 Nodes (1): MailActionLog
 
-### Community 60 - "Community 60"
-Cohesion: 0.67
-Nodes (1): MailCategoryStatistic
-
-### Community 62 - "Community 62"
+### Community 61 - "Community 61"
 Cohesion: 0.67
 Nodes (1): MailArchiveRepository
 
-### Community 63 - "Community 63"
+### Community 62 - "Community 62"
 Cohesion: 0.67
 Nodes (1): MailActionLogRepository
+
+### Community 63 - "Community 63"
+Cohesion: 0.67
+Nodes (1): MailCategoryStatisticRepository
 
 ### Community 64 - "Community 64"
 Cohesion: 0.67
@@ -442,37 +442,37 @@ Nodes (1): CqrsBoundaryTest
   These have ≤1 connection - possible missing edges or undocumented components.
 - **Thin community `Community 23`** (11 nodes): `UserTaskRepository`, `.countByUserIdAndFolderIdAndReadStatus()`, `.emptyTrash()`, `.findActiveByUserIdAndMailId()`, `.findAllInTrashByMailId()`, `.findByUserIdAndMailId()`, `.purgeTrash()`, `.relocateMails()`, `.restoreFromTrash()`, `.updateFolder()`, `UserTaskRepository.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 25`** (9 nodes): `GlobalExceptionHandler`, `.handleBadRequest()`, `.handleConflict()`, `.handleForbidden()`, `.handleGeneral()`, `.handleNotFound()`, `.handleUnauthorized()`, `.handleValidation()`, `GlobalExceptionHandler.java`
+- **Thin community `Community 24`** (11 nodes): `MailArchiveController`, `.createDraft()`, `.deleteArchive()`, `.findForAdmin()`, `.getAccess()`, `.MailArchiveController()`, `.publish()`, `.searchWithAcl()`, `.setAccess()`, `.updateDraft()`, `MailArchiveController.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 26`** (9 nodes): `MessageTemplateController`, `.create()`, `.delete()`, `.findAll()`, `.findAllList()`, `.findById()`, `.MessageTemplateController()`, `.update()`, `MessageTemplateController.java`
+- **Thin community `Community 26`** (9 nodes): `GlobalExceptionHandler`, `.handleBadRequest()`, `.handleConflict()`, `.handleForbidden()`, `.handleGeneral()`, `.handleNotFound()`, `.handleUnauthorized()`, `.handleValidation()`, `GlobalExceptionHandler.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 27`** (8 nodes): `AttachmentController`, `.AttachmentController()`, `.delete()`, `.download()`, `.findById()`, `.findByOwner()`, `.upload()`, `AttachmentController.java`
+- **Thin community `Community 27`** (9 nodes): `MessageTemplateController`, `.create()`, `.delete()`, `.findAll()`, `.findAllList()`, `.findById()`, `.MessageTemplateController()`, `.update()`, `MessageTemplateController.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 28`** (6 nodes): `PublicationCommandHandler`, `.create()`, `.delete()`, `.publish()`, `.update()`, `PublicationCommandHandler.java`
+- **Thin community `Community 28`** (8 nodes): `AttachmentController`, `.AttachmentController()`, `.delete()`, `.download()`, `.findById()`, `.findByOwner()`, `.upload()`, `AttachmentController.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 29`** (5 nodes): `MailTypeRepository`, `.existsByName()`, `.existsByNameAndIdNot()`, `.findAllByStatusOrderByIdAsc()`, `MailTypeRepository.java`
+- **Thin community `Community 29`** (6 nodes): `PublicationCommandHandler`, `.create()`, `.delete()`, `.publish()`, `.update()`, `PublicationCommandHandler.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 30`** (5 nodes): `MessageTemplateMapper`, `.toEntity()`, `.toResponse()`, `.updateEntity()`, `MessageTemplateMapper.java`
+- **Thin community `Community 30`** (5 nodes): `MailTypeRepository`, `.existsByName()`, `.existsByNameAndIdNot()`, `.findAllByStatusOrderByIdAsc()`, `MailTypeRepository.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 31`** (5 nodes): `AllowedFileTypeParams`, `.allowedSorts()`, `.defaultSort()`, `.toSpecification()`, `AllowedFileTypeParams.java`
+- **Thin community `Community 31`** (5 nodes): `MessageTemplateMapper`, `.toEntity()`, `.toResponse()`, `.updateEntity()`, `MessageTemplateMapper.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 32`** (5 nodes): `OpenApiConfig`, `.coreApi()`, `.masterApi()`, `.openAPI()`, `OpenApiConfig.java`
+- **Thin community `Community 32`** (5 nodes): `AllowedFileTypeParams`, `.allowedSorts()`, `.defaultSort()`, `.toSpecification()`, `AllowedFileTypeParams.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 33`** (5 nodes): `JooqConfig`, `.connectionProvider()`, `.dslContext()`, `.jooqConfiguration()`, `JooqConfig.java`
+- **Thin community `Community 33`** (5 nodes): `OpenApiConfig`, `.coreApi()`, `.masterApi()`, `.openAPI()`, `OpenApiConfig.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 34`** (5 nodes): `PublicationQueryHandler`, `.download()`, `.findAll()`, `.findById()`, `PublicationQueryHandler.java`
+- **Thin community `Community 34`** (5 nodes): `JooqConfig`, `.connectionProvider()`, `.dslContext()`, `.jooqConfiguration()`, `JooqConfig.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 35`** (4 nodes): `BooleanYesNoConverter.java`, `BooleanYesNoConverter`, `.convertToDatabaseColumn()`, `.convertToEntityAttribute()`
+- **Thin community `Community 35`** (5 nodes): `PublicationQueryHandler`, `.download()`, `.findAll()`, `.findById()`, `PublicationQueryHandler.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 36`** (4 nodes): `MailArchiveNotif`, `.onCreate()`, `.onUpdate()`, `MailArchiveNotif.java`
+- **Thin community `Community 36`** (4 nodes): `BooleanYesNoConverter.java`, `BooleanYesNoConverter`, `.convertToDatabaseColumn()`, `.convertToEntityAttribute()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 37`** (4 nodes): `MailResponseTime`, `.onCreate()`, `.onUpdate()`, `MailResponseTime.java`
+- **Thin community `Community 37`** (4 nodes): `MailArchiveNotif`, `.onCreate()`, `.onUpdate()`, `MailArchiveNotif.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 38`** (4 nodes): `MailArchiveNotifRepository`, `.findByArchiveId()`, `.findByPosId()`, `MailArchiveNotifRepository.java`
+- **Thin community `Community 38`** (4 nodes): `MailResponseTime`, `.onCreate()`, `.onUpdate()`, `MailResponseTime.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 39`** (4 nodes): `MailResponseTimeRepository`, `.findByOriginalMailId()`, `.findByReplyMailId()`, `MailResponseTimeRepository.java`
+- **Thin community `Community 39`** (4 nodes): `MailArchiveNotifRepository`, `.findByArchiveId()`, `.findByPosId()`, `MailArchiveNotifRepository.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 40`** (4 nodes): `MailCategoryStatisticRepository`, `.findByCategoryId()`, `.findByPeriodMonth()`, `MailCategoryStatisticRepository.java`
+- **Thin community `Community 40`** (4 nodes): `MailResponseTimeRepository`, `.findByOriginalMailId()`, `.findByReplyMailId()`, `MailResponseTimeRepository.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 41`** (4 nodes): `MailOrgStatisticRepository`, `.findByOrganizationId()`, `.findByPeriodMonth()`, `MailOrgStatisticRepository.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -504,11 +504,11 @@ Nodes (1): CqrsBoundaryTest
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 59`** (3 nodes): `MailActionLog`, `.MailActionLog()`, `MailActionLog.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 60`** (3 nodes): `MailCategoryStatistic.java`, `MailCategoryStatistic`, `.onUpdate()`
+- **Thin community `Community 61`** (3 nodes): `MailArchiveRepository`, `.findActiveById()`, `MailArchiveRepository.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (3 nodes): `MailArchiveRepository`, `.findActiveById()`, `MailArchiveRepository.java`
+- **Thin community `Community 62`** (3 nodes): `MailActionLogRepository`, `.findAllByMailIdOrderByCreatedAtDesc()`, `MailActionLogRepository.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 63`** (3 nodes): `MailActionLogRepository`, `.findAllByMailIdOrderByCreatedAtDesc()`, `MailActionLogRepository.java`
+- **Thin community `Community 63`** (3 nodes): `MailCategoryStatisticRepository`, `.findByPeriodMonthAndCategoryId()`, `MailCategoryStatisticRepository.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 64`** (3 nodes): `QuickMessageMapper`, `.toResponse()`, `QuickMessageMapper.java`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -556,11 +556,11 @@ Nodes (1): CqrsBoundaryTest
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `findById()` connect `Community 2` to `Community 1`, `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 11`, `Community 13`, `Community 21`?**
-  _High betweenness centrality (0.075) - this node is a cross-community bridge._
+- **Why does `findById()` connect `Community 2` to `Community 0`, `Community 1`, `Community 3`, `Community 4`, `Community 5`, `Community 9`, `Community 12`, `Community 20`?**
+  _High betweenness centrality (0.063) - this node is a cross-community bridge._
+- **Why does `from()` connect `Community 0` to `Community 3`, `Community 5`, `Community 7`, `Community 15`, `Community 16`, `Community 17`?**
+  _High betweenness centrality (0.038) - this node is a cross-community bridge._
 - **Why does `PageRequestMixin` connect `Community 6` to `Community 2`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Why does `from()` connect `Community 1` to `Community 3`, `Community 4`, `Community 8`, `Community 11`, `Community 16`, `Community 17`, `Community 19`?**
   _High betweenness centrality (0.028) - this node is a cross-community bridge._
 - **Are the 50 inferred relationships involving `findById()` (e.g. with `.create()` and `.update()`) actually correct?**
   _`findById()` has 50 INFERRED edges - model-reasoned connections that need verification._
@@ -568,5 +568,5 @@ _Questions this graph is uniquely positioned to answer:_
   _`from()` has 38 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 29 inferred relationships involving `userIdLong()` (e.g. with `.addRecipient()` and `.deleteRecipient()`) actually correct?**
   _`userIdLong()` has 29 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 22 inferred relationships involving `getDbValue()` (e.g. with `.convertToDatabaseColumn()` and `.MailRecipient()`) actually correct?**
-  _`getDbValue()` has 22 INFERRED edges - model-reasoned connections that need verification._
+- **What connects `ArchiveLocation`, `MessageTemplateRepository`, `MailRepository` to the rest of the system?**
+  _10 weakly-connected nodes found - possible documentation gaps or missing edges._

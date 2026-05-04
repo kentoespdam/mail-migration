@@ -1,5 +1,6 @@
 package id.perumdamts.mail.entity.statistic;
 
+import id.perumdamts.mail.entity.SqidEntity;
 import id.perumdamts.mail.entity.master.MailCategory;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -9,33 +10,30 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/**
- * Entity untuk tabel {@code mail_category_statistic}.
- * Agregasi total surat per bulan per kategori.
- */
 @Entity
 @Table(name = "mail_category_statistic", indexes = {
-        @Index(name = "idx_cat_stat_period_cat", columnList = "period_month, category_id")
+        @Index(name = "idx_mcs_period_category", columnList = "period_month, category_id")
 })
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class MailCategoryStatistic {
+public class MailCategoryStatistic implements SqidEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @Column(name = "id")
+    private Long id;
 
-    @Column(name = "period_month", nullable = false)
-    private Integer periodMonth; // Format YYYYMM
+    @Column(name = "period_month")
+    private Integer periodMonth;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id", foreignKey = @ForeignKey(name = "fk_mcs_category"))
     private MailCategory category;
 
     @Column(name = "total")
-    private Integer total = 0;
+    private Integer total;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
