@@ -22,4 +22,6 @@ public interface MailRecipientRepository extends JpaRepository<MailRecipient, Lo
     void deleteAllByMailIdAndIdIn(Long mailId, List<Long> ids);
 
     void deleteByMailId(Long mailId);
+
+    java.util.Optional<MailRecipient> findByMailIdAndUserId(Long mailId, Long userId);
 }
