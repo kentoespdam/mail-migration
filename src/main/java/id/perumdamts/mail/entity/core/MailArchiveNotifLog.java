@@ -5,28 +5,21 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-/**
- * Entity untuk tabel {@code mail_archive_notif_log}.
- * Audit trail pengiriman notifikasi arsip.
- */
 @Entity
 @Table(name = "mail_archive_notif_log")
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
+@Getter @Setter @NoArgsConstructor
 public class MailArchiveNotifLog {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mail_archive_id", nullable = false)
-    private MailArchive archive;
+    @Column(name = "mail_archive_id", nullable = false)
+    private Long mailArchiveId;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -34,8 +27,11 @@ public class MailArchiveNotifLog {
     @Column(name = "notif_date")
     private LocalDateTime notifDate;
 
-    @PrePersist
-    protected void onCreate() {
-        this.notifDate = LocalDateTime.now();
-    }
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }
