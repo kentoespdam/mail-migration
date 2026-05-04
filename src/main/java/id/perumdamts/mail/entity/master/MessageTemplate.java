@@ -8,22 +8,20 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-/**
- * Entity untuk tabel {@code msg_template}.
- * Template pesan/surat legacy.
- */
+import id.perumdamts.mail.entity.SqidEntity;
+
 @Entity
 @Table(name = "msg_template")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class MessageTemplate {
+public class MessageTemplate implements SqidEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "template_id")
-    private Integer id;
+    private Long id;
 
     @Column(name = "message", columnDefinition = "TEXT")
     private String message;
@@ -31,7 +29,7 @@ public class MessageTemplate {
     @Column(name = "description", length = 128)
     private String description;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
@@ -40,7 +38,7 @@ public class MessageTemplate {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
-        this.updatedAt = this.createdAt;
+        this.updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
