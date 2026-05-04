@@ -3,7 +3,11 @@
 
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 1. Cleanup orphan user tasks (where tm_id no longer exists in mail table)
+-- 1. Create backup table for orphans
+CREATE TABLE IF NOT EXISTS `sys_user_task_orphan_backup_20260504` AS
+SELECT * FROM sys_user_task WHERE tm_id NOT IN (SELECT m_id FROM mail);
+
+-- 2. Cleanup orphan user tasks (where tm_id no longer exists in mail table)
 -- Estimated ~57 rows to be deleted.
 DELETE FROM sys_user_task WHERE tm_id NOT IN (SELECT m_id FROM mail);
 
