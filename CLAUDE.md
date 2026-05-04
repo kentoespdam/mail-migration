@@ -78,12 +78,19 @@ Akses data divalidasi melalui **UserTaskQueryService** untuk memastikan hak akse
 - **Storage**: Semua file baru masuk ke folder `mail/` bukan `publik/`.
 - **Validation**: Selalu validasi akses mail melalui UserTask sebelum mengizinkan operasi pada attachment.
 
-## graphify
+## MANDATORY: Context & Discovery (claude-mem & graphify)
 
-This project has a graphify knowledge graph at graphify-out/.
+Before reading raw files, scanning, or grepping for application logic, you MUST build context:
 
-Rules:
-- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
-- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
-- For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
-- After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)
+1. **Memory First (claude-mem):** Check for past decisions, bugfixes, or patterns using the 3-layer workflow:
+   - `search(query)` → Get index with IDs.
+   - `timeline(anchor=ID)` → Get surrounding context.
+   - `get_observations([IDs])` → Fetch full details ONLY for filtered IDs.
+2. **Architecture First (graphify):** Read `graphify-out/GRAPH_REPORT.md` (or `graphify-out/wiki/index.md`) to understand the god nodes and community structure.
+3. **Semantic Lookup & Symbol Discovery:**
+   - Use `graphify query`, `graphify path`, or `graphify explain` for conceptual or cross-module questions.
+   - Use `claude-mem smart_search` / `smart_outline` / `smart_unfold` for structural code lookup (functions, classes, methods) to avoid reading full files.
+   - **Always use these tools to locate source-code symbols** before reaching for Glob/Grep/Read.
+4. **Maintenance:** Run `graphify update .` after ANY code change.
+
+**Forbidden**: recursive folder scanning, broad Glob/Grep sweeps for conceptual/logic questions or symbol lookups. Use Grep only for exact-string textual lookups (a known error message, log literal, or file-path string).

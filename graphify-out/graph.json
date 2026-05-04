@@ -18948,8 +18948,8 @@
       "source_file": "src/main/java/id/perumdamts/mail/service/core/archive/MailArchiveCommandService.java",
       "source_location": "L102",
       "weight": 1.0,
-      "_src": "archive_mailarchivecommandservice_mailarchivecommandservice_publisharchive",
-      "_tgt": "jpa_mailarchivenotiflogrepository_mailarchivenotiflogrepository_findbyarchiveid",
+      "_src": "jpa_mailarchivenotiflogrepository_mailarchivenotiflogrepository_findbyarchiveid",
+      "_tgt": "archive_mailarchivecommandservice_mailarchivecommandservice_publisharchive",
       "source": "jpa_mailarchivenotiflogrepository_mailarchivenotiflogrepository_findbyarchiveid",
       "target": "archive_mailarchivecommandservice_mailarchivecommandservice_publisharchive"
     },
@@ -18960,8 +18960,8 @@
       "source_file": "src/main/java/id/perumdamts/mail/service/core/archive/MailArchiveCommandService.java",
       "source_location": "L142",
       "weight": 1.0,
-      "_src": "archive_mailarchivecommandservice_mailarchivecommandservice_getaccess",
-      "_tgt": "jpa_mailarchivenotiflogrepository_mailarchivenotiflogrepository_findbyarchiveid",
+      "_src": "jpa_mailarchivenotiflogrepository_mailarchivenotiflogrepository_findbyarchiveid",
+      "_tgt": "archive_mailarchivecommandservice_mailarchivecommandservice_getaccess",
       "source": "jpa_mailarchivenotiflogrepository_mailarchivenotiflogrepository_findbyarchiveid",
       "target": "archive_mailarchivecommandservice_mailarchivecommandservice_getaccess"
     },
