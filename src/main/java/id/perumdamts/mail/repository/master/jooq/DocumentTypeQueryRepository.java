@@ -3,7 +3,7 @@ package id.perumdamts.mail.repository.master.jooq;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeParams;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
 import id.perumdamts.mail.entity.master.DocumentType;
-import id.perumdamts.mail.enums.RecordStatus;
+import id.perumdamts.mail.enums.RecordStatusActive;
 import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,20 +29,20 @@ public class DocumentTypeQueryRepository {
     private final SqidsEncoder encoder;
 
     public Page<DocumentTypeResponse> findAll(DocumentTypeParams params) {
-        Condition condition = field("jd.status").ne(inline("DELETED"));
+        Condition condition = field("jd.is_deleted").eq(0);
 
         if (params.getSearch() != null && !params.getSearch().isBlank()) {
             condition = condition.and(field("jd.jenis_dokumen").likeIgnoreCase("%" + params.getSearch() + "%"));
         }
 
         if (params.getStatus() != null) {
-            condition = condition.and(field("jd.status").eq(params.getStatus().name()));
+            condition = condition.and(field("jd.status_new").eq(params.getStatus().name()));
         }
 
         var records = dsl.select(
                 field("jd.id"),
                 field("jd.jenis_dokumen"),
-                field("jd.status"),
+                field("jd.status_new"),
                 field(
                         dsl.selectCount()
                                 .from(table("area_publik").as("p"))
@@ -67,7 +67,7 @@ public class DocumentTypeQueryRepository {
         DocumentTypeResponse response = dsl.select(
                 field("jd.id"),
                 field("jd.jenis_dokumen"),
-                field("jd.status"),
+                field("jd.status_new"),
                 field(
                         dsl.selectCount()
                                 .from(table("area_publik").as("p"))
@@ -76,7 +76,7 @@ public class DocumentTypeQueryRepository {
                         .as("publication_count"))
                 .from(table("jenis_dokumen").as("jd"))
                 .where(field("jd.id").eq(id))
-                .and(field("jd.status").ne(inline("DELETED")))
+                .and(field("jd.is_deleted").eq(0))
                 .fetchOne(this::mapRecordToResponse);
 
         return Optional.ofNullable(response);
@@ -87,7 +87,7 @@ public class DocumentTypeQueryRepository {
         return new DocumentTypeResponse(
                 encoder.encode(DocumentType.class, docId),
                 r.get(field("jd.jenis_dokumen"), String.class),
-                RecordStatus.valueOf(r.get(field("jd.status"), String.class)),
+                RecordStatusActive.valueOf(r.get(field("jd.status_new"), String.class)),
                 r.get(field("publication_count"), Long.class));
     }
 }

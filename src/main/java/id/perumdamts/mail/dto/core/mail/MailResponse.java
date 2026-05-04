@@ -26,7 +26,7 @@ public class MailResponse implements HasSqid {
         MailComponentDto.MailAuditInfoDto audit;
         String noSuratMasuk;
         String asalSuratMasuk;
-        String tglSuratMasuk;
+        LocalDate tglSuratMasuk;
         String tujuanSuratKeluar;
         String penerimaSuratKeluar;
         List<AttachmentResponse> attachments;

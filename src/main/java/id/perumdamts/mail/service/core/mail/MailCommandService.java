@@ -222,7 +222,7 @@ public class MailCommandService {
             LocalDate maxResponseDate,
             String noSuratMasuk,
             String asalSuratMasuk,
-            String tglSuratMasuk,
+            LocalDate tglSuratMasuk,
             String tujuanSuratKeluar,
             String penerimaSuratKeluar,
             String rootMailSqid,

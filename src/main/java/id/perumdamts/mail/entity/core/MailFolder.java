@@ -31,7 +31,7 @@ public class MailFolder implements SqidEntity {
     @Column(name = "folder_id")
     private Long id;
 
-    @Column(name = "parent_folder_id", nullable = false)
+    @Column(name = "parent_folder_id")
     private Long parentFolderId;
 
     @Column(name = "owner_id", nullable = false, updatable = false)
@@ -51,7 +51,7 @@ public class MailFolder implements SqidEntity {
 
     public MailFolder(Long ownerId, Long parentFolderId, String name) {
         this.ownerId = ownerId;
-        this.parentFolderId = parentFolderId;
+        this.parentFolderId = (parentFolderId != null && parentFolderId > 0) ? parentFolderId : null;
         this.name = name.trim();
         this.iconClsFolder = "folder";
         this.status = STATUS_ACTIVE;

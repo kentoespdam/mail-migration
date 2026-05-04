@@ -10,10 +10,8 @@ public record ArchiveCreateRequest(
         Integer categoryId,
         Long mailId,
         LocalDate archiveDate,
-        Short year,
         String rack,
         String shelf,
         String box,
-        String folderPosition,
         String keywordFlag
 ) {}

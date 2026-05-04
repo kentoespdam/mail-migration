@@ -3,6 +3,7 @@ package id.perumdamts.mail.service.master.documentType;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
 import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.enums.RecordStatus;
+import id.perumdamts.mail.enums.RecordStatusActive;
 import id.perumdamts.mail.repository.master.jooq.DocumentTypeQueryRepository;
 import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -41,25 +42,25 @@ class DocumentTypeCommandServiceTest {
 
     @Test
     void toggleStatus_FromActiveToInactive_ShouldSuccess() {
-        documentType.setStatus(RecordStatus.ACTIVE);
+        documentType.setStatus(RecordStatusActive.ACTIVE);
         when(repository.findById(id)).thenReturn(Optional.of(documentType));
         when(queryRepository.findById(id)).thenReturn(Optional.of(mock(DocumentTypeResponse.class)));
 
         service.toggleStatus(id);
 
-        assertThat(documentType.getStatus()).isEqualTo(RecordStatus.INACTIVE);
+        assertThat(documentType.getStatus()).isEqualTo(RecordStatusActive.INACTIVE);
         verify(repository).save(documentType);
     }
 
     @Test
     void toggleStatus_FromInactiveToActive_ShouldSuccess() {
-        documentType.setStatus(RecordStatus.INACTIVE);
+        documentType.setStatus(RecordStatusActive.INACTIVE);
         when(repository.findById(id)).thenReturn(Optional.of(documentType));
         when(queryRepository.findById(id)).thenReturn(Optional.of(mock(DocumentTypeResponse.class)));
 
         service.toggleStatus(id);
 
-        assertThat(documentType.getStatus()).isEqualTo(RecordStatus.ACTIVE);
+        assertThat(documentType.getStatus()).isEqualTo(RecordStatusActive.ACTIVE);
         verify(repository).save(documentType);
     }
 
@@ -73,11 +74,12 @@ class DocumentTypeCommandServiceTest {
 
     @Test
     void toggleStatus_DeletedRecord_ShouldThrowException() {
-        documentType.setStatus(RecordStatus.DELETED);
+        documentType.setStatus(RecordStatusActive.INACTIVE);
+        documentType.setDeleted(Boolean.TRUE);
         when(repository.findById(id)).thenReturn(Optional.of(documentType));
 
         assertThatThrownBy(() -> service.toggleStatus(id))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Cannot toggle status of a DELETED record");
+                .hasMessageContaining("Cannot toggle status of a deleted record");
     }
 }

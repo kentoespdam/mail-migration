@@ -10,8 +10,6 @@ public class RecipientComponentDto {
     public record NotificationInfoDto(
             Integer emailNotif,
             Integer smsNotif,
-            Boolean notified,
-            Boolean read,
-            Integer folderPosition) {
+            Boolean notified) {
     }
 }

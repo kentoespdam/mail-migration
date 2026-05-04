@@ -25,20 +25,20 @@ public class QuickMessageQueryRepository {
     private final SqidsEncoder encoder;
 
     public Page<QuickMessageResponse> findAll(QuickMessageParams params) {
-        Condition condition = field("ps.status").ne(inline("DELETED"));
+        Condition condition = field("ps.is_deleted").eq(0);
 
         if (params.getSearch() != null && !params.getSearch().isBlank()) {
             condition = condition.and(field("ps.pesan").likeIgnoreCase("%" + params.getSearch() + "%"));
         }
 
         if (params.getStatus() != null) {
-            condition = condition.and(field("ps.status").eq(params.getStatus().name()));
+            condition = condition.and(field("ps.status_new").eq(params.getStatus().name()));
         }
 
         var records = dsl.select(
                         field("ps.id"),
                         field("ps.pesan"),
-                        field("ps.status"),
+                        field("ps.status_new"),
                         count().over().as("total_count"))
                 .from(table("pesan_singkat").as("ps"))
                 .where(condition)
@@ -57,10 +57,10 @@ public class QuickMessageQueryRepository {
         QuickMessageResponse response = dsl.select(
                         field("ps.id"),
                         field("ps.pesan"),
-                        field("ps.status"))
+                        field("ps.status_new"))
                 .from(table("pesan_singkat").as("ps"))
                 .where(field("ps.id").eq(id))
-                .and(field("ps.status").ne(inline("DELETED")))
+                .and(field("ps.is_deleted").eq(0))
                 .fetchOne(this::mapRecordToResponse);
 
         return Optional.ofNullable(response);

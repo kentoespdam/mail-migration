@@ -15,7 +15,7 @@ public record MailCreateRequest(
                 String parentMailId,
                 String noSuratMasuk,
                 String asalSuratMasuk,
-                String tglSuratMasuk,
+                LocalDate tglSuratMasuk,
                 String tujuanSuratKeluar,
                 String penerimaSuratKeluar) {
 }

@@ -14,7 +14,7 @@ public interface ArchiveMapper {
     @Mapping(source = "location.rack", target = "rack")
     @Mapping(source = "location.shelf", target = "shelf")
     @Mapping(source = "location.box", target = "box")
-    @Mapping(source = "location.folderPosition", target = "folderPosition")
+    @Mapping(target = "year", expression = "java(entity.getArchiveDate() != null ? (short) entity.getArchiveDate().getYear() : null)")
     ArchiveResponse toResponse(MailArchive entity);
 
     ArchiveAccessResponse toAccessResponse(MailArchiveAccess entity);

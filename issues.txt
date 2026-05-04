@@ -1,0 +1,28 @@
+○ mail-service-rla ● P0 [migrate] V16 batch cleanup 532k m_parent_id orphans
+○ mail-service-1gd ● P1 [migrate] V15 mail.m_updated_date + cleanup orphan masters
+○ mail-service-8qv ● P1 [migrate] V23 attachments composite PK->single + FK download_history
+○ mail-service-9le ● P1 [migrate] V17 mail FK + indexes
+○ mail-service-rim ● P1 [migrate] V20 mail_archive align legacy columns + indexes + FK
+○ mail-service-128 ● P2 [migrate] V27 mail_folder parent_folder_id nullable + FK
+○ mail-service-34k ● P2 [migrate] V19 mail_recipient dedupe + unique + FK
+○ mail-service-4mw ● P2 [migrate] V28 mail_category FK to mail_type
+○ mail-service-7z7 ● P2 [migrate] V26 pesan_singkat InnoDB + audit + FULLTEXT
+○ mail-service-8ad ● P2 [migrate] V29 print_log cleanup + FK + entity length fix
+◐ mail-service-8ga ● P2 Implement CQRS for Attachment
+○ mail-service-8ly ● P2 [migrate] V21 mail_archive_access pos_id varchar->int + FK
+○ mail-service-bmn ● P2 [migrate] V25 jenis_dokumen status split + DocumentType refactor
+○ mail-service-haf ● P2 [migrate] V18 mail_recipient is_notified + cleanup 37k orphan
+○ mail-service-pct ● P2 [migrate] V22 sys_user_task cleanup 57 orphan + FK
+○ mail-service-t1b ● P2 [migrate] V24 area_publik enum migration + audit + FK
+○ mail-service-7pr ● P3 [entity-new] MailOrgStatistic (mail_org_statistic)
+○ mail-service-czz ● P3 [entity-new] MailArchiveNotifLog (mail_archive_notif_log)
+○ mail-service-d25 ● P3 [entity-new] MailArchiveNotif (mail_archive_notif)
+○ mail-service-nb4 ● P3 [entity-new] MailCategoryStatistic (mail_category_statistic)
+○ mail-service-q2t ● P3 [entity-new] MessageTemplate (msg_template)
+○ mail-service-ses ● P3 [migrate] V30 audit columns ke 6 tabel legacy unmapped
+○ mail-service-t6c ● P3 [entity-new] MailResponseTime (mail_respontime)
+
+--------------------------------------------------------------------------------
+Total: 23 issues (22 open, 1 in progress)
+
+Status: ○ open  ◐ in_progress  ● blocked  ✓ closed  ❄ deferred

@@ -1,53 +1,44 @@
--- Pre-flight verification script for V15..V30 migration
--- This script validates assumptions about legacy data before running structural migrations.
--- It is READ-ONLY and does not modify any data.
+-- scripts/preflight_v15_v30.sql
+-- Pre-flight verification script before running migrations V15 - V30
+-- Run this on your target database to identify data issues that might cause migration failures.
 
--- 1. Duplikat attachments.id (blocker untuk V23)
-SELECT 'attachments.id duplicates' AS label, COUNT(*) AS cnt
-FROM (SELECT id FROM attachments GROUP BY id HAVING COUNT(*) > 1) x;
+-- 1. Backup Reminder
+SELECT 'WARNING: Ensure you have backups for mail, mail_recipient, sys_user_task, and attachments tables!' AS info;
 
--- 2. position_id non-numeric di mail_archive_access (blocker untuk V21)
-SELECT 'mail_archive_access.position_id non-numeric' AS label, COUNT(*) AS cnt
-FROM mail_archive_access
-WHERE position_id NOT REGEXP '^[0-9]+$' AND position_id IS NOT NULL AND position_id <> '';
+-- 2. Verify duplicates in attachments.id (Blocker for V23)
+SELECT 'Checking for duplicates in attachments.id...' AS task;
+SELECT id, COUNT(*) as duplicate_count 
+FROM attachments 
+GROUP BY id 
+HAVING duplicate_count > 1;
 
--- 3. Duplikat (mail_id, user_id) di mail_recipient (blocker untuk V19)
-SELECT 'mail_recipient (mail_id,user_id) duplicates' AS label, COUNT(*) AS cnt
-FROM (SELECT mail_id, user_id FROM mail_recipient
-      GROUP BY mail_id, user_id HAVING COUNT(*) > 1) x;
+-- 3. Verify non-numeric pos_id in mail_archive_access (Risk for V21)
+-- Only relevant if we need to convert pos_id from VARCHAR to INT.
+-- In V21 we use CHANGE COLUMN, so non-numeric values might fail or be truncated to 0.
+SELECT 'Checking for non-numeric position_id in mail_archive_access...' AS task;
+SELECT position_id, COUNT(*) as count
+FROM mail_archive_access 
+WHERE position_id NOT REGEXP '^[0-9]+$'
+GROUP BY position_id;
 
--- 4. Snapshot orphan count
-SELECT 'mail.m_type orphan' AS label, COUNT(*) AS cnt
-  FROM mail WHERE m_type IS NOT NULL
-    AND m_type NOT IN (SELECT mail_type_id FROM mail_type);
+-- 4. Verify duplicates in mail_recipient (mail_id, user_id) (Risk for V19)
+SELECT 'Checking for duplicates in mail_recipient (mail_id, user_id)...' AS task;
+SELECT mail_id, user_id, COUNT(*) as duplicate_count
+FROM mail_recipient 
+GROUP BY mail_id, user_id 
+HAVING duplicate_count > 1;
 
-SELECT 'mail.m_category orphan' AS label, COUNT(*) AS cnt
-  FROM mail WHERE m_category IS NOT NULL
-    AND m_category NOT IN (SELECT mcat_id FROM mail_category);
+-- 5. Orphan Count Analysis (Informational - will be cleaned by migrations)
+SELECT 'Orphan Analysis (Expected to be cleaned by V15, V16, V18, V22, V29):' AS info;
 
-SELECT 'mail.m_root_id orphan' AS label, COUNT(*) AS cnt
-  FROM mail WHERE m_root_id IS NOT NULL
-    AND m_root_id NOT IN (SELECT m_id FROM mail);
+SELECT 'mail.m_parent_id orphans' as label, COUNT(*) as count 
+FROM mail WHERE m_parent_id IS NOT NULL AND m_parent_id NOT IN (SELECT m_id FROM mail);
 
-SELECT 'mail.m_parent_id orphan' AS label, COUNT(*) AS cnt
-  FROM mail WHERE m_parent_id IS NOT NULL
-    AND m_parent_id NOT IN (SELECT m_id FROM mail);
+SELECT 'mail_recipient.mail_id orphans' as label, COUNT(*) as count 
+FROM mail_recipient WHERE mail_id NOT IN (SELECT m_id FROM mail);
 
-SELECT 'mail_recipient.mail_id orphan' AS label, COUNT(*) AS cnt
-  FROM mail_recipient WHERE mail_id NOT IN (SELECT m_id FROM mail);
+SELECT 'sys_user_task.tm_id orphans' as label, COUNT(*) as count 
+FROM sys_user_task WHERE tm_id NOT IN (SELECT m_id FROM mail);
 
-SELECT 'sys_user_task.tm_id orphan' AS label, COUNT(*) AS cnt
-  FROM sys_user_task WHERE tm_id NOT IN (SELECT m_id FROM mail);
-
-SELECT 'print_log.mail_id orphan' AS label, COUNT(*) AS cnt
-  FROM print_log WHERE mail_id IS NOT NULL
-    AND mail_id NOT IN (SELECT m_id FROM mail);
-
-SELECT 'attachment_download_history.attachment_id orphan' AS label, COUNT(*) AS cnt
-  FROM attachment_download_history
-    WHERE attachment_id NOT IN (SELECT id FROM attachments);
-
--- 5. Engine verification
-SELECT 'pesan_singkat engine' AS label, ENGINE AS info
-  FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'pesan_singkat';
+SELECT 'print_log.mail_id orphans' as label, COUNT(*) as count 
+FROM print_log WHERE mail_id IS NOT NULL AND mail_id NOT IN (SELECT m_id FROM mail);

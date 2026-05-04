@@ -5,7 +5,7 @@ import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeMapper;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeParams;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
-import id.perumdamts.mail.enums.RecordStatus;
+import id.perumdamts.mail.enums.RecordStatusActive;
 import id.perumdamts.mail.repository.master.jooq.DocumentTypeQueryRepository;
 import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -31,7 +31,7 @@ public class DocumentTypeQueryService {
 
     @org.springframework.cache.annotation.Cacheable(value = CacheConfig.CacheNames.DOCUMENT_TYPES, key = "'lookup'")
     public List<DocumentTypeLookup> lookup() {
-        return jpaRepository.findAllByStatusOrderByIdAsc(RecordStatus.ACTIVE).stream()
+        return jpaRepository.findAllByStatusOrderByIdAsc(RecordStatusActive.ACTIVE).stream()
                 .map(mapper::toLookup)
                 .toList();
     }

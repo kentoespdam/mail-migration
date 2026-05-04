@@ -31,16 +31,16 @@ public class PrintLog {
     @Column(name = "mail_id", nullable = false)
     private Long mailId;
 
-    @Column(name = "auth_code", length = 100, nullable = false, unique = true)
+    @Column(name = "auth_code", length = 32, nullable = false, unique = true)
     private String authCode;
 
-    @Column(name = "username", length = 100, nullable = false)
+    @Column(name = "username", length = 128, nullable = false)
     private String username;
 
     @Column(name = "date", nullable = false)
     private LocalDateTime printDate;
 
-    @Column(name = "ip_address", length = 50)
+    @Column(name = "ip_address", length = 32)
     private String ipAddress;
 
     /**

@@ -38,8 +38,6 @@ public abstract class RecipientMapper extends SqidMapper<MailRecipient> {
         return new RecipientComponentDto.NotificationInfoDto(
                 entity.getEmailNotif(),
                 entity.getSmsNotif(),
-                entity.isNotified(),
-                entity.isRead(),
-                entity.getFolderPosition());
+                entity.isNotified());
     }
 }

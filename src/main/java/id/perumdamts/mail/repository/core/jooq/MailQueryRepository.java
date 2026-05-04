@@ -328,7 +328,7 @@ public class MailQueryRepository {
                                                 r.get("updatedDate", LocalDateTime.class)),
                                 r.get("noSuratMasuk", String.class),
                                 r.get("asalSuratMasuk", String.class),
-                                r.get("tglSuratMasuk", String.class),
+                                r.get("tglSuratMasuk", LocalDate.class),
                                 r.get("tujuanSuratKeluar", String.class),
                                 r.get("penerimaSuratKeluar", String.class),
                                 null // attachments to be filled by service

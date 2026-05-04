@@ -53,9 +53,7 @@ public class RecipientQueryRepository {
                 new RecipientComponentDto.NotificationInfoDto(
                         r.get(field("r.email"), Integer.class),
                         r.get(field("r.sms"), Integer.class),
-                        r.get(field("r.is_notified"), Boolean.class),
-                        r.get(field("r.is_read"), Boolean.class),
-                        r.get(field("r.folder_position"), Integer.class)));
+                        r.get(field("r.is_notified"), Boolean.class)));
     }
 
     public List<MailTrackingResponse> findTracking(Long mailId) {
@@ -72,7 +70,7 @@ public class RecipientQueryRepository {
                         .when(field("r.circulation").eq(6), inline("FORWARD"))
                         .otherwise(inline("UNKNOWN"))
                         .as("circulationName"),
-                field("r.is_read").as("isRead"),
+                field("ut.read_status").eq(1).as("isRead"),
                 field("ut.read_date").as("readDate"))
                 .from(table("mail_recipient").as("r"))
                 .leftJoin(table("sys_user_task").as("ut"))

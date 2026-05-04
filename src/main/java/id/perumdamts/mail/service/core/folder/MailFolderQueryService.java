@@ -141,9 +141,12 @@ public class MailFolderQueryService {
     }
 
     private MailFolderResponse toResponseWithCounter(MailFolder folder, FolderCountDto counter) {
+        String parentId = folder.getParentFolderId() != null && folder.getParentFolderId() > 0 
+                ? encoder.encode(MailFolder.class, folder.getParentFolderId()) 
+                : "0";
         return new MailFolderResponse(
                 encoder.encode(MailFolder.class, folder.getId()),
-                folder.getParentFolderId() > 0 ? encoder.encode(MailFolder.class, folder.getParentFolderId()) : "0",
+                parentId,
                 encoder.encode(MailFolder.class, folder.getOwnerId()),
                 folder.getName(),
                 folder.getIconClsFolder(),

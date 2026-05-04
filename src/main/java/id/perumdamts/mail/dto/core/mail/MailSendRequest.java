@@ -20,7 +20,7 @@ public record MailSendRequest(
                 String parentMailId,
                 String noSuratMasuk,
                 String asalSuratMasuk,
-                String tglSuratMasuk,
+                LocalDate tglSuratMasuk,
                 String tujuanSuratKeluar,
                 String penerimaSuratKeluar,
                 @NotEmpty @Valid List<RecipientBatchRequest> recipients) {

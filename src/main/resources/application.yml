@@ -20,7 +20,7 @@ spring:
     locations: classpath:db/migration
     validate-on-migrate: false
     clean-disabled: true
-    out-of-order: false
+    out-of-order: true
     encoding: UTF-8
 
   # ── DataSource ──

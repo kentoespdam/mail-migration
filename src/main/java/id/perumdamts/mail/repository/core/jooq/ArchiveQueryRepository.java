@@ -8,6 +8,7 @@ import id.perumdamts.mail.entity.master.MailCategory;
 import id.perumdamts.mail.util.SqidsEncoder;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
+import org.jooq.DatePart;
 import org.jooq.SortField;
 import org.springframework.stereotype.Repository;
 
@@ -30,7 +31,7 @@ public class ArchiveQueryRepository {
 
     public List<ArchiveSummaryResponse> findForAdmin(ArchiveSearchRequest request, String officeCode) {
         Condition condition = field("a.ma_status").ne(3)
-                .and(field("a.ma_office_code").eq(officeCode));
+                .and(field("a.office_code").eq(officeCode));
 
         condition = applyFilters(condition, request);
 
@@ -39,18 +40,18 @@ public class ArchiveQueryRepository {
         return dsl.select(
                 field("a.ma_id").as("id"),
                 field("a.ma_no").as("archiveNumber"),
-                field("a.ma_date").as("archiveDate"),
+                field("a.ma_mail_date").as("archiveDate"),
                 field("a.ma_subject").as("subject"),
                 field("mc.mcat_name").as("categoryName"),
                 field("a.ma_status").as("status"),
-                field("a.ma_year").as("year"),
-                field("a.ma_office_code").as("officeCode"),
-                field("a.ma_attachment_qty").as("attachmentQty"),
-                field("a.ma_created_date").as("createdDate"),
-                field("a.ma_created_by_name").as("createdByName"),
+                extract(field("a.ma_mail_date"), DatePart.YEAR).as("year"),
+                field("a.office_code").as("officeCode"),
+                field(selectCount().from(table("attachments")).where(field("ref_type").eq(2).and(field("ref_id").eq(field("a.ma_id"))))).as("attachmentQty"),
+                field("a.ma_archive_date").as("createdDate"),
+                field("a.ma_archive_by_name").as("createdByName"),
                 count().over().as("totalCount"))
                 .from(table("mail_archive").as("a"))
-                .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("a.ma_category")))
+                .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("a.ma_mcat_id")))
                 .where(condition)
                 .orderBy(sort)
                 .limit(request.getSize())
@@ -62,8 +63,8 @@ public class ArchiveQueryRepository {
             List<Long> positionIds,
             String officeCode) {
         Condition condition = field("a.ma_status").eq(2)
-                .and(field("a.ma_office_code").eq(officeCode))
-                .and(field("acc.position_id").in(positionIds));
+                .and(field("a.office_code").eq(officeCode))
+                .and(field("acc.pos_id").in(positionIds));
 
         condition = applyFilters(condition, request);
 
@@ -72,20 +73,20 @@ public class ArchiveQueryRepository {
         return dsl.selectDistinct(
                 field("a.ma_id").as("id"),
                 field("a.ma_no").as("archiveNumber"),
-                field("a.ma_date").as("archiveDate"),
+                field("a.ma_mail_date").as("archiveDate"),
                 field("a.ma_subject").as("subject"),
                 field("mc.mcat_name").as("categoryName"),
                 field("a.ma_status").as("status"),
-                field("a.ma_year").as("year"),
-                field("a.ma_office_code").as("officeCode"),
-                field("a.ma_attachment_qty").as("attachmentQty"),
-                field("a.ma_created_date").as("createdDate"),
-                field("a.ma_created_by_name").as("createdByName"),
+                extract(field("a.ma_mail_date"), DatePart.YEAR).as("year"),
+                field("a.office_code").as("officeCode"),
+                field(selectCount().from(table("attachments")).where(field("ref_type").eq(2).and(field("ref_id").eq(field("a.ma_id"))))).as("attachmentQty"),
+                field("a.ma_archive_date").as("createdDate"),
+                field("a.ma_archive_by_name").as("createdByName"),
                 count().over().as("totalCount"))
                 .from(table("mail_archive").as("a"))
                 .join(table("mail_archive_access").as("acc"))
                 .on(field("acc.mail_archive_id").eq(field("a.ma_id")))
-                .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("a.ma_category")))
+                .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("a.ma_mcat_id")))
                 .where(condition)
                 .orderBy(sort)
                 .limit(request.getSize())
@@ -95,36 +96,36 @@ public class ArchiveQueryRepository {
 
     public List<ArchiveReportResponse> getReport(ArchiveReportRequest request, String officeCode) {
         Condition condition = field("a.ma_status").ne(3)
-                .and(field("a.ma_office_code").eq(officeCode));
+                .and(field("a.office_code").eq(officeCode));
 
         if (request.getCategoryId() != null && !request.getCategoryId().isBlank()) {
             condition = condition
-                    .and(field("a.ma_category").eq(encoder.decode(MailCategory.class, request.getCategoryId())));
+                    .and(field("a.ma_mcat_id").eq(encoder.decode(MailCategory.class, request.getCategoryId())));
         }
         if (request.getYear() != null) {
-            condition = condition.and(field("a.ma_year").eq(request.getYear()));
+            condition = condition.and(extract(field("a.ma_mail_date"), DatePart.YEAR).eq(request.getYear().intValue()));
         }
         if (request.getStartDate() != null && request.getEndDate() != null) {
-            condition = condition.and(field("a.ma_date").between(request.getStartDate(), request.getEndDate()));
+            condition = condition.and(field("a.ma_mail_date").between(request.getStartDate(), request.getEndDate()));
         }
 
         return dsl.select(
                 field("mc.mcat_name").as("categoryName"),
-                field("a.ma_year").as("year"),
+                extract(field("a.ma_mail_date"), DatePart.YEAR).as("year"),
                 count().as("totalArchives"),
                 count(case_().when(field("a.ma_status").eq(1), inline(1))).as("totalDraft"),
                 count(case_().when(field("a.ma_status").eq(2), inline(1))).as("totalArchived"),
                 count().over().as("totalCount"))
                 .from(table("mail_archive").as("a"))
-                .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("a.ma_category")))
+                .leftJoin(table("mail_category").as("mc")).on(field("mc.mcat_id").eq(field("a.ma_mcat_id")))
                 .where(condition)
-                .groupBy(field("mc.mcat_name"), field("a.ma_year"))
+                .groupBy(field("mc.mcat_name"), extract(field("a.ma_mail_date"), DatePart.YEAR))
                 .orderBy(request.toSortField())
                 .limit(request.getSize())
                 .offset(request.offset())
                 .fetch(r -> new ArchiveReportResponse(
                         r.get("categoryName", String.class),
-                        r.get("year", Short.class),
+                        r.get("year", Integer.class).shortValue(),
                         r.get("totalArchives", Long.class),
                         r.get("totalDraft", Long.class),
                         r.get("totalArchived", Long.class),
@@ -138,17 +139,17 @@ public class ArchiveQueryRepository {
                     field("a.ma_subject").likeIgnoreCase(kw)
                             .or(field("a.ma_no").likeIgnoreCase(kw))
                             .or(field("a.ma_content").likeIgnoreCase(kw))
-                            .or(field("a.ma_keyword_flag").likeIgnoreCase(kw)));
+                            .or(field("a.ma_keyword_index_flag").likeIgnoreCase(kw)));
         }
         if (request.getCategoryId() != null && !request.getCategoryId().isBlank()) {
             condition = condition
-                    .and(field("a.ma_category").eq(encoder.decode(MailCategory.class, request.getCategoryId())));
+                    .and(field("a.ma_mcat_id").eq(encoder.decode(MailCategory.class, request.getCategoryId())));
         }
         if (request.getYear() != null) {
-            condition = condition.and(field("a.ma_year").eq(request.getYear()));
+            condition = condition.and(extract(field("a.ma_mail_date"), DatePart.YEAR).eq(request.getYear().intValue()));
         }
         if (request.getStartDate() != null && request.getEndDate() != null) {
-            condition = condition.and(field("a.ma_date").between(request.getStartDate(), request.getEndDate()));
+            condition = condition.and(field("a.ma_mail_date").between(request.getStartDate(), request.getEndDate()));
         }
         if (request.getStatus() != null) {
             condition = condition.and(field("a.ma_status").eq(request.getStatus()));

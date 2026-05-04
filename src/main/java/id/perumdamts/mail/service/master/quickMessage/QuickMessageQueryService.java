@@ -4,7 +4,7 @@ import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageMapper;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageParams;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageResponse;
-import id.perumdamts.mail.enums.RecordStatus;
+import id.perumdamts.mail.enums.RecordStatusActive;
 import id.perumdamts.mail.repository.master.jooq.QuickMessageQueryRepository;
 import id.perumdamts.mail.repository.master.jpa.QuickMessageRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -36,7 +36,7 @@ public class QuickMessageQueryService {
 
     @Cacheable(value = CacheConfig.CacheNames.TENANT_CONFIG, key = "'quickMessages'")
     public List<QuickMessageResponse> lookup() {
-        return jpaRepository.findAllByStatusOrderByMessageAsc(RecordStatus.ACTIVE).stream()
+        return jpaRepository.findAllByStatusOrderByMessageAsc(RecordStatusActive.ACTIVE).stream()
                 .map(mapper::toResponse)
                 .toList();
     }

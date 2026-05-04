@@ -57,8 +57,8 @@ public class DefaultArchiveNumberGenerator implements ArchiveNumberGenerator {
         Integer maxSeq = dsl.select(count())
                 .from(table("mail_archive"))
                 .where(field("ma_status").eq(2))
-                .and(field("ma_category").eq(archive.getCategory() != null ? archive.getCategory().getId() : 0))
-                .and(field("YEAR(ma_created_date)").eq(LocalDate.now().getYear()))
+                .and(field("ma_mcat_id").eq(archive.getCategory() != null ? archive.getCategory().getId() : 0))
+                .and(extract(field("ma_archive_date"), org.jooq.DatePart.YEAR).eq(LocalDate.now().getYear()))
                 .fetchOneInto(Integer.class);
         return (maxSeq != null ? maxSeq : 0) + 1;
     }

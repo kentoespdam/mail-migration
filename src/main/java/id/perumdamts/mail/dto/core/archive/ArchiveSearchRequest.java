@@ -15,11 +15,11 @@ import java.util.Map;
 public class ArchiveSearchRequest extends PagedRequest {
 
     private static final Map<String, String> ALLOWED_SORTS = Map.of(
-            "createdDate", "a.created_date",
-            "archiveDate", "a.archive_date",
-            "archiveNumber", "a.archive_no",
-            "subject", "a.subject");
-    private static final String DEFAULT_SORT = "a.created_date";
+            "createdDate", "a.ma_archive_date",
+            "archiveDate", "a.ma_mail_date",
+            "archiveNumber", "a.ma_no",
+            "subject", "a.ma_subject");
+    private static final String DEFAULT_SORT = "a.ma_archive_date";
 
     // ── Filter fields ─────────────────────────────────────────────────────────
 

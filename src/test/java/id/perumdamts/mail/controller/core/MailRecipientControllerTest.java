@@ -55,7 +55,7 @@ class MailRecipientControllerTest {
                 "10",
                 new RecipientComponentDto.EmployeeInfoDto("100", "1000", "John Doe", "Manager"),
                 new RecipientComponentDto.CirculationInfoDto("1", "TO"),
-                new RecipientComponentDto.NotificationInfoDto(0, 0, false, false, 0));
+                new RecipientComponentDto.NotificationInfoDto(0, 0, false));
     }
 
     // ── getRecipients ──

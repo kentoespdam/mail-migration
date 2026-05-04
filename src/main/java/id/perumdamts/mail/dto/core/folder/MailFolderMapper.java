@@ -18,7 +18,7 @@ public abstract class MailFolderMapper extends SqidMapper<MailFolder> {
     @Autowired protected SqidsEncoder encoder;
 
     @Mapping(target = "id", expression = "java(sqid(entity))")
-    @Mapping(target = "parentFolderId", expression = "java(entity.getParentFolderId() > 0 ? encoder.encode(MailFolder.class, entity.getParentFolderId()) : \"0\")")
+    @Mapping(target = "parentFolderId", expression = "java(entity.getParentFolderId() != null && entity.getParentFolderId() > 0 ? encoder.encode(MailFolder.class, entity.getParentFolderId()) : \"0\")")
     @Mapping(target = "ownerId", expression = "java(entity.getOwnerId() != null ? encoder.encode(MailFolder.class, entity.getOwnerId()) : \"0\")")
     @Mapping(target = "system", expression = "java(entity.isSystemFolder())")
     @Mapping(target = "unread", expression = "java(0L)")
