@@ -3,7 +3,15 @@
 
 SET FOREIGN_KEY_CHECKS = 0;
 
--- 1. Deduplicate mail_recipient rows
+-- 1. Create backup for duplicates
+CREATE TABLE IF NOT EXISTS mail_recipient_duplicate_backup_20260504 AS
+SELECT mr1.* FROM mail_recipient mr1
+INNER JOIN mail_recipient mr2
+  ON mr1.mail_id = mr2.mail_id
+ AND mr1.user_id = mr2.user_id
+ AND mr1.id > mr2.id;
+
+-- 2. Deduplicate mail_recipient rows
 -- We keep only the row with the smallest ID for each (mail_id, user_id) pair.
 DELETE mr1 FROM mail_recipient mr1
 INNER JOIN mail_recipient mr2
@@ -11,12 +19,12 @@ INNER JOIN mail_recipient mr2
  AND mr1.user_id = mr2.user_id
  AND mr1.id > mr2.id;
 
--- 2. Add Unique Constraint
+-- 3. Add Unique Constraint
 -- This prevents future duplicates and is expected by the MailRecipient JPA entity.
 ALTER TABLE mail_recipient
   ADD CONSTRAINT uq_recipient_mail_user UNIQUE (mail_id, user_id);
 
--- 3. Add Foreign Key
+-- 4. Add Foreign Key
 -- Links mail_recipient to the mail table.
 ALTER TABLE mail_recipient
   ADD CONSTRAINT fk_recipient_mail FOREIGN KEY (mail_id) REFERENCES mail(m_id) ON DELETE CASCADE;
