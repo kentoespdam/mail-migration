@@ -86,12 +86,21 @@ public class Publication implements SqidEntity {
         this.status = PublicationStatus.PUBLISHED;
         this.publishedDate = LocalDateTime.now();
         this.notifFlag = 1;
-        this.updatedAt = LocalDateTime.now();
         return true;
     }
 
     public void softDelete() {
         this.status = PublicationStatus.DELETED;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
+        if (this.updatedAt == null) this.updatedAt = this.createdAt;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 }

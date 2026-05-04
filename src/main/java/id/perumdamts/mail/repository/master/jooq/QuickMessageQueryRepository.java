@@ -28,7 +28,7 @@ public class QuickMessageQueryRepository {
         Condition condition = field("ps.is_deleted").eq(0);
 
         if (params.getSearch() != null && !params.getSearch().isBlank()) {
-            condition = condition.and(field("ps.pesan").likeIgnoreCase("%" + params.getSearch() + "%"));
+            condition = condition.and(condition("MATCH(ps.pesan) AGAINST(? IN BOOLEAN MODE)", params.getSearch()));
         }
 
         if (params.getStatus() != null) {

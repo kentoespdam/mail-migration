@@ -7,8 +7,8 @@ import id.perumdamts.mail.dto.common.HasSqid;
  * Include counter badge (unread, total) untuk menampilkan jumlah mail.
  *
  * @param id             SQID dari Mail folder
- * @param parentFolderId SQID dari parent folder (0 jika root)
- * @param ownerId        SQID dari owner user (0 jika system)
+ * @param parentFolderId SQID dari parent folder (null jika root)
+ * @param ownerId        SQID dari owner user (null jika system)
  * @param name           Nama folder
  * @param iconCls        CSS class untuk icon folder
  * @param system         Flag jika ini adalah system folder

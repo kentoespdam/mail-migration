@@ -128,11 +128,11 @@ public class MailFolderQueryService {
     }
 
     private MailFolderResponse fromSystemFolder(SystemFolder sf, FolderCountDto counter) {
-        long parentFolderId = sf.getParent() != null ? sf.getParent().getId() : 0L;
+        String parentId = sf.getParent() != null ? encoder.encode(MailFolder.class, sf.getParent().getId()) : null;
         return new MailFolderResponse(
                 encoder.encode(MailFolder.class, sf.getId()),
-                parentFolderId > 0 ? encoder.encode(MailFolder.class, parentFolderId) : "0",
-                "0",
+                parentId,
+                null,
                 sf.getDisplayName(),
                 "email",
                 true,
@@ -141,13 +141,13 @@ public class MailFolderQueryService {
     }
 
     private MailFolderResponse toResponseWithCounter(MailFolder folder, FolderCountDto counter) {
-        String parentId = folder.getParentFolderId() != null && folder.getParentFolderId() > 0 
+        String parentId = folder.getParentFolderId() != null 
                 ? encoder.encode(MailFolder.class, folder.getParentFolderId()) 
-                : "0";
+                : null;
         return new MailFolderResponse(
                 encoder.encode(MailFolder.class, folder.getId()),
                 parentId,
-                encoder.encode(MailFolder.class, folder.getOwnerId()),
+                folder.getOwnerId() != null ? encoder.encode(MailFolder.class, folder.getOwnerId()) : null,
                 folder.getName(),
                 folder.getIconClsFolder(),
                 false,
