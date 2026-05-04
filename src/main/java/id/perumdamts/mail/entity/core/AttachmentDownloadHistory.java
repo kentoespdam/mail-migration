@@ -25,8 +25,9 @@ public class AttachmentDownloadHistory {
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "attachment_id", nullable = false)
-    private Integer attachmentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "attachment_id", nullable = false)
+    private Attachment attachment;
 
     @Column(name = "user_id")
     private Integer userId;
@@ -40,9 +41,9 @@ public class AttachmentDownloadHistory {
     @Column(name = "download_time", nullable = false)
     private LocalDateTime downloadTime;
 
-    public AttachmentDownloadHistory(Integer attachmentId, Integer userId,
+    public AttachmentDownloadHistory(Attachment attachment, Integer userId,
                                      String empName, String empPosName) {
-        this.attachmentId = attachmentId;
+        this.attachment = attachment;
         this.userId = userId;
         this.empName = empName;
         this.empPosName = empPosName;

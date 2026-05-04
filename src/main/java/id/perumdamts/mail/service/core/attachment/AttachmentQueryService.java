@@ -67,7 +67,7 @@ public class AttachmentQueryService {
 
         // Log download history
         historyRepository.save(new id.perumdamts.mail.entity.core.AttachmentDownloadHistory(
-                attachment.getId(),
+                attachment,
                 principal.userIdLong().intValue(),
                 principal.name(),
                 null));

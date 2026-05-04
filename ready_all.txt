@@ -1,0 +1,16 @@
+○ mail-service-8qv ● P1 [migrate] V23 attachments composite PK->single + FK download_history
+○ mail-service-rim ● P1 [migrate] V20 mail_archive align legacy columns + indexes + FK
+○ mail-service-pct ● P2 [migrate] V22 sys_user_task cleanup 57 orphan + FK
+○ mail-service-haf ● P2 [migrate] V18 mail_recipient is_notified + cleanup 37k orphan
+○ mail-service-8ly ● P2 [migrate] V21 mail_archive_access pos_id varchar->int + FK
+○ mail-service-7z7 ● P2 [migrate] V26 pesan_singkat InnoDB + audit + FULLTEXT
+○ mail-service-t1b ● P2 [migrate] V24 area_publik enum migration + audit + FK
+○ mail-service-8ad ● P2 [migrate] V29 print_log cleanup + FK + entity length fix
+○ mail-service-128 ● P2 [migrate] V27 mail_folder parent_folder_id nullable + FK
+○ mail-service-4mw ● P2 [migrate] V28 mail_category FK to mail_type
+○ mail-service-ses ● P3 [migrate] V30 audit columns ke 6 tabel legacy unmapped
+
+--------------------------------------------------------------------------------
+Ready: 11 issues with no active blockers
+
+Status: ○ open  ◐ in_progress  ● blocked  ✓ closed  ❄ deferred

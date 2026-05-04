@@ -94,7 +94,7 @@ public class AttachmentService {
 
         // Log download history
         historyRepository.save(new AttachmentDownloadHistory(
-                attachment.getId(),
+                attachment,
                 parseUserId(principal.userId()),
                 principal.name(),
                 null));
