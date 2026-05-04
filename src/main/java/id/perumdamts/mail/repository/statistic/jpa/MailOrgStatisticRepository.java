@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface MailOrgStatisticRepository extends JpaRepository<MailOrgStatistic, Integer> {
-    List<MailOrgStatistic> findByOrganizationId(Integer organizationId);
+public interface MailOrgStatisticRepository extends JpaRepository<MailOrgStatistic, Long> {
+    List<MailOrgStatistic> findByCreatedByOrg(Integer createdByOrg);
     List<MailOrgStatistic> findByPeriodMonth(Integer periodMonth);
 }
