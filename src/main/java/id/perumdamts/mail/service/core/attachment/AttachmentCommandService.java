@@ -73,4 +73,38 @@ public class AttachmentCommandService {
         userTaskQueryService.findUserTask(principal.userIdLong(), mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found in your mailbox: " + mailId));
     }
+
+    @Transactional
+    public Attachment upload(MultipartFile file, AttachmentRefType refType, Long refId, String docNotes, MailPrincipal principal) {
+        AttachmentFileStorageService.StoredFile storedFile = storageService.store(file);
+
+        String originalFilename = storedFile.originalFileName();
+        String fileExt = "";
+        int dot = originalFilename.lastIndexOf('.');
+        if (dot >= 0) {
+            fileExt = originalFilename.substring(dot + 1).toLowerCase();
+        }
+
+        Attachment attachment = new Attachment(
+                refType,
+                refId,
+                originalFilename,
+                storedFile.systemFileName(),
+                fileExt,
+                (int) storedFile.fileSize(),
+                principal.name()
+        );
+        attachment.setDocNotes(docNotes);
+
+        return attachmentRepository.save(attachment);
+    }
+
+    @Transactional
+    public void delete(Integer attachmentId) {
+        Attachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Attachment not found: " + attachmentId));
+
+        attachment.markDeleted();
+        attachmentRepository.save(attachment);
+    }
 }

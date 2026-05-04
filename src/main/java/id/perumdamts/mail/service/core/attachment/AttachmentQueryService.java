@@ -83,4 +83,27 @@ public class AttachmentQueryService {
         userTaskQueryService.findUserTask(principal.userIdLong(), mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found in your mailbox: " + mailId));
     }
+
+    public List<AttachmentResponse> findByOwner(AttachmentRefType refType, Long refId) {
+        return queryRepository.findByRef(refType, refId);
+    }
+
+    public AttachmentResponse findById(Integer id) {
+        return queryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Attachment not found: " + id));
+    }
+
+    @Transactional
+    public Resource download(Integer attachmentId, MailPrincipal principal) {
+        Attachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Attachment not found: " + attachmentId));
+
+        historyRepository.save(new id.perumdamts.mail.entity.core.AttachmentDownloadHistory(
+                attachment,
+                principal.userIdLong().intValue(),
+                principal.name(),
+                null));
+
+        return storageService.load(attachment.getSystemFilename(), attachment.getUploadDate());
+    }
 }
