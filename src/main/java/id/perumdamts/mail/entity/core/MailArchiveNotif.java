@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -24,12 +25,8 @@ public class MailArchiveNotif {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mail_archive_id", nullable = false)
-    private MailArchive archive;
-
-    @Column(name = "pos_id")
-    private Long posId;
+    @Column(name = "mail_archive_id", nullable = false)
+    private Long mailArchiveId;
 
     @Column(name = "notif_flag")
     private Integer notifFlag;
@@ -40,17 +37,7 @@ public class MailArchiveNotif {
     @Column(name = "processed_date")
     private LocalDateTime processedDate;
 
+    @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.insertDate = LocalDateTime.now();
-        this.updatedAt = this.insertDate;
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 }

@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface MailArchiveNotifRepository extends JpaRepository<MailArchiveNotif, Long> {
-    List<MailArchiveNotif> findByArchiveId(Long archiveId);
-    List<MailArchiveNotif> findByPosId(Long posId);
+public interface MailArchiveNotifRepository extends JpaRepository<MailArchiveNotif, Integer> {
+    List<MailArchiveNotif> findByMailArchiveId(Long mailArchiveId);
 }

@@ -66,12 +66,13 @@ public abstract class AbstractMailNumberGenerator implements MailNumberGenerator
         int categoryId = mail.getMailCategory() != null ? mail.getMailCategory().getId().intValue() : 0;
         int year = LocalDate.now().getYear();
 
-        // Lock row untuk prevent race condition
-        Integer maxSeq = dsl.select(count())
+        // Lock row untuk prevent race condition dan gunakan MAX dari parsed seq
+        Integer maxSeq = dsl.select(max(cast(substringIndex(field("m_no", String.class), "/", 1), Integer.class)))
                 .from(table("mail"))
-                .where(field("m_status").eq(1))
-                .and(field("m_category").eq(categoryId))
+                .where(field("m_category").eq(categoryId))
                 .and(field("YEAR(m_created_date)").eq(year))
+                .and(field("m_no").isNotNull())
+                .and(field("m_no").notEqual(""))
                 .forUpdate()
                 .fetchOneInto(Integer.class);
 

@@ -88,13 +88,13 @@ public class MailArchiveCommandService {
     }
 
     @Transactional
-    public ArchiveResponse publishArchive(Long archiveId, MailPrincipal principal) {
+    public ArchiveResponse publishArchive(Long archiveId, id.perumdamts.mail.dto.core.archive.ArchivePublishRequest request, MailPrincipal principal) {
         var archive = getArchiveOrThrow(archiveId);
         if (!archive.isDraft()) {
             throw new IllegalStateException("Only draft archives can be published");
         }
 
-        String archiveNumber = archiveNumberGenerator.generate(archive);
+        String archiveNumber = archiveNumberGenerator.generate(archive, request.pattern());
         archive.publish(archiveNumber);
         archiveRepository.save(archive);
 
