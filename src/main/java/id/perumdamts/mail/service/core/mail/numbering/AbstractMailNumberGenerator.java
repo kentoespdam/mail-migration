@@ -5,6 +5,7 @@ import org.jooq.DSLContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static org.jooq.impl.DSL.*;
@@ -29,18 +30,28 @@ public abstract class AbstractMailNumberGenerator implements MailNumberGenerator
             template = getDefaultTemplate();
         }
 
-        int sequence = getNextSequence(mail);
-        LocalDate now = LocalDate.now();
+        LocalDateTime referenceDate = mail.getCreatedDate() != null ? mail.getCreatedDate() : LocalDateTime.now();
+        int sequence = getNextSequence(mail, referenceDate.getYear());
 
         String categoryCode = mail.getMailCategory() != null ? mail.getMailCategory().getCode() : "";
+        String typeCode = (mail.getMailType() != null && mail.getMailType().getName() != null && !mail.getMailType().getName().isBlank())
+                ? mail.getMailType().getName().substring(0, 1).toUpperCase()
+                : "";
+        String romanMonth = getRomanMonth(referenceDate.getMonthValue());
 
         return template
                 .replace("#seq#", String.valueOf(sequence))
                 .replace("#org_code#", getOfficeCode())
                 .replace("#m_cat#", categoryCode)
-                .replace("#MR#", "MR")
-                .replace("#YYYY#", now.format(DateTimeFormatter.ofPattern("yyyy")))
-                .replace("#MM#", now.format(DateTimeFormatter.ofPattern("MM")));
+                .replace("#type#", typeCode)
+                .replace("#MR#", romanMonth)
+                .replace("#YYYY#", referenceDate.format(DateTimeFormatter.ofPattern("yyyy")))
+                .replace("#MM#", referenceDate.format(DateTimeFormatter.ofPattern("MM")));
+    }
+
+    private String getRomanMonth(int month) {
+        String[] romans = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"};
+        return (month >= 1 && month <= 12) ? romans[month] : "";
     }
 
     /**
@@ -52,7 +63,7 @@ public abstract class AbstractMailNumberGenerator implements MailNumberGenerator
         if (refCode == null || refCode.isBlank()) {
             return null;
         }
-        return dsl.select(field("text"))
+        return dsl.select(field("text", String.class))
                 .from(table("sys_reference"))
                 .where(field("code").eq(refCode))
                 .fetchOneInto(String.class);
@@ -62,9 +73,8 @@ public abstract class AbstractMailNumberGenerator implements MailNumberGenerator
      * Get next sequence number dengan SELECT FOR UPDATE untuk race condition safety.
      * Sequence di-reset setiap tahun.
      */
-    protected int getNextSequence(Mail mail) {
+    protected int getNextSequence(Mail mail, int year) {
         int categoryId = mail.getMailCategory() != null ? mail.getMailCategory().getId().intValue() : 0;
-        int year = LocalDate.now().getYear();
 
         // Lock row untuk prevent race condition dan gunakan MAX dari parsed seq
         Integer maxSeq = dsl.select(max(cast(substringIndex(field("m_no", String.class), "/", 1), Integer.class)))

@@ -118,7 +118,7 @@ public class MailSendService {
     }
 
     private Mail getMailOrThrow(Long mailId) {
-        return mailRepository.findById(mailId)
+        return mailRepository.findByIdWithDetails(mailId)
                 .orElseThrow(() -> new IllegalArgumentException("Mail not found: " + mailId));
     }
 }

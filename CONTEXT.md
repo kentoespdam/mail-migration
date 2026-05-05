@@ -750,16 +750,25 @@ melalui beads `mail-service-843` (P1).
   fallback hanya untuk transition; remove setelah dual-strategy
   GA.
 
-**Open question (belum dijawab):**
-- **Mail seq scope** — sample 2025 menunjukkan global lintas
-  kategori, tapi belum diverifikasi 5 tahun + multi-office.
-  Sebelum refactor `AbstractMailNumberGenerator`, lakukan query
-  agregat `SELECT YEAR, m_category, MIN(seq), MAX(seq) FROM mail
-  GROUP BY YEAR, m_category` dan cek overlap range — kalau tumpang
-  tindih → konfirmasi global; kalau disjoint → per-kategori.
-- **Lifecycle `ma_status`** — mapping enum 1/2/3 ke
-  DRAFT/ARCHIVED/DELETED belum di-grep di codebase. Pastikan
-  sebelum tulis test.
+**Open question — TERVERIFIKASI (2026-05-05):**
+- **Mail seq scope** = **per-(YEAR, m_category)**, BUKAN global.
+  Bukti agregat 2025: `cat=1` max=338730, `cat=86` max=22460,
+  `cat=595` max=1480, `cat=199` max=1747, dan banyak kategori
+  mulai dari `min_seq=1`. Generator existing yang sudah memfilter
+  `m_category` SUDAH BENAR scope-nya — yang perlu diperbaiki cuma
+  `COUNT(*) → MAX(parsed_seq)` dan ganti `YEAR(m_created_date)=?`
+  jadi range `BETWEEN '<yr>-01-01' AND '<yr+1>-01-01'` agar
+  sargable. Tabel counter `mail_seq` jadi key composite
+  `(year, category, last_seq)`.
+- **Mail tidak punya kolom office/unit** — hanya `m_created_by`
+  (user FK). Scope office tidak relevan untuk Mail seq.
+- **`MailStatus` enum** = `DRAFT(0)`, `SENT(1)`. Filter
+  `m_status=1` di `AbstractMailNumberGenerator` BENAR — exclude
+  draft, hitung yang terkirim.
+- **`ArchiveStatus` enum** = `DRAFT(1)`, `ARCHIVED(2)`,
+  `DELETED(3)`. Cocok dengan distribusi legacy (NULL=1, 1=2188,
+  2=37559, 3=145). `@SQLRestriction("ma_status != 3")` di entity
+  sudah benar untuk soft delete.
 
 ### MailArchive — Trigger (kapan Mail "naik" jadi Arsip)
 Aplikasi berjalan: **manual oleh petugas admin / sekretariat unit**.
@@ -819,3 +828,142 @@ Audience: semua pegawai. Bukan eksternal di luar organisasi.
 - Arsip akses dibatasi per unit; Publikasi terbuka.
 - Arsip pakai `MailCategory`; Publikasi pakai `DocumentType`.
 - Arsip bisa rahasia; Publikasi tidak ada konsep rahasia.
+
+### MailCategory vs DocumentType — Boundary & Tata Kelola
+Dua master klasifikasi dokumen yang **terpisah penuh** secara semantik
+dan referensi. Tidak ada overlap.
+
+**MailCategory (`mail_category`)**
+- Klasifikasi formal **Tata Naskah Dinas** untuk Mail & MailArchive.
+- Field: `code` (kode formal, mis. "485.1"), `name`, `sort`,
+  `mailType` FK (Internal/Masuk/Keluar), unique
+  `(mail_type_id, mcat_code)`.
+- Status: `ENABLED / DISABLED / DELETED`.
+- Dipakai di **numbering** (`#m_cat#` placeholder) dan filter
+  search/folder.
+- Referenced by: `Mail.m_category`, `MailArchive.ma_mcat_id` +
+  `ma_mcat_type` + `ma_mcat_code`.
+
+**DocumentType (`jenis_dokumen`)**
+- Tag jenis dokumen Publikasi (mis. "Pengumuman", "SOP", "Notulen").
+- Field: `name` saja. **Tidak ada code, tidak ada parent type**.
+- Status: `ACTIVE/INACTIVE` + `is_deleted` boolean.
+- **Bukan** input numbering — Publication tidak punya nomor formal.
+- Referenced by: `Publication.documentType`.
+
+**Aturan boundary:**
+- Mail / MailArchive **tidak pakai** DocumentType.
+- Publication **tidak pakai** MailCategory.
+- Tidak ada plan konsolidasi merge dua master jadi satu.
+
+**MailType (`mail_type`)**
+- Enum master 3 baris: 1=Internal, 2=Masuk, 3=Keluar.
+- Tidak punya kolom code; **inisial tipe untuk numbering = huruf
+  pertama nama** (`I`/`M`/`K`).
+- Distribusi data legacy (mail_archive): Keluar 24757, Masuk 11495,
+  Internal 3495.
+
+**Numbering placeholder verifikasi data legacy 2025**
+Template tenant BMS = `#seq#/#org_code#/#m_cat#-#type#/#MR#/#YYYY#`.
+Sample real `m_no`:
+- Internal: `22460/00/485.1-I/X/2025` → `#type#=I`, `#MR#=X` (Oktober).
+- Masuk: `049/1421002/SEKRE-M/VII/2025-690` → `#type#=M`, `#MR#=VII`.
+
+Resolusi placeholder yang harus didukung generator:
+- `#seq#` = nomor urut per (year, m_category) — sudah benar di
+  843.
+- `#org_code#` = `tenantConfig.officeCode()` — sudah benar.
+- `#m_cat#` = `MailCategory.code` — sudah benar.
+- `#type#` = `mail.getMailType().getName().substring(0,1).toUpperCase()`
+  — **belum diimplementasi**, ditracking di beads `mail-service-s31`.
+- `#MR#` = roman of `MONTH(m_created_date)` (I-XII) —
+  **belum diimplementasi**, masih literal "MR" di kode existing.
+  Ditracking di beads `mail-service-s31`.
+- `#YYYY#`, `#MM#` = tahun/bulan dari `m_created_date` — sudah benar.
+
+**Validasi MailCategory di MailArchive**
+- Backend **permissive**: semua kategori bisa dipakai untuk arsip
+  (sesuai data legacy — semua 3 tipe ter-arsip dengan distribusi
+  ~55-60% kategori benar-benar dipakai, sisanya tidak ada surat-nya).
+- FE optional filter dropdown by context (mis. saat arsip surat
+  masuk, tampilkan hanya kategori MailType=Masuk). Bukan validasi
+  backend.
+
+**Lifecycle master**
+- **DISABLE** (`mcat_status=DISABLED` / `status_new=INACTIVE`):
+  filter dari dropdown form create-baru/arsip-baru. Mail/Archive/
+  Publication lama tetap render kategori-nya normal (history kekal).
+- **DELETE** (`mcat_status=DELETED` / `is_deleted=1`): backend
+  cek FK referensi sebelum hapus. Jika ada referensi → return
+  HTTP 409 dengan pesan "masih dipakai oleh N record". Tidak ada
+  cascade re-assign.
+
+**Publication — minimal fields**
+- `title`, `content`, `documentType` (FK), tanggal terbit.
+- **Tidak ada nomor formal**. Tidak butuh numbering generator.
+
+### Search — Cakupan & Strategi Indexing
+Pencarian **scope per modul**: search bar di Inbox cari Mail saja,
+di MailArchive cari arsip saja. Tidak ada satu kotak global lintas
+modul — user pindah modul untuk ganti scope.
+
+**Mail search (Inbox/Sent/Draft/Archive folder)**
+- Field text: `m_no` (exact/prefix), `m_subject`, `m_content`,
+  pengirim & external metadata (`m_created_by_name`,
+  `m_no_surat_masuk`, `m_asal_surat_masuk`).
+- Date sebagai **filter range terpisah** (`m_date` & `m_created_date`),
+  bukan token di search bar.
+- Filter sidebar: date range, read/unread (via `user_task.read_status`),
+  kategori (`m_category`) & tipe (`m_type`).
+- **Authorization**: filter via `user_task` user. Search join:
+  `SELECT m.* FROM mail m JOIN user_task ut ON ut.mail_id=m.m_id
+  WHERE ut.user_id=? AND MATCH(...) AGAINST(...)`.
+
+**MailArchive search**
+- Field text: `ma_no`, `ma_subject`, `ma_keyword` (TEXT khusus search),
+  `ma_content`, `ma_sent_to`, `ma_ref_no`.
+- Filter sidebar: date range (`ma_archive_date` / `ma_mail_date`),
+  unit (`ma_org_id`) + kategori (`ma_mcat_id`), lokasi fisik
+  (`ma_loc_building/floor/room/rack/tier/box`), klasifikasi rahasia
+  (`ma_secret_type`).
+- **Authorization hybrid**: `WHERE (ma_org_id = user.org_id) OR
+  EXISTS (SELECT 1 FROM mail_archive_access WHERE archive_id=ma_id
+  AND user_id=?)`. Anggota unit lihat arsip unit-nya; non-anggota
+  butuh grant explicit.
+
+**Publication search**
+- **Tidak disediakan** — chronological feed saja. Volume kecil,
+  user scroll. Filter date di FE cukup.
+
+**Indexing strategy (MVP)**
+- **MariaDB FULLTEXT** native. Index:
+  - `mail`: `FULLTEXT(m_subject, m_content)` + B-tree biasa untuk
+    `m_no`, `m_no_surat_masuk`, `m_asal_surat_masuk`,
+    `m_created_by_name`.
+  - `mail_archive`: `FULLTEXT(ma_subject, ma_keyword, ma_content)` +
+    B-tree untuk `ma_no`, `ma_ref_no`, `ma_sent_to`.
+- Query pakai `MATCH ... AGAINST(... IN BOOLEAN MODE)` untuk text
+  fields, plus exact predicate untuk `m_no`/`ma_no`.
+- Tidak ada Indonesian stemmer / synonym di MVP — diterima sebagai
+  trade-off agar aplikasi tidak terlalu rumit.
+
+**Roadmap engine eksternal (NOT NOW)**
+- Elasticsearch / OpenSearch direncanakan untuk fase berikutnya
+  (fuzzy match, ranking lebih baik, highlight, possibly attachment
+  full-text). **Tidak diimplementasi sekarang.**
+- Persiapan: bungkus akses pencarian di interface
+  `MailSearchService` / `MailArchiveSearchService` (CQRS Query side
+  saja). Implementasi MVP = JOOQ + FULLTEXT; nanti swap ke
+  ElasticsearchSearchService tanpa mengubah caller.
+- Sync strategy ditentukan saat implementasi (event listener
+  on-write atau Debezium CDC) — out of scope sekarang.
+
+**Yang belum di-search di MVP**
+- Attachment full-text (OCR/PDF parse) — tidak diimplementasi.
+- Cross-module global search — tidak ada.
+- Saved search / search history — tidak ada.
+
+**Open question (untuk fase Elasticsearch nanti):**
+- Sync lag yang dapat diterima (real-time vs eventual ≤5s)?
+- Index lifecycle: rebuild full vs incremental?
+- Highlight di hasil search wajib atau cukup nice-to-have?
