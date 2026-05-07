@@ -90,13 +90,20 @@ public class MailSignatureService {
                 .orElse(null);
 
         if (printLog == null) {
+            // Check if legacy auth_code (13-char)
+            if (authCode.length() == 13) {
+                return MailSignatureVerificationResponse.invalid("Dokumen pre-migrasi, hubungi arsip");
+            }
             return MailSignatureVerificationResponse.invalid("Kode verifikasi tidak ditemukan");
         }
 
-        // Get mail details
+        // Get mail details (handle soft-deleted)
         Mail mail = mailRepository.findById(printLog.getMailId())
-                .orElseThrow(() -> new EntityNotFoundException(
-                        "Mail not found: " + printLog.getMailId()));
+                .orElse(null);
+
+        if (mail == null) {
+            return MailSignatureVerificationResponse.invalid("Dokumen tidak tersedia");
+        }
 
         return MailSignatureVerificationResponse.valid(
                 encoder.encode(Mail.class, printLog.getMailId()),

@@ -1,51 +1,22 @@
 # Agent Instructions
 
-## Issue Tracking (beads)
+## 1. Task & Knowledge Tracking (`beads`)
+- **Workflow:** `bd prime` (context) ➔ `bd ready` (find) ➔ `bd show <id>` (view) ➔ `bd update <id> --claim` ➔ `bd close <id>`
+- **Strict Rule:** Use ONLY `bd` for tasks (NO markdown TODOs) and `bd remember` for knowledge (NO MEMORY.md).
 
-```bash
-bd prime                # Full workflow context
-bd ready                # Find available work
-bd show <id>            # View issue details
-bd update <id> --claim  # Claim work
-bd close <id>           # Complete work
-```
+## 2. Context & Discovery (`claude-mem` & `graphify`)
+*Context MUST precede raw file reading/grepping.*
+- **Memory:** `claude-mem` (`search` ➔ `timeline` ➔ `get_observations`).
+- **Architecture:** Read `graphify-out/GRAPH_REPORT.md` or use `graphify query/path/explain`.
+- **Symbols:** Discover via `claude-mem` (smart_* tools) or `graphify query`.
+- **Maintenance:** Run `graphify update .` after ANY code change.
+- **FORBIDDEN:** Broad recursive folder scans or logic/symbol greps. Grep ONLY for exact literals (errors, paths).
 
-- Use `bd` for ALL task tracking — NOT TodoWrite/TaskCreate/markdown TODOs
-- Use `bd remember` for persistent knowledge — NOT MEMORY.md files
+## 3. Execution Constraints
+- **Non-Interactive Shell:** ALWAYS prevent hangs. Force flags are mandatory: `-f` (`cp -f`, `mv -f`, `rm -rf`), `-y` (`apt-get -y`), and `-o BatchMode=yes` (`scp/ssh`).
 
-## Non-Interactive Shell
-
-**ALWAYS use `-f` flags** to prevent interactive hang:
-
-```bash
-cp -f / mv -f / rm -f          # Force overwrite
-rm -rf / cp -rf                 # Recursive force
-scp -o BatchMode=yes            # Non-interactive scp/ssh
-apt-get -y                      # Auto-confirm
-```
-
-## Session Completion
-
-Work is NOT complete until `git push` succeeds. **NEVER** stop before pushing.
-
-1. File issues for remaining work
-2. Run quality gates (tests/linters/builds) if code changed
-3. Update issue status — close finished, update in-progress
-4. **PUSH TO REMOTE:**
-   ```bash
-   git pull --rebase && bd dolt push && git push
-   git status  # MUST show "up to date with origin"
-   ```
-5. Clean up stashes, prune remote branches
-6. Hand off context for next session
-
-## Context & Discovery (claude-mem & graphify)
-
-Before reading raw files or grepping, **MUST build context first:**
-
-1. **Memory (claude-mem):** `search(query)` → `timeline(anchor=ID)` → `get_observations([IDs])`
-2. **Architecture (graphify):** Read `graphify-out/GRAPH_REPORT.md` or use `graphify query/path/explain`
-3. **Symbol Discovery:** Use `claude-mem smart_search/smart_outline/smart_unfold` or `graphify query` — **always before** Glob/Grep/Read
-4. **Maintenance:** Run `graphify update .` after ANY code change
-
-**Forbidden:** recursive folder scans, broad Glob/Grep sweeps for logic/symbol lookups. Grep only for exact strings (error messages, log literals, file paths).
+## 4. Session Completion
+*Session is incomplete until a remote push succeeds.*
+1. **Wrap-up:** File pending issues, run quality gates (test/lint/build), and update `bd` status (close/in-progress).
+2. **Sync & Push:** `git pull --rebase && bd dolt push && git push`. (`git status` MUST show "up to date").
+3. **Clean & Handoff:** Drop stashes, prune branches, and prepare handoff context.

@@ -967,3 +967,458 @@ modul — user pindah modul untuk ganti scope.
 - Sync lag yang dapat diterima (real-time vs eventual ≤5s)?
 - Index lifecycle: rebuild full vs incremental?
 - Highlight di hasil search wajib atau cukup nice-to-have?
+
+### Personal Folder Management — Tata Kelola
+
+Personal folder = folder yang dibuat user untuk mengorganisir mail-nya sendiri,
+disimpan di tabel `mail_folder` dengan `owner_id > 0`. Bedakan dari **system
+folder** (`owner_id = 0`, hardcoded di enum `SystemFolder`).
+
+**Hierarki**
+- Root personal: `SystemFolder.PERSONAL_ROOT` (id=10, owner_id=0).
+- Top-level personal folder: `parent_folder_id = 10`.
+- Sub-folder: `parent_folder_id = <folder_id personal lain milik owner yang sama>`.
+- **Cap depth = 3** (dihitung dari PERSONAL_ROOT sebagai depth=0; folder
+  langsung di bawahnya = depth 1; max anak = depth 3). Sesuai pola legacy
+  (max yang teramati di DB legacy: depth 3, mis. `2020 / spk / pengadaan`).
+  Backend reject create/move bila melewati cap (HTTP 400).
+
+**Validasi nama**
+- Trim whitespace, max 45 char (sesuai kolom DB `folder_name VARCHAR(45)`).
+- **Unique per (owner_id, parent_folder_id)** — tidak boleh ada 2 folder
+  dengan nama sama dalam parent yang sama untuk satu user. Dicek pakai
+  case-insensitive compare. Kalau bentrok → HTTP 409.
+- Karakter: izinkan huruf/angka/spasi/`_`/`-`/`.`/`/` (slash perlu kalau
+  user mau imitasi path seperti `2024 / Q1`).
+
+**Lifecycle**
+- **Create**: validasi nama unique, validasi parent valid (parent harus
+  milik owner sama atau PERSONAL_ROOT), validasi depth cap, set
+  `folder_status=1`, `folder_created_date=NOW()`.
+- **Rename**: hanya owner. Re-validasi unique nama dalam parent.
+- **Delete**: **block delete jika folder berisi mail ATAU memiliki child folder**
+  → HTTP 409 dengan pesan "folder masih berisi mail/subfolder, kosongkan dulu".
+  User harus rapikan dari leaf ke root. Tidak ada cascade. Setelah aman,
+  soft-delete (`folder_status=3`).
+
+**Auto-rules / filter** — **TIDAK ADA di MVP.** User pindah mail manual
+via UI. Tidak ada rule engine "kalau pengirim X masuk folder Y". Sederhana
+dan sesuai legacy.
+
+**Move mail ke personal folder**
+- Source folder yang diizinkan: hanya **INBOX(2)** dan **READ(4)**.
+  Draft, Sent, Deleted, Purged tidak boleh di-pindah ke personal folder.
+  Sent items immutable di folder Sent (it's sent metadata).
+- Backend: `UPDATE user_task SET folder_id=<personal_folder_id> WHERE
+  user_id=? AND mail_id IN (...)`. Mail satu-folder-per-user (single
+  membership), tidak ada label-style.
+- Validasi: target folder harus milik user yang sama (`owner_id` cocok).
+
+**System vs Personal — perbedaan kapabilitas**
+
+| Operasi          | System Folder | Personal Folder |
+|------------------|---------------|-----------------|
+| Create           | ❌ (hardcoded) | ✅ (cap depth=3) |
+| Rename           | ❌            | ✅              |
+| Delete           | ❌            | ✅ (block jika tidak kosong) |
+| Move target      | INBOX→READ→DELETED via aksi eksplisit | ✅ dari INBOX/READ saja |
+| Tampil di tree   | ✅            | ✅              |
+| Counter badge    | ✅ (semua kecuali ROOT/PERSONAL_ROOT/PURGED) | ✅ |
+
+**Open question (tindak lanjut)**
+- Migrasi: 609 folder dengan `folder_status=3` di legacy (deleted) — apakah
+  di-skip total atau tetap di-migrasi sebagai DELETED untuk audit history?
+- Mail orphan di legacy: ada `user_task.folder_id` yang menunjuk ke folder
+  deleted? Perlu data fix sebelum import.
+- Counter badge personal folder: total saja, atau juga unread (semantik
+  unread untuk personal folder belum jelas — biasanya unread = INBOX-only)?
+
+### Role-in-context UX — Tata Kelola
+
+**Asumsi inti (klarifikasi user)**: Tidak ada jabatan rangkap. 1 user = 1
+posisi aktif pada saat tertentu. Plt = jabatan lama dikosongkan, user
+diberi posisi plt sebagai satu-satunya posisi aktif.
+
+**Validasi data legacy**:
+- `sys_user.user_role_id` — single kolom (1 role per user).
+- `employee.emp_pos_id` — single kolom (1 position per employee).
+- Tidak ada tabel join `employee_position` / `user_role` (M:N).
+- `mail_recipient` 100% terisi (`user_id`, `emp_id`, `pos_id`, `pos_name`)
+  pada 2.24M baris → snapshot per-recipient sudah disediakan legacy.
+
+**Model role aktif**
+- Backend: `MailPrincipal.activePosId` di-resolve dari `employee.emp_pos_id`
+  saat JWT divalidasi (via HR integration / cache `hrEmployee` 60m).
+- Tidak ada role-switcher UI. Tidak ada header `X-Active-Role-Id`. Role
+  aktif = posisi terkini employee (single source of truth: HR).
+- Saat mutasi/promosi (HR update `emp_pos_id`), cache invalidation
+  `hrEmployee::{empId}` triggered. Sesi user lanjut tanpa re-login (read-
+  through cache). Mail lama tidak di-rewrite.
+
+**Resolusi posisi per aksi (auto dari konteks, TANPA snapshot kolom baru)**
+- **Compose / kirim mail**: hanya simpan `m_created_by` (user id) +
+  `m_created_by_name` (nama). Posisi pengirim tidak di-snapshot di mail.
+- **Disposisi (forward)**: child mail tetap hanya simpan `m_created_by`.
+  Recipient row child di-isi `mail_recipient.pos_id` + `pos_name`
+  snapshot dari target saat itu (kolom sudah ada).
+- **Numbering scope**: numbering generator resolve runtime
+  `mail.created_by → employee.emp_pos_id → position.pos_org_id` untuk
+  scope per-unit (BMS/SMD/BPN). Karena resolve via posisi terkini,
+  numbering yang sudah-jadi tidak ter-pengaruh (mail_number kolom tetap).
+- **Signature**: signature pejabat di-pick runtime dari posisi aktif
+  user saat sign. Mail history menampilkan signature image yg di-attach
+  saat itu (signature di-render ke PDF/blob → blob immutable). Jadi
+  walau user mutasi, signature di blob mail lama tetap historis.
+- **Approval / read-status**: `user_task` di-resolve via `user_id` saja
+  (1 user = 1 posisi aktif).
+
+**Tampilan history (asimetris: recipient snapshot, sender live)**
+- **Recipient side (snapshot — by legacy schema)**: setiap row mail
+  recipient menampilkan `pos_name` apa adanya dari
+  `mail_recipient.pos_name` (varchar 64 sudah snapshot legacy). Mail
+  lama tetap bertuliskan "Staf Sub Bag Pengadaan" walau user recipient
+  kini Manajer. ✅ History terjaga untuk recipient.
+- **Sender side (live — by legacy schema)**: tabel `mail` hanya punya
+  `m_created_by_name` (nama orang) — TIDAK punya pos snapshot. Posisi
+  pengirim di-resolve runtime via `m_created_by → employee → position`.
+  Saat sender dimutasi, posisi sender di mail lama ikut berubah.
+  ⚠️ Konsekuensi yang diterima karena schema tidak boleh berubah.
+- Mitigasi: jika audit posisi sender historis dibutuhkan kelak, pakai
+  `snapshot_employee` / `snapshot_position` legacy (sudah ada — perlu
+  audit logic, bukan schema change). Tidak di-MVP.
+- Tidak ada tooltip "sekarang: ..." di MVP.
+
+**Implikasi entitas Mail (write path) — TANPA SCHEMA CHANGE**
+- Hard constraint: tabel `mail` legacy TIDAK punya kolom sender pos/org
+  snapshot. Tidak boleh ditambah supaya migrasi 1.8M baris aman.
+- Sender role HANYA di-resolve runtime saat read:
+  `mail.m_created_by → employee.emp_pos_id (current) → position.pos_name`.
+  Dengan kata lain: sender role TIDAK snapshot — ini konsekuensi yg
+  diterima.
+- Konsisten dengan legacy: legacy juga tidak snapshot sender role; saat
+  user dimutasi, tampilan sender di mail lama akan ikut posisi baru.
+  Field yang TETAP snapshot: `m_created_by_name` (varchar 64) — minimal
+  nama orang tetap historis.
+- Saat add recipient: `mail_recipient.pos_id` + `pos_name` SUDAH snapshot
+  by legacy schema (kolom sudah ada). Tetap dipakai apa adanya — ini
+  yang jadi sumber tampilan "sebagai: <pos_name>" di history.
+- Saat disposisi forward: child mail tetap pakai `m_created_by` saja;
+  posisi forwarder tampil via resolve runtime, bukan snapshot.
+
+**Capability per posisi (akses fitur)**
+- Tidak ada permission matrix per posisi di MVP. Semua user dapat:
+  compose, kirim, terima, disposisi, archive view (kecuali yang
+  dibatasi `MailArchiveAccess`).
+- Pejabat (signature) dibedakan via flag `employee.has_signature` atau
+  master `signature_pejabat` (lookup runtime), bukan capability matrix.
+
+**Edge case: user dimutasi saat ada draft / mail in-flight**
+- Draft (status=0): ketika user mutasi, draft tetap milik user; saat dia
+  kirim, snapshot pos_name = posisi BARU. Diterima karena draft = belum
+  terkirim.
+- Mail sudah terkirim (status=1): immutable. Snapshot lama tetap.
+- Disposisi yang ditujukan ke user di posisi LAMA: tetap di Inbox user
+  (karena user_task.user_id matched), badge pos_name = posisi lama
+  recipient row. User tetap bisa proses (forward / archive) — atasan
+  baru-nya tidak otomatis terima takeover. Manual handover jika perlu.
+
+**Konsekuensi diterima (no schema change)**
+- Sender role di mail history TIDAK historis. Kalau user dimutasi,
+  posisi sender di mail lama berubah. Mitigasi: nama orang
+  (`m_created_by_name`) tetap snapshot, sehingga "siapa" terjaga
+  walau "sebagai apa" tidak.
+- Recipient role di mail history HISTORIS (snapshot). Asimetri ini
+  diterima sebagai trade-off zero-migration-risk.
+- FE harus tampilkan label sender sebagai "Nama Orang" (snapshot) +
+  optional "(posisi terkini)" runtime — bukan "(posisi saat kirim)".
+
+**Open question (tindak lanjut)**
+- Plt: apakah `employee.emp_pos_id` di-update langsung saat plt aktif,
+  atau ada tabel terpisah `employee_assignment(emp_id, pos_id, type,
+  start, end)`? Jika kedua, perlu integrasi HR untuk pick "active
+  assignment" pada timestamp. Konfirmasi dengan tim HR.
+- Mutasi inflight: apakah perlu notifikasi otomatis ke atasan baru saat
+  ada mail belum-diproses milik user yang dimutasi? Tidak di MVP, tapi
+  worth tracked.
+- Cache invalidation HR: HR service harus emit event `EmployeePositionChanged`
+  ke mail-service (via webhook / message bus) supaya `hrEmployee` cache
+  invalidate. Saat ini hanya TTL 60m → ada window inkonsistensi 60m.
+- Audit historis sender: jika legal/audit minta "siapa kirim sebagai
+  apa di tanggal X", pakai `snapshot_employee` / `snapshot_position`
+  legacy + reconstruct via timestamp `mail.created_date`. Tidak di MVP.
+
+### MailArchiveAccess / MailArchiveNotif Fan-out
+
+**Data legacy** (`smartoffice@192.168.230.84:3307`):
+- `mail_archive`: 39893 row. Status: 1=DRAFT(2188), 2=ARCHIVED(37559),
+  3=DELETED(145).
+- `mail_archive_access`: 119619 row, 37612 archive, 89 distinct pos_id.
+  Granular flag (access/download/history). Distribusi:
+  - (1,1,1): 119579 row = 99.97% full access.
+  - (0,1,1): 30 row — anomali legacy (kemungkinan data error: view
+    forbidden tapi download allowed).
+  - (1,1,0): 7 row — real use case (hide audit history).
+  - (1,0,1): 2 row — real use case (view-only, no download).
+  - (0,0,1): 1 row — only history.
+- `mail_archive_notif`: 40922 row, 37578 archive, 100% `notif_flag=1`.
+  Per-archive flag (apakah notif sudah diproses), bukan recipient list.
+- `mail_archive_notif_log`: 336560 row, 37269 archive, 186 user.
+  Avg ~9 user per archive. Ini adalah fan-out actual ke user.
+
+**Model akses**
+- ACL granted ke `pos_id` (bukan user_id). 89 posisi di legacy.
+- User akses archive: resolve `user.activePosId` runtime → cek
+  `mail_archive_access WHERE mail_archive_id=? AND pos_id=?`.
+- Single-position assumption (1 user = 1 posisi) cocok dengan model ini.
+- TIDAK include ancestors (org tree). Legacy 99.97% full access →
+  cascading tidak diperlukan untuk MVP.
+
+**Enforce flag (backend, defense in depth)**
+- 3 flag dipisah karena legacy punya 40 row granular (real use case).
+- Endpoint mapping:
+  - `GET /archives/{id}` → cek `access=1`. HTTP 403 jika tidak.
+  - `GET /archives/{id}/download` atau `/attachments/*` → cek
+    `download=1`.
+  - `GET /archives/{id}/history` (audit trail / log perubahan) → cek
+    `history=1`.
+- Implementasi: `MailArchiveAccessChecker` service dipanggil dari
+  `@PreAuthorize` SpEL atau manual check di controller. Cache per-
+  request (sama archive sering dicek 2-3x dalam 1 req chain).
+- FE hide button untuk flag yg 0 (UX), tapi BE tetap enforce (security).
+
+**Fan-out notif (publish flow eksplisit)**
+- Step 1 (sync, command service): user buat arsip → save `mail_archive`
+  (status DRAFT=1 atau langsung ARCHIVED=2).
+- Step 2 (sync, command service): user pilih pos_id list (manual atau
+  auto dari kategori) → save `mail_archive_access (mail_archive_id,
+  pos_id, access, download, history)`. Multiple pos per archive.
+- Step 3 (event publish, on commit): `ArchivePublishedEvent` di-fire
+  saat status transit ke ARCHIVED=2.
+- Step 4 (listener async @TransactionalEventListener+@Async):
+  a. SELECT pos_id FROM `mail_archive_access` WHERE
+     `mail_archive_id=?` AND `access='1'` (skip view-forbid 30 row
+     anomali legacy).
+  b. Untuk tiap pos_id: fetch pegawai by pos_id via HrServiceClient
+     atau JOIN `employee WHERE emp_pos_id IN (...)` → list user_id.
+  c. INSERT BATCH ke `mail_archive_notif_log (mail_archive_id, user_id,
+     notif_date=NOW())`. Avg ~9 user/archive di legacy.
+  d. UPSERT `mail_archive_notif (mail_archive_id, notif_flag=1,
+     processed_date=NOW())` sebagai per-archive marker (1 row/archive).
+- Implementasi saat ini (`ArchivePublishedEventListener.java`) BUGGY:
+  insert ke `mail_archive_notif` dengan kolom `user_id` (kolom tidak
+  ada di schema), pakai positionId langsung sebagai user_id, tidak
+  insert ke `mail_archive_notif_log`. Tracked di beads issue
+  `mail-service-a3s` (P1 bug).
+- Soft delete archive (status 3) → tidak fan-out, tidak hapus log.
+  Re-archive (3→2) edge case: cek apakah perlu re-fan-out (legacy
+  tidak clear).
+
+**Read-status notif log**
+- `mail_archive_notif_log` saat ini tidak punya kolom `read_at`.
+  Untuk badge "baru" di FE: query log row mana yg user belum klik
+  archive-nya (cek via timestamp `notif_date` vs last view di
+  `audit_trail` atau new tabel — TBD).
+- MVP: tampilkan list notif by user, klik → mark as read (perlu
+  schema change → ditolak constraint). Alternatif: hitung "new"
+  via heuristik `notif_date > user.last_login` atau session-side.
+
+**Edge cases**
+- Pos_id berubah di mail_archive_access setelah archive published:
+  user yg dulu eligible bisa hilang akses. Acceptable (snapshot tidak
+  diperlukan untuk ACL).
+- User dimutasi setelah dapat notif_log: tetap bisa lihat log (log
+  punya user_id eksplisit), tapi saat klik archive cek pos baru →
+  bisa 403. Acceptable.
+- Performance: 1 archive × 9 user fan-out = INSERT 9 row. 40k archive
+  total = 336k row. Tidak ada masalah skala saat ini. Future: batch
+  INSERT, indeks `(user_id, notif_date)` untuk inbox query.
+
+**Open question**
+- Re-archive (status 3→2): perlu re-fan-out atau skip?
+- Mark-as-read notif: schema `mail_archive_notif_log` tidak punya
+  `read_at`. Mau pakai heuristik atau terima limitation?
+- Bulk-grant access: ada UI admin yg set access ke banyak pos sekaligus?
+  Atau hanya per-archive manual?
+
+---
+
+## MailResponseTime SLA — Tata Kelola
+
+**Tujuan**
+Track waktu respons antar surat (parent → child) untuk monitoring
+performa unit/kategori. **Bukan** SLA enforcement — tidak ada
+breach detection proaktif.
+
+**Validasi data legacy**
+- Tabel `mail_respontime` ada di legacy. Entity `MailResponseTime`
+  sudah wired ke listener `MailResponseTimeListener` (dipanggil
+  via `MailSentEvent`).
+- `m_max_response_date` (deadline) terisi hanya 11% dari mail
+  (~198k / 1.8M). 89% mail tidak punya deadline.
+- Threading legacy cascading 8-10 level (root→sup→manajer→…→staf).
+
+**Model perhitungan response time**
+- Trigger: `MailSentEvent` saat reply (child) dikirim.
+- Formula: `Duration.between(parent.createdDate, child.createdDate)`
+  → simpan dalam detik di kolom `respon_time`.
+- **First-reply-wins**: cek `findByOriginalMailId(parentId)`. Kalau
+  sudah ada record → skip. Hanya child PERTAMA yang di-track.
+- Forward (Fwd:) **dihitung sebagai response** (decision user). Setiap
+  child = response. Tidak ada flag reply-vs-forward di legacy.
+  Konsekuensi: cascading thread (root→sup→…→staf) → response time
+  yg ter-record adalah delta root→sup (anak pertama), bukan root→staf.
+  Acceptable.
+
+**SLA breach detection — DROP**
+- Tidak ada job/cron untuk flag mail overdue (`m_max_response_date <
+  today AND no_child`).
+- Alasan: 89% mail tidak punya deadline → fitur jadi noise.
+- Konsekuensi: tidak ada notif eskalasi. FE tidak menampilkan
+  "Overdue" badge proaktif. Operator harus query manual kalau perlu.
+
+**Reporting SLA — dua report terpisah**
+
+1. **Per kategori + per tipe** (stable historical)
+   - Source: `mail_respontime.m_type, m_category, respon_time`.
+   - Aggregat: AVG/MIN/MAX/P50/P95 response_time per (type, category).
+   - Filter: range tanggal `created_at`.
+   - Stable: kolom snapshot dari mail saat tracking.
+
+2. **Per unit/posisi pengirim** (live snapshot)
+   - Source: `mail_respontime.reply_m_id` → `mail.m_created_by` →
+     resolve `pos_id` LIVE dari HR (employee.emp_pos_id current).
+   - Bias terdokumentasi: kalau user pindah pos antara saat reply
+     dan saat report dibuat → reply ter-attribute ke pos baru, bukan
+     pos saat reply. **Acceptable** (sesuai konsekuensi diterima
+     Role-in-context branch — sender role live, bukan snapshot).
+   - Mitigasi FE: tampilkan caveat "data berdasarkan posisi user
+     saat ini, bukan saat surat dikirim".
+
+**Edge cases**
+- Reply dari user yang sudah resign: pos tidak ketemu di HR →
+  fallback ke "Unknown" atau skip dari report unit.
+- Cascading reply (root→sup→…→staf): hanya root→sup yang masuk
+  `mail_respontime` (first-reply-wins). Sup→manajer→…→staf TIDAK
+  ter-track. Acceptable — fokus root response only.
+- Forward sebagai delegasi (bukan response real): tetap di-count.
+  Akibat: response time bisa terlalu cepat (menit) karena forward
+  cuma klik tombol. Operator harus baca konteks subject ("Fwd:")
+  untuk filter.
+- Negative duration (clock skew / backdate): `responseSeconds < 0`
+  → skip (sudah ada di listener).
+- Existing record check: kalau child kedua datang setelah child
+  pertama → di-skip. Tapi tidak ada UPDATE flow → kalau child
+  pertama dibatalkan/dihapus, record tetap pointing ke child lama.
+  Acceptable (soft-delete tidak rewind tracking).
+
+**Konsekuensi diterima (no schema change)**
+- Tidak ada flag `is_breached` atau `escalated_at` di mail.
+- Tidak ada cron/scheduler baru.
+- Tidak ada audit trail "pindah pos" untuk akurasi report unit.
+- FE harus tampilkan disclaimer pos live di report unit.
+
+**Open question**
+- Backfill `mail_respontime` dari legacy: legacy tabel sudah ada
+  data atau perlu rebuild? Cek count + skema saat migrasi data.
+- Filter Forward dari report: butuh heuristik subject `LIKE 'Fwd:%'`
+  atau biarkan apa adanya?
+- Report range default: per bulan, per quarter, atau per tahun?
+
+---
+
+## Signature / Print-Verification — Tata Kelola
+
+**Scope sekarang**: print-verification only. BUKAN crypto digital
+signature (PKI/BSrE/PrivyID). Setiap kali user cetak surat,
+sistem generate `auth_code` (16-char UUID hex) + simpan
+`PrintLog`. QR di dokumen cetak berisi URL verifikasi
+`/api/mails/verify-sign/{auth_code}` → endpoint return
+{mailNumber, subject, printDate, printedBy, ipAddress}.
+
+**Keterbatasan jaminan**: ini bukti *cetak tercatat*, BUKAN
+bukti *isi tidak diubah*. Tidak ada hash konten, tidak ada
+sertifikat penanda tangan. Kalau user ubah PDF setelah cetak,
+QR tetap valid karena cuma point ke record cetak.
+
+**Kemungkinan masa depan: crypto signature (BSrE/PrivyID)**
+- Rencana terbuka, belum diimplementasi.
+- Saat itu tiba akan butuh schema baru: `signer_id`,
+  `cert_serial`, `signed_hash`, `signed_at`, `provider`
+  (BSrE/PrivyID/internal), multi-signer table kalau perlu
+  approval berjenjang.
+- Konflik dengan no-schema-change → butuh approval eksplisit.
+- API verify nanti dipisah: `/verify-print` (now) vs
+  `/verify-sign` (future crypto). Atau union response dengan
+  field `verificationType`.
+- Jangan paksa migrasi data lama ke crypto — backward compat
+  via `verificationType=PRINT_LOG_LEGACY`.
+
+**Validasi data legacy `print_log` (192.168.230.84:3307)**
+- Total: 95.740 row, range 2017-12-17 → 2025-11-07 (8 tahun).
+- Unique `auth_code`: 95.739 (1 dup: `61fb4ce3c6f80` muncul
+  2x — kolisi `uniqid()` PHP, deterministic-ish).
+- 72.206 mail unik dicetak. Top reprint: 31x untuk 1 mail
+  (mail_id=244441). Reprint normal, bukan anomali.
+- `auth_code` legacy = 13-char hex (uniqid format), baru =
+  16-char hex (UUID truncated).
+- `ip_address` varchar(32), banyak null. IPv4 cukup, IPv6
+  full (39 char) tidak muat — terima sebagai keterbatasan.
+
+**Keputusan migrasi**
+
+- *Backfill legacy 95k row*: **SKIP**. Dokumen cetak sebelum
+  migrasi tidak bisa diverifikasi via app baru.
+  - Konsekuensi: QR di kertas lama (8 tahun arsip) jadi mati.
+    User yang scan akan dapat "kode tidak ditemukan".
+  - Mitigasi opsional: redirect endpoint `/verify-sign/{code}`
+    untuk auth_code 13-char ke "Dokumen pre-migrasi, hubungi
+    arsip" (bukan invalid). Belum diputuskan, masuk open Q.
+- *Schema `print_log`*: pertahankan apa adanya. Field cocok
+  legacy (mail_id, auth_code, username, date, ip_address).
+  Field rename `date` → `print_date` di entity (mapping
+  via `@Column(name="date")`) sudah benar.
+- *IP storage*: terima null + varchar(32). Tidak widen ke
+  IPv6 full. New record tetap diisi via X-Forwarded-For
+  chain (`AppWriteAuthFilter` proxy-aware).
+
+**Edge cases**
+
+- Mail dihapus (soft delete) tapi print_log masih ada:
+  `verifySignature` fetch via `mailRepository.findById`
+  yang ke-restrict `@SQLRestriction status != DELETED` →
+  throw `EntityNotFoundException`. Saat ini mengembalikan
+  500. **Open Q**: harusnya return invalid response, bukan
+  exception (kasih pesan "dokumen tidak tersedia").
+- Auth_code dup legacy (1 row): kalau akhirnya backfill
+  diaktifkan, butuh handling: append suffix `-1`/`-2` atau
+  skip duplicate.
+- `getClientIpAddress()` baca `X-Forwarded-For` tanpa allow-
+  list IP proxy → bisa di-spoof. Acceptable karena ip_address
+  cuma untuk audit, bukan auth. Catat sebagai info, jangan
+  jadi indikator otoritatif.
+- Reprint counter: tidak ada limit re-print per user/per
+  mail. Top legacy 31x cetak. Acceptable (kebutuhan operasi).
+- Username field varchar(128) simpan `principal.name()` —
+  saat user resign username masih ada di history (snapshot,
+  bukan FK). Sengaja: audit log harus tetap valid post-
+  resignation.
+
+**Konsekuensi diterima**
+- Tidak ada jaminan integritas isi PDF.
+- QR cuma "ya/tidak ada record cetak", bukan "konten asli".
+- Backfill skip → user butuh edukasi: dokumen lama tidak
+  diverifikasi via QR baru.
+- Tidak ada audit trail "siapa lihat verifikasi" (verify
+  endpoint readonly, tidak nge-log).
+
+**Open question**
+- Behavior verify untuk auth_code 13-char (legacy format):
+  invalid biasa, atau pesan khusus "pre-migrasi"?
+- Endpoint verify perlu di-rate-limit? (mencegah brute-force
+  enumeration auth_code).
+- Mail soft-deleted + print_log ada: response invalid atau
+  return mailNumber dari snapshot (perlu tambah kolom)?
+  Rekomendasi: invalid + pesan netral, tidak bocor info.
+- Crypto signature provider mana yang prioritas (BSrE
+  punya BSSN gratis vs PrivyID berbayar)? Belum saatnya
+  diputus, tapi catat untuk pemilihan vendor.

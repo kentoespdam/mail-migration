@@ -101,6 +101,7 @@ public class MailArchiveCommandService {
         // Publish event for notifications
         List<Integer> accessPositionIds = accessRepository.findByArchiveId(archiveId)
                 .stream()
+                .filter(MailArchiveAccess::getCanAccess)
                 .map(MailArchiveAccess::getPositionId)
                 .toList();
         eventPublisher.publishEvent(new ArchivePublishedEvent(

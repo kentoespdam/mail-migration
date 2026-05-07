@@ -46,6 +46,7 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.GET, "/actuator/info").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/mails/verify-sign/**").permitAll()
 
                 // Semua API endpoint membutuhkan autentikasi
                 .requestMatchers("/api/**").authenticated()
