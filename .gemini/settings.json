@@ -11,5 +11,11 @@
         ]
       }
     ]
-  }
+  },
+  "allowlist": [
+    "bd ready",
+    "bd show *",
+    "bd list",
+    "read_file *"
+  ]
 }

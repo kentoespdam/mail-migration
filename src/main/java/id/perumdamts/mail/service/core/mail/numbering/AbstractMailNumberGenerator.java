@@ -1,18 +1,23 @@
 package id.perumdamts.mail.service.core.mail.numbering;
 
-import id.perumdamts.mail.entity.core.Mail;
-import org.jooq.DSLContext;
-import org.springframework.transaction.annotation.Transactional;
+import static org.jooq.impl.DSL.cast;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.max;
+import static org.jooq.impl.DSL.substringIndex;
+import static org.jooq.impl.DSL.table;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static org.jooq.impl.DSL.*;
+import org.jooq.DSLContext;
+import org.springframework.transaction.annotation.Transactional;
+
+import id.perumdamts.mail.entity.core.Mail;
 
 /**
  * Base implementation untuk MailNumberGenerator.
- * Menyediakan logic umum untuk load template dari sys_reference dan generate sequence.
+ * Menyediakan logic umum untuk load template dari sys_reference dan generate
+ * sequence.
  */
 @Transactional
 public abstract class AbstractMailNumberGenerator implements MailNumberGenerator {
@@ -34,9 +39,10 @@ public abstract class AbstractMailNumberGenerator implements MailNumberGenerator
         int sequence = getNextSequence(mail, referenceDate.getYear());
 
         String categoryCode = mail.getMailCategory() != null ? mail.getMailCategory().getCode() : "";
-        String typeCode = (mail.getMailType() != null && mail.getMailType().getName() != null && !mail.getMailType().getName().isBlank())
-                ? mail.getMailType().getName().substring(0, 1).toUpperCase()
-                : "";
+        String typeCode = (mail.getMailType() != null && mail.getMailType().getName() != null
+                && !mail.getMailType().getName().isBlank())
+                        ? mail.getMailType().getName().substring(0, 1).toUpperCase()
+                        : "";
         String romanMonth = getRomanMonth(referenceDate.getMonthValue());
 
         return template
@@ -50,7 +56,7 @@ public abstract class AbstractMailNumberGenerator implements MailNumberGenerator
     }
 
     private String getRomanMonth(int month) {
-        String[] romans = {"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"};
+        String[] romans = { "", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII" };
         return (month >= 1 && month <= 12) ? romans[month] : "";
     }
 
@@ -70,7 +76,8 @@ public abstract class AbstractMailNumberGenerator implements MailNumberGenerator
     }
 
     /**
-     * Get next sequence number dengan SELECT FOR UPDATE untuk race condition safety.
+     * Get next sequence number dengan SELECT FOR UPDATE untuk race condition
+     * safety.
      * Sequence di-reset setiap tahun.
      */
     protected int getNextSequence(Mail mail, int year) {

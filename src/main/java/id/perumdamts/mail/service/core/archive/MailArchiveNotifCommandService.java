@@ -1,13 +1,13 @@
 package id.perumdamts.mail.service.core.archive;
 
-import id.perumdamts.mail.dto.core.archive.MailArchiveNotifResponse;
-import id.perumdamts.mail.entity.core.MailArchiveNotif;
-import id.perumdamts.mail.repository.core.jpa.MailArchiveNotifRepository;
-import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import id.perumdamts.mail.entity.core.MailArchiveNotif;
+import id.perumdamts.mail.repository.core.jpa.MailArchiveNotifRepository;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 @Transactional
@@ -20,7 +20,7 @@ public class MailArchiveNotifCommandService {
 
     public void markAsProcessed(Integer id) {
         MailArchiveNotif notif = repository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("MailArchiveNotif not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("MailArchiveNotif not found: " + id));
         notif.setProcessedDate(LocalDateTime.now());
         repository.save(notif);
     }

@@ -1,16 +1,14 @@
 package id.perumdamts.mail.repository.statistic.jooq;
 
-import id.perumdamts.mail.entity.statistic.MailOrgStatistic;
-import org.jooq.DSLContext;
-import org.jooq.Record4;
-import org.jooq.Result;
-import org.springframework.stereotype.Repository;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.table;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.field;
+import org.jooq.DSLContext;
+import org.springframework.stereotype.Repository;
+
+import id.perumdamts.mail.entity.statistic.MailOrgStatistic;
 
 @Repository
 public class MailOrgStatisticQueryRepository {

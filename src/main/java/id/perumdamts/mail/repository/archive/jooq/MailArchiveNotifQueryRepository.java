@@ -1,13 +1,13 @@
 package id.perumdamts.mail.repository.archive.jooq;
 
-import id.perumdamts.mail.entity.core.MailArchiveNotif;
+import java.util.Optional;
+
 import org.jooq.DSLContext;
 import org.jooq.Record;
-import org.jooq.Table;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import id.perumdamts.mail.entity.core.MailArchiveNotif;
 
 @Repository
 public class MailArchiveNotifQueryRepository {

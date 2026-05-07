@@ -18,5 +18,11 @@
 ## 4. Session Completion
 *Session is incomplete until a remote push succeeds.*
 1. **Wrap-up:** File pending issues, run quality gates (test/lint/build), and update `bd` status (close/in-progress).
-2. **Sync & Push:** `git pull --rebase && bd dolt push && git push`. (`git status` MUST show "up to date").
-3. **Clean & Handoff:** Drop stashes, prune branches, and prepare handoff context.
+
+## Agent skills
+### Issue tracker
+`bd` (beads) CLI. See `docs/agents/issue-tracker.md`.
+### Triage labels
+Default vocabulary. See `docs/agents/triage-labels.md`.
+### Domain docs
+Single-context. See `docs/agents/domain.md`.

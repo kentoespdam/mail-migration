@@ -72,7 +72,8 @@ public class ArchivePublishedEventListener {
         if (exists) {
             dsl.update(table("mail_archive_notif"))
                     .set(field("notif_flag"), 1)
-                    .set(field("insert_date"), LocalDateTime.now())
+                    .set(field("processed_date"), LocalDateTime.now())
+                    .set(field("updated_at"), LocalDateTime.now())
                     .where(field("mail_archive_id").eq(event.archiveId()))
                     .execute();
         } else {
@@ -80,6 +81,8 @@ public class ArchivePublishedEventListener {
                     .set(field("mail_archive_id"), event.archiveId())
                     .set(field("notif_flag"), 1)
                     .set(field("insert_date"), LocalDateTime.now())
+                    .set(field("processed_date"), LocalDateTime.now())
+                    .set(field("updated_at"), LocalDateTime.now())
                     .execute();
         }
     }

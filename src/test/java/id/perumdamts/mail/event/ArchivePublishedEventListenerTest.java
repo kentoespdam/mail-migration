@@ -94,8 +94,9 @@ class ArchivePublishedEventListenerTest {
         
         // Check for specific columns as per legacy schema mentioned in issue
         assertThat(sql).contains("notif_flag");
-        assertThat(sql).contains("insert_date");
-
+        assertThat(sql).contains("processed_date");
+        assertThat(sql).contains("updated_at");
+        
         // user_id should be in mail_archive_notif_log but NOT in mail_archive_notif
         assertThat(sql).contains("insert into mail_archive_notif_log");
         String notifInsert = java.util.Arrays.stream(sql.split("\n"))
