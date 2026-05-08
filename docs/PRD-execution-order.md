@@ -58,7 +58,7 @@ Legend: **AFK** = autonomous · **HITL** = human-in-the-loop · 🔒 = blocked-b
 | # | Beads | GH | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
 | 2a | `mail-service-4z6` | [#58](https://github.com/kentoespdam/mail-migration/issues/58) | MailPrincipal.activePosId resolver (JWT + header) | `mail-service-6eb` (1a) | [x] |
-| 2b | `mail-service-nyb` | [#67](https://github.com/kentoespdam/mail-migration/issues/67) | ResponseTimeAggregator + dashboard endpoint (p50/p90/p99) | `mail-service-5l7` (1n) | [ ] |
+| 2b | `mail-service-nyb` | [#67](https://github.com/kentoespdam/mail-migration/issues/67) | ResponseTimeAggregator + dashboard endpoint (p50/p90/p99) | `mail-service-5l7` (1n) | [x] |
 | 2c | `mail-service-xw6` | [#72](https://github.com/kentoespdam/mail-migration/issues/72) | Public verify endpoint (always 200, deleted→invalid) | `mail-service-bj3` (1o), `mail-service-lfe` (0c) | [ ] |
 
 ---
