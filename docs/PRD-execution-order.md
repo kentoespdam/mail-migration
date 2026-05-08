@@ -77,7 +77,7 @@ Fokus pada fondasi baca yang bersih dan integrasi `Mail` ↔ `UserTask`.
 
 | # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
-| 4a | `mail-service-cqrs-ut` | AFK | Refactor `UserTask` to CQRS-lite (Command JPA / Query JOOQ) | — | [ ] |
+| 4a | `mail-service-6gb` | AFK | Refactor `UserTask` to CQRS-lite (Command JPA / Query JOOQ) | — | [x] |
 | 4b | `mail-service-cqrs-mail`| AFK | Refactor `Mail` & `Recipient` to CQRS-lite | 4a | [ ] |
 | 4c | `mail-service-lookup` | AFK | `GET /api/v1/mails/lookup` (PagedModel, folder filter) | 4b | [ ] |
 | 4d | `mail-service-detail` | AFK | `GET /api/v1/mails/{id}` (Detail + auto mark-read) | 4c | [ ] |

@@ -7,7 +7,7 @@ import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.entity.core.UserTask;
 import id.perumdamts.mail.enums.ReadStatus;
 import id.perumdamts.mail.enums.SystemFolder;
-import id.perumdamts.mail.repository.core.jpa.UserTaskRepository;
+import id.perumdamts.mail.repository.core.jooq.UserTaskQueryRepository;
 import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
@@ -31,7 +31,7 @@ import static org.jooq.impl.DSL.*;
 @RequiredArgsConstructor
 public class UserTaskQueryService {
     private final DSLContext dsl;
-    private final UserTaskRepository userTaskRepository;
+    private final UserTaskQueryRepository userTaskQueryRepository;
     private final SqidsEncoder encoder;
 
     public boolean existsActive(Long userId, Long mailId) {
@@ -54,7 +54,7 @@ public class UserTaskQueryService {
     }
 
     public Optional<UserTask> findUserTask(Long userId, Long mailId) {
-        return userTaskRepository.findByUserIdAndMailIdAnyFolder(userId, mailId);
+        return userTaskQueryRepository.findByUserIdAndMailIdAnyFolder(userId, mailId);
     }
 
     public Long resolveRootId(Long mailId) {
