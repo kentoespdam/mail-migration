@@ -69,16 +69,16 @@ class MailSignatureControllerTest {
     void verifySignature_shouldReturnResponse() {
         String authCode = "valid-code";
         MailSignatureVerificationResponse response = MailSignatureVerificationResponse.valid(
-                "1", "001", "Subject", null, "User", "127.0.0.1");
+                "1", "001", null, "User", "123", "ARCHIVED");
 
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
         when(rateLimitService.resolveBucket("127.0.0.1")).thenReturn(bucket);
         when(bucket.tryConsume(1)).thenReturn(true);
-        when(signatureService.verifySignature(authCode)).thenReturn(response);
+        when(signatureService.verifySignature(authCode, "127.0.0.1")).thenReturn(response);
 
         MailSignatureVerificationResponse result = controller.verifySignature(authCode, request);
 
         assertThat(result).isEqualTo(response);
-        verify(signatureService).verifySignature(authCode);
+        verify(signatureService).verifySignature(authCode, "127.0.0.1");
     }
 }

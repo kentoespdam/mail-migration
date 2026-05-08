@@ -46,7 +46,7 @@ public class MailSignatureController {
         if (!rateLimitService.resolveBucket(clientIp).tryConsume(1)) {
             return MailSignatureVerificationResponse.invalid("Too many requests. Please try again later.");
         }
-        return signatureService.verifySignature(authCode);
+        return signatureService.verifySignature(authCode, clientIp);
     }
 
     private String getClientIp(HttpServletRequest request) {

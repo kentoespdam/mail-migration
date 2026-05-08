@@ -43,6 +43,9 @@ public class PrintLog {
     @Column(name = "ip_address", length = 32)
     private String ipAddress;
 
+    @Column(name = "verify_log", length = 64)
+    private String verifyLog;
+
     /**
      * Factory method untuk create print log dengan auth code.
      */
@@ -60,5 +63,13 @@ public class PrintLog {
      */
     public String getVerificationUrl(String baseUrl) {
         return baseUrl + "/api/mails/verify-sign/" + authCode;
+    }
+
+    public void recordVerification(String ipAddress) {
+        if (this.verifyLog == null) {
+            this.verifyLog = ipAddress;
+        } else if (!this.verifyLog.contains(ipAddress)) {
+            this.verifyLog += "," + ipAddress;
+        }
     }
 }

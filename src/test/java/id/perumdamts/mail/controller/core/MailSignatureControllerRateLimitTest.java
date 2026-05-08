@@ -48,7 +48,7 @@ public class MailSignatureControllerRateLimitTest {
     @Test
     public void testRateLimit() throws Exception {
         String authCode = "someCode";
-        when(signatureService.verifySignature(anyString())).thenReturn(MailSignatureVerificationResponse.invalid("invalid"));
+        when(signatureService.verifySignature(anyString(), anyString())).thenReturn(MailSignatureVerificationResponse.invalid("invalid"));
 
         // Hit 30 times
         for (int i = 0; i < 30; i++) {

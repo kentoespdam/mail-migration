@@ -3,7 +3,9 @@ package id.perumdamts.mail.service.core.mail;
 import id.perumdamts.mail.dto.core.mail.MailSignResponse;
 import id.perumdamts.mail.dto.core.mail.MailSignatureVerificationResponse;
 import id.perumdamts.mail.entity.core.Mail;
+import id.perumdamts.mail.entity.core.MailArchive;
 import id.perumdamts.mail.entity.core.PrintLog;
+import id.perumdamts.mail.repository.core.jpa.MailArchiveRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
 import id.perumdamts.mail.repository.core.jpa.PrintLogRepository;
 import id.perumdamts.mail.security.MailPrincipal;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -30,6 +33,7 @@ public class MailSignatureService {
 
     private final PrintLogRepository printLogRepository;
     private final MailRepository mailRepository;
+    private final MailArchiveRepository mailArchiveRepository;
     private final HttpServletRequest httpServletRequest;
     private final SqidsEncoder encoder;
 
@@ -38,10 +42,12 @@ public class MailSignatureService {
 
     public MailSignatureService(PrintLogRepository printLogRepository,
             MailRepository mailRepository,
+            MailArchiveRepository mailArchiveRepository,
             HttpServletRequest httpServletRequest,
             SqidsEncoder encoder) {
         this.printLogRepository = printLogRepository;
         this.mailRepository = mailRepository;
+        this.mailArchiveRepository = mailArchiveRepository;
         this.httpServletRequest = httpServletRequest;
         this.encoder = encoder;
     }
@@ -93,46 +99,60 @@ public class MailSignatureService {
     /**
      * Verifikasi keaslian dokumen cetak berdasarkan auth code.
      * Equivalent dengan checkSign() di source PHP.
-     * 
+     *
      * @param authCode kode verifikasi dari dokumen cetak
+     * @param clientIp IP address of the verifier
      * @return hasil verifikasi
      */
-    @Transactional(readOnly = true)
-    public MailSignatureVerificationResponse verifySignature(String authCode) {
+    @Transactional
+    public MailSignatureVerificationResponse verifySignature(String authCode, String clientIp) {
         if (authCode == null || authCode.isBlank()) {
-            return MailSignatureVerificationResponse.invalid("Kode verifikasi kosong");
+            return MailSignatureVerificationResponse.invalid("INVALID_OR_DELETED");
         }
 
-        // Lookup print log by auth code
         PrintLog printLog = printLogRepository.findByAuthCode(authCode)
                 .orElse(null);
 
         if (printLog == null) {
-            // Check if legacy auth_code (13-char)
             if (authCode.length() == 13) {
-                return MailSignatureVerificationResponse.invalid("Dokumen pre-migrasi, hubungi arsip");
+                return MailSignatureVerificationResponse.invalid("INVALID_OR_DELETED");
             }
-            return MailSignatureVerificationResponse.invalid("Kode verifikasi tidak ditemukan");
+            return MailSignatureVerificationResponse.invalid("INVALID_OR_DELETED");
         }
 
-        // Get mail details (handle soft-deleted)
         Mail mail = mailRepository.findById(printLog.getMailId())
                 .orElse(null);
 
-        if (mail == null) {
-            if (mailRepository.existsByIdAndDeletedTrue(printLog.getMailId())) {
-                return MailSignatureVerificationResponse.invalid("INVALID_OR_DELETED");
-            }
-            return MailSignatureVerificationResponse.invalid("Dokumen tidak tersedia");
+        if (mail == null || Boolean.TRUE.equals(mail.getDeleted())) {
+            return MailSignatureVerificationResponse.invalid("INVALID_OR_DELETED");
         }
+
+        printLog.recordVerification(clientIp);
+        printLogRepository.save(printLog);
+
+        String signerName = printLog.getUsername();
+        String signerPosition = extractSignerPosition(signerName);
+        String archiveStatus = getArchiveStatus(printLog.getMailId());
 
         return MailSignatureVerificationResponse.valid(
                 encoder.encode(Mail.class, printLog.getMailId()),
                 mail.getMailNumber(),
-                mail.getSubject(),
                 printLog.getPrintDate(),
-                printLog.getUsername(),
-                printLog.getIpAddress());
+                signerName,
+                signerPosition,
+                archiveStatus);
+    }
+
+    private String extractSignerPosition(String username) {
+        if (username != null && username.startsWith("PosId:")) {
+            return username.substring(6);
+        }
+        return null;
+    }
+
+    private String getArchiveStatus(Long mailId) {
+        Optional<MailArchive> archive = mailArchiveRepository.findActiveById(mailId);
+        return archive.map(a -> a.getArchiveStatus() != null ? a.getArchiveStatus().name() : null).orElse(null);
     }
 
     /**
