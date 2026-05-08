@@ -15,6 +15,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @Service
@@ -79,6 +81,11 @@ public class MailQueryService {
     }
 
     public Page<MailReportResponse> findReport(MailReportRequest request) {
+        if (request.getStartDate() == null || request.getEndDate() == null) {
+            LocalDate now = LocalDate.now();
+            request.setStartDate(now.with(TemporalAdjusters.firstDayOfMonth()));
+            request.setEndDate(now.with(TemporalAdjusters.lastDayOfMonth()));
+        }
         List<MailReportResponse> items = mailQueryRepository.getReport(request);
         long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
         return new PageImpl<>(items, PageRequest.of(request.getPage(), request.getSize()), total);

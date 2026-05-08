@@ -286,13 +286,14 @@ CREATE TABLE `mail_org_statistic` (
 DROP TABLE IF EXISTS `mail_respontime`;
 CREATE TABLE `mail_respontime` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `mail_id` bigint(20) DEFAULT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `response_time` int(11) DEFAULT NULL,
-  `period_month` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `mrt_mail_id` (`mail_id`),
-  KEY `mrt_user_id` (`user_id`)
+  `orig_m_id` bigint(20) DEFAULT NULL,
+  `orig_date` datetime DEFAULT NULL,
+  `reply_m_id` bigint(20) DEFAULT NULL,
+  `reply_date` datetime DEFAULT NULL,
+  `m_type` int(11) DEFAULT NULL,
+  `m_category` int(11) DEFAULT NULL,
+  `respon_time` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================

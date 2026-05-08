@@ -67,7 +67,7 @@ Legend: **AFK** = autonomous · **HITL** = human-in-the-loop · 🔒 = blocked-b
 
 | # | Beads | GH | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
-| 3a | `mail-service-d5z` | [#59](https://github.com/kentoespdam/mail-migration/issues/59) | GET /api/me/positions endpoint | `mail-service-4z6` (2a) | [ ] |
+| 3a | `mail-service-d5z` | [#59](https://github.com/kentoespdam/mail-migration/issues/59) | GET /api/me/positions endpoint | `mail-service-4z6` (2a) | [x] |
 
 ---
 
@@ -78,9 +78,9 @@ Fokus pada fondasi baca yang bersih dan integrasi `Mail` ↔ `UserTask`.
 | # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
 | 4a | `mail-service-6gb` | AFK | Refactor `UserTask` to CQRS-lite (Command JPA / Query JOOQ) | — | [x] |
-| 4b | `mail-service-cqrs-mail`| AFK | Refactor `Mail` & `Recipient` to CQRS-lite | 4a | [ ] |
-| 4c | `mail-service-lookup` | AFK | `GET /api/v1/mails/lookup` (PagedModel, folder filter) | 4b | [ ] |
-| 4d | `mail-service-detail` | AFK | `GET /api/v1/mails/{id}` (Detail + auto mark-read) | 4c | [ ] |
+| 4b | `mail-service-cqrs-mail`| AFK | Refactor `Mail` & `Recipient` to CQRS-lite | 4a | [x] |
+| 4c | `mail-service-lookup` | AFK | `GET /api/v1/mails/lookup` (PagedModel, folder filter) | 4b | [x] |
+| 4d | `mail-service-detail` | AFK | `GET /api/v1/mails/{id}` (Detail + auto mark-read) | 4c | [x] |
 
 ---
 
@@ -88,7 +88,7 @@ Fokus pada fondasi baca yang bersih dan integrasi `Mail` ↔ `UserTask`.
 
 | # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
-| 5a | `mail-service-tracking`| AFK | `GET /api/v1/mails/{id}/tracking` (Thread-based resolver) | 4d | [ ] |
+| 5a | `mail-service-tracking`| AFK | `GET /api/v1/mails/{id}/tracking` (Thread-based resolver) | 4d | [x] |
 | 5b | `mail-service-search` | AFK | FULLTEXT Search integration (Subject/Content/Metadata) | V10 | [ ] |
 
 ---

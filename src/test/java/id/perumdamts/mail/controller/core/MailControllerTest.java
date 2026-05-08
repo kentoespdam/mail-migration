@@ -216,14 +216,20 @@ class MailControllerTest {
 
     @Test
     void getTracking_shouldReturnList() {
-        var tracking = List.of(new MailTrackingResponse("1", "Emp", "Pos", "MEMO", false, null));
+        var tracking = List.of(
+                MailTrackingResponse.root("1", "Emp", "Pos", "MEMO", false, null),
+                MailTrackingResponse.child("2", "Emp2", "Pos2", "DISPOSISI", true, null, 1)
+        );
         when(encoder.decode(Mail.class, "1")).thenReturn(1L);
         when(recipientQueryService.findTracking(1L)).thenReturn(tracking);
 
         var result = controller.getTracking("1");
 
-        assertThat(result).hasSize(1);
+        assertThat(result).hasSize(2);
         assertThat(result.getFirst().recipientId()).isEqualTo("1");
+        assertThat(result.getFirst().isRoot()).isTrue();
+        assertThat(result.get(1).isRoot()).isFalse();
+        assertThat(result.get(1).depth()).isEqualTo(1);
     }
 
     @Test
@@ -246,6 +252,24 @@ class MailControllerTest {
         when(queryService.search(request)).thenReturn(page);
 
         var result = controller.search(request);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getMetadata().totalElements()).isEqualTo(1L);
+    }
+
+    @Test
+    void lookup_shouldReturnPagedModel() {
+        var params = new MailLookupParams();
+        params.setPage(0);
+        params.setSize(20);
+        var lookupItem = new MailLookupResponse(
+                "1", LocalDate.of(2025, 1, 1), "Test User",
+                "Test Subject", "Surat Masuk", "Umum",
+                "DISPOSISI", LocalDate.of(2025, 1, 15), false);
+        var page = new PageImpl<>(List.of(lookupItem), PageRequest.of(0, 20), 1L);
+        when(queryService.findLookup(principal.userIdLong(), params)).thenReturn(page);
+
+        var result = controller.lookup(principal, params);
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getMetadata().totalElements()).isEqualTo(1L);
