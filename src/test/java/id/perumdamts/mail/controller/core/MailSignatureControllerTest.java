@@ -1,5 +1,7 @@
 package id.perumdamts.mail.controller.core;
 
+import id.perumdamts.mail.dto.core.mail.MailSignRequest;
+import id.perumdamts.mail.dto.core.mail.MailSignResponse;
 import id.perumdamts.mail.dto.core.mail.MailSignatureVerificationResponse;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.security.MailPrincipal;
@@ -46,19 +48,21 @@ class MailSignatureControllerTest {
     void setUp() {
         controller = new MailSignatureController(signatureService, rateLimitService, encoder);
         principal = new MailPrincipal("1", "Test User", "test@mail.com",
-                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+                List.of(new SimpleGrantedAuthority("SCOPE_mail:write")));
     }
 
     @Test
-    void signMail_shouldReturnAuthCode() {
-        String authCode = "generated-code";
+    void signMail_shouldReturnAuthCodeAndQrUrl() {
+        MailSignResponse response = new MailSignResponse("generated-code", "http://localhost:8081/api/mails/verify-sign/generated-code");
         when(encoder.decode(Mail.class, "encoded-id")).thenReturn(1L);
-        when(signatureService.signMail(1L, principal)).thenReturn(authCode);
+        when(signatureService.signMail(1L, 123L)).thenReturn(response);
 
-        String result = controller.signMail(principal, "encoded-id");
+        MailSignRequest requestBody = new MailSignRequest(123L);
+        MailSignResponse result = controller.signMail(principal, "encoded-id", requestBody);
 
-        assertThat(result).isEqualTo(authCode);
-        verify(signatureService).signMail(1L, principal);
+        assertThat(result.authCode()).isEqualTo("generated-code");
+        assertThat(result.qrUrl()).contains("verify-sign");
+        verify(signatureService).signMail(1L, 123L);
     }
 
     @Test
@@ -66,7 +70,7 @@ class MailSignatureControllerTest {
         String authCode = "valid-code";
         MailSignatureVerificationResponse response = MailSignatureVerificationResponse.valid(
                 "1", "001", "Subject", null, "User", "127.0.0.1");
-        
+
         when(request.getRemoteAddr()).thenReturn("127.0.0.1");
         when(rateLimitService.resolveBucket("127.0.0.1")).thenReturn(bucket);
         when(bucket.tryConsume(1)).thenReturn(true);

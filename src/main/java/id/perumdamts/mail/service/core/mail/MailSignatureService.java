@@ -1,5 +1,6 @@
 package id.perumdamts.mail.service.core.mail;
 
+import id.perumdamts.mail.dto.core.mail.MailSignResponse;
 import id.perumdamts.mail.dto.core.mail.MailSignatureVerificationResponse;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.entity.core.PrintLog;
@@ -9,6 +10,7 @@ import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +33,9 @@ public class MailSignatureService {
     private final HttpServletRequest httpServletRequest;
     private final SqidsEncoder encoder;
 
+    @Value("${app.base-url:http://localhost:8081}")
+    private String baseUrl;
+
     public MailSignatureService(PrintLogRepository printLogRepository,
             MailRepository mailRepository,
             HttpServletRequest httpServletRequest,
@@ -44,31 +49,44 @@ public class MailSignatureService {
     /**
      * Generate verification code saat user mencetak surat.
      * Equivalent dengan signMe() di source PHP.
-     * 
-     * @param mailId    ID mail yang akan dicetak
-     * @param principal user yang mencetak
-     * @return auth code yang di-generate
+     *
+     * @param mailId     ID mail yang akan dicetak
+     * @param signerPosId posisi ID yang menandatangani
+     * @return response dengan authCode dan qrUrl
      */
-    public String signMail(Long mailId, MailPrincipal principal) {
-        // Verify mail exists
-        getMailOrThrow(mailId);
+    public MailSignResponse signMail(Long mailId, Long signerPosId) {
+        Mail mail = mailRepository.findById(mailId)
+                .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
 
-        // Generate unique auth code (fix: gunakan UUID instead of uniqid())
-        String authCode = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        if (Boolean.TRUE.equals(mail.getDeleted())) {
+            throw new IllegalStateException("Cannot sign a deleted mail");
+        }
 
-        // Get IP address dan user agent dari request
+        String authCode = generateUniqueAuthCode();
+
         String ipAddress = getClientIpAddress();
-        String userAgent = httpServletRequest.getHeader("User-Agent");
 
-        // Create print log record
         PrintLog printLog = PrintLog.create(
                 mailId,
-                principal.name(),
+                "PosId:" + signerPosId,
                 ipAddress);
         printLog.setAuthCode(authCode);
 
         printLogRepository.save(printLog);
 
+        return MailSignResponse.of(authCode, baseUrl);
+    }
+
+    private String generateUniqueAuthCode() {
+        String authCode;
+        int attempts = 0;
+        do {
+            authCode = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+            attempts++;
+            if (attempts > 10) {
+                throw new IllegalStateException("Failed to generate unique auth code");
+            }
+        } while (printLogRepository.existsByAuthCode(authCode));
         return authCode;
     }
 
@@ -102,6 +120,9 @@ public class MailSignatureService {
                 .orElse(null);
 
         if (mail == null) {
+            if (mailRepository.existsByIdAndDeletedTrue(printLog.getMailId())) {
+                return MailSignatureVerificationResponse.invalid("INVALID_OR_DELETED");
+            }
             return MailSignatureVerificationResponse.invalid("Dokumen tidak tersedia");
         }
 
