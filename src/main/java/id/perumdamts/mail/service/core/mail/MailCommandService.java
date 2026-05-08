@@ -229,7 +229,8 @@ public class MailCommandService {
             String parentMailSqid,
             MailPrincipal principal) {
         var mail = new Mail();
-        mail.setSubject(subject);
+        String finalSubject = prefixSubjectIfChild(subject, rootMailSqid, parentMailSqid);
+        mail.setSubject(finalSubject);
         mail.setContent(content);
         mail.setNote(note);
         mail.setMailDate(mailDate);
@@ -322,6 +323,18 @@ public class MailCommandService {
             recipient.setPosName(emp.jabatanNama());
         }
         return recipient;
+    }
+
+    private String prefixSubjectIfChild(String subject, String rootMailSqid, String parentMailSqid) {
+        boolean isChildMail = rootMailSqid != null && !rootMailSqid.isBlank()
+                && parentMailSqid != null && !parentMailSqid.isBlank();
+        if (!isChildMail) {
+            return subject;
+        }
+        if (subject != null && subject.toLowerCase().startsWith("fwd:")) {
+            return subject;
+        }
+        return "Fwd: " + subject;
     }
 
     private Mail getMailOrThrow(Long mailId) {

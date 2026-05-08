@@ -38,6 +38,7 @@ public class MailSendService {
     private final MailRecipientRepository recipientRepository;
     private final UserTaskCommandService userTaskCommandService;
     private final MailNumberGenerator mailNumberGenerator;
+    private final id.perumdamts.mail.integration.hr.HrServiceClient hrServiceClient;
     private final ApplicationEventPublisher eventPublisher;
 
     /**
@@ -74,6 +75,9 @@ public class MailSendService {
 
         // Side-effect 2: Generate nomor surat
         String mailNumber = mailNumberGenerator.generate(mail);
+
+        // Capture sender snapshot
+        captureSenderSnapshot(mail, principal);
 
         // Side-effect 3: Update status mail
         mail.send(mailNumber);
@@ -115,6 +119,25 @@ public class MailSendService {
      */
     private String buildToStr(List<MailRecipient> recipients) {
         return Mail.buildToStr(recipients);
+    }
+
+    private void captureSenderSnapshot(Mail mail, MailPrincipal principal) {
+        try {
+            hrServiceClient.getEmployee(principal.userIdLong()).ifPresent(emp -> {
+                var snapshot = id.perumdamts.mail.dto.core.mail.MailSenderSnapshotDto.builder()
+                        .employeeId(emp.id())
+                        .fullName(emp.nama())
+                        .positionId(emp.jabatanId())
+                        .positionName(emp.jabatanNama())
+                        .unitId(emp.organisasiId())
+                        .unitName(emp.organisasiNama())
+                        .capturedAt(java.time.LocalDateTime.now())
+                        .build();
+                mail.setSenderSnapshot(snapshot);
+            });
+        } catch (Exception e) {
+            log.warn("Failed to capture sender snapshot for mail {}: {}", mail.getId(), e.getMessage());
+        }
     }
 
     private Mail getMailOrThrow(Long mailId) {

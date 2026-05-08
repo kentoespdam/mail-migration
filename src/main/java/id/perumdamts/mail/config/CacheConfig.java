@@ -81,6 +81,7 @@ public class CacheConfig {
         public static final String ALLOWED_FILE_TYPES = "allowedFileTypes:v3";
         public static final String MAIL_CATEGORIES = "mailCategories:v3";
         public static final String MAIL_TYPES      = "mailTypes:v3";
+        public static final String DISPOSISI_STATUS = "disposisiStatus:v3";
         public static final String DOCUMENT_TYPES  = "documentTypes:v3";
     }
 
@@ -103,6 +104,7 @@ public class CacheConfig {
         public static final Duration ALLOWED_FILE_TYPES = Duration.ofHours(1);
         public static final Duration MAIL_CATEGORIES = Duration.ofHours(1);
         public static final Duration MAIL_TYPES      = Duration.ofHours(1);
+        public static final Duration DISPOSISI_STATUS = Duration.ofMinutes(5);
         public static final Duration DOCUMENT_TYPES  = Duration.ofHours(1);
         public static final Duration DEFAULT         = Duration.ofMinutes(30);
     }

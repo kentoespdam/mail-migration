@@ -235,7 +235,7 @@ bd dep add mail-service-t0v mail-service-lfe
 4. **Filter "Fwd:" untuk SLA report**: heuristik `subject LIKE 'Fwd:%'` — apa cukup? Berapa persen reply yang ter-tag "Fwd:" di legacy? — TBD, butuh query `mail_respontime JOIN mail`.
 5. **Default range laporan SLA**: month / quarter / year? — preferensi UX, tanya stakeholder.
 6. **HR cache invalidation protocol**: HTTP webhook / Kafka / Redis pub-sub? — preferensi infra, tanya tim HR.
-7. **Audit historis sender**: snapshot `employee` ke kolom JSON di `mail` (`m_sender_snapshot`) saat insert, vs reconstruct dari timestamp + audit log HR? — preferensi storage, tanya stakeholder.
+7. [RESOLVED] **Audit historis sender**: Menggunakan snapshot `employee` ke kolom JSON di `mail` (`m_sender_snapshot`) saat insert. Lihat [ADR 002](adr/002-sender-snapshot-strategy.md).
 8. **Counter badge personal folder**: total items vs unread only? — preferensi UX.
 9. **Crypto vendor**: BSrE BSSN (free, gov-mandated, PKI X.509) vs PrivyID (paid, e-meterai integration)? — keputusan post-MVP, tanya legal/procurement.
 

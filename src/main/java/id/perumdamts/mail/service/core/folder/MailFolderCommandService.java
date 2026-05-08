@@ -28,19 +28,22 @@ public class MailFolderCommandService {
     private final MailFolderMapper folderMapper;
     private final SqidsEncoder encoder;
     private final id.perumdamts.mail.service.core.mail.AuditTrailService auditTrailService;
+    private final PersonalFolderValidator personalFolderValidator;
 
     public MailFolderCommandService(MailFolderRepository folderRepository,
             UserTaskCommandService userTaskCommandService,
             UserTaskQueryService userTaskQueryService,
             MailFolderMapper folderMapper,
             SqidsEncoder encoder,
-            id.perumdamts.mail.service.core.mail.AuditTrailService auditTrailService) {
+            id.perumdamts.mail.service.core.mail.AuditTrailService auditTrailService,
+            PersonalFolderValidator personalFolderValidator) {
         this.folderRepository = folderRepository;
         this.userTaskCommandService = userTaskCommandService;
         this.userTaskQueryService = userTaskQueryService;
         this.folderMapper = folderMapper;
         this.encoder = encoder;
         this.auditTrailService = auditTrailService;
+        this.personalFolderValidator = personalFolderValidator;
     }
 
     @Transactional
@@ -49,11 +52,7 @@ public class MailFolderCommandService {
         Long parentFolderId = request.parentFolderId() != null
                 ? encoder.decode(MailFolder.class, request.parentFolderId())
                 : SystemFolder.PERSONAL_ROOT.getId();
-        validateParentFolder(userId, parentFolderId);
-
-        if (folderRepository.existsByOwnerIdAndName(userId, request.name().trim())) {
-            throw new IllegalArgumentException("Folder with name '" + request.name() + "' already exists");
-        }
+        personalFolderValidator.validateCreate(userId, parentFolderId, request.name());
 
         var folder = new MailFolder(userId, parentFolderId, request.name().trim());
         return folderMapper.toResponse(folderRepository.save(folder));
@@ -75,16 +74,9 @@ public class MailFolderCommandService {
     @Transactional
     @CacheEvict(value = CacheConfig.CacheNames.MAIL_FOLDER, key = "'tree:' + #userId")
     public void deleteFolder(Long userId, Long folderId) {
+        personalFolderValidator.validateDelete(userId, folderId);
+
         MailFolder folder = getOwnedPersonalFolder(userId, folderId);
-
-        userTaskCommandService.relocateMails(userId, folderId, folder.getParentFolderId());
-
-        var children = folderRepository.findActiveChildren(folderId);
-        for (var child : children) {
-            userTaskCommandService.relocateMails(userId, child.getId(), folder.getParentFolderId());
-            child.softDelete();
-        }
-
         folder.softDelete();
         folderRepository.save(folder);
     }

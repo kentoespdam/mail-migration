@@ -99,6 +99,10 @@ public class Mail implements SqidEntity {
     @Column(name = "m_penerima_surat_keluar", length = 128)
     private String penerimaSuratKeluar;
 
+    @Convert(converter = id.perumdamts.mail.util.MailSenderSnapshotConverter.class)
+    @Column(name = "m_sender_snapshot", columnDefinition = "JSON")
+    private id.perumdamts.mail.dto.core.mail.MailSenderSnapshotDto senderSnapshot;
+
     @Column(name = "is_deleted", nullable = false)
     private Boolean deleted = false;
 

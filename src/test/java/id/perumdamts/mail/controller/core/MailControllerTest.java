@@ -9,6 +9,7 @@ import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.mail.MailCommandService;
 import id.perumdamts.mail.service.core.mail.MailQueryService;
 import id.perumdamts.mail.service.core.recipient.MailRecipientQueryService;
+import id.perumdamts.mail.service.core.mail.DispositionStatusDeriver;
 import id.perumdamts.mail.util.SqidsEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,13 +46,16 @@ class MailControllerTest {
     @Mock
     private SqidsEncoder encoder;
 
+    @Mock
+    private DispositionStatusDeriver dispositionStatusDeriver;
+
     private MailController controller;
 
     private MailPrincipal principal;
 
     @BeforeEach
     void setUp() {
-        controller = new MailController(commandService, queryService, recipientQueryService, encoder);
+        controller = new MailController(commandService, queryService, recipientQueryService, encoder, dispositionStatusDeriver);
         principal = new MailPrincipal("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }

@@ -6,12 +6,14 @@ import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.mail.MailCommandService;
 import id.perumdamts.mail.service.core.mail.MailQueryService;
 import id.perumdamts.mail.service.core.recipient.MailRecipientQueryService;
+import id.perumdamts.mail.service.core.mail.DispositionStatusDeriver;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,15 +27,18 @@ public class MailController {
     private final MailQueryService queryService;
     private final MailRecipientQueryService recipientQueryService;
     private final SqidsEncoder encoder;
+    private final DispositionStatusDeriver dispositionStatusDeriver;
 
     public MailController(MailCommandService commandService,
             MailQueryService queryService,
             MailRecipientQueryService recipientQueryService,
-            SqidsEncoder encoder) {
+            SqidsEncoder encoder,
+            DispositionStatusDeriver dispositionStatusDeriver) {
         this.commandService = commandService;
         this.queryService = queryService;
         this.recipientQueryService = recipientQueryService;
         this.encoder = encoder;
+        this.dispositionStatusDeriver = dispositionStatusDeriver;
     }
 
     @PostMapping
@@ -145,4 +150,14 @@ public class MailController {
         return new PagedModel<>(queryService.findReport(request));
     }
 
+    @GetMapping("/{id}/disposition-status")
+    @PreAuthorize("isAuthenticated()")
+    public DispositionStatusResponse getDispositionStatus(@PathVariable String id) {
+        long mailId = encoder.decode(Mail.class, id);
+        var result = dispositionStatusDeriver.deriveStatus(mailId);
+        if (result == null) {
+            return null;
+        }
+        return new DispositionStatusResponse(result.status(), result.deadline(), result.depth());
+    }
 }

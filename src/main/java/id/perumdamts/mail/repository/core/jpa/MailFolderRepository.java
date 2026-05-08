@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MailFolderRepository extends JpaRepository<MailFolder, Long> {
 
@@ -19,4 +20,8 @@ public interface MailFolderRepository extends JpaRepository<MailFolder, Long> {
 
     @Query("SELECT f FROM MailFolder f WHERE f.parentFolderId = :parentId")
     List<MailFolder> findActiveChildren(@Param("parentId") Long parentId);
+
+    Optional<MailFolder> findByOwnerIdAndParentFolderIdAndName(Long ownerId, Long parentFolderId, String name);
+
+    long countByOwnerIdAndParentFolderId(Long ownerId, Long parentFolderId);
 }
