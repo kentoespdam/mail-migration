@@ -24,7 +24,7 @@
 - **CQRS-lite**: `CommandService` (JPA write) + `QueryService` (JOOQ read).
 - **Security**: `AppWriteAuthFilter` JWT validation + **UserTask** ownership check for all mail/attachment ops.
 - **Layered**: Controller → Service → Repository · Domain Events via `@TransactionalEventListener` + `@Async`.
-- **Soft Delete**: `@SQLRestriction("status != 'DELETED'")` on all entities · `MailFolder`: `folder_status = 1` (1=Active, 3=Deleted).
+- **Soft Delete**: `@SQLRestriction("status != 'DELETED'")` on all entities · `MailFolder`: `folder_status = 1` (1=Active, 3=Deleted). Legacy folders with `status=3` are hard-deleted after rescuing orphan tasks to Trash (ADR 004).
 - **Tenant**: Replace `CLIENT_CODE if-else` with `TenantConfig`.
 - **Virtual Threads**: `spring.threads.virtual.enabled: true` — avoid `synchronized` (use `ReentrantLock`).
 - **Performance**: FULLTEXT index on `mail` (subject, content) for optimized global search via `MATCH ... AGAINST`.

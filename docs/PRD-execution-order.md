@@ -39,7 +39,7 @@ HITL discovery dan AFK independent. Tidak ada blocker antar wave 1.
 | 1a | `mail-service-6eb` | [#57](https://github.com/kentoespdam/mail-migration/issues/57) | **Plt model** (emp_pos_id vs employee_assignment) | ADR — blocker untuk role-in-context | [x] |
 | 1b | `mail-service-293` | [#60](https://github.com/kentoespdam/mail-migration/issues/60) | Sender snapshot strategy (JSON column vs reconstruct) | ADR | [x] |
 | 1c | `mail-service-qej` | [#61](https://github.com/kentoespdam/mail-migration/issues/61) | HR cache invalidation protocol (webhook/Kafka/Redis pub-sub) | ADR + endpoint stub | [x] |
-| 1d | `mail-service-aaj` | [#64](https://github.com/kentoespdam/mail-migration/issues/64) | Legacy `folder_status=3` migration (skip vs DELETED) | ADR + migration script update | [ ] |
+| 1d | `mail-service-aaj` | [#64](https://github.com/kentoespdam/mail-migration/issues/64) | Legacy `folder_status=3` migration (skip vs DELETED) | ADR + migration script update | [x] |
 | 1e | `mail-service-4kp` | [#65](https://github.com/kentoespdam/mail-migration/issues/65) | Folder counter badge (total vs unread) | ADR | [ ] |
 | 1f | `mail-service-arb` | [#68](https://github.com/kentoespdam/mail-migration/issues/68) | Default SLA report range (month/quarter/year) | ADR | [ ] |
 | 1g | `mail-service-egf` | [#69](https://github.com/kentoespdam/mail-migration/issues/69) | Backfill `mail_respontime` strategy (cutoff date) | ADR + migration script | [ ] |
@@ -55,7 +55,7 @@ HITL discovery dan AFK independent. Tidak ada blocker antar wave 1.
 | 1l | `mail-service-imv` | [#62](https://github.com/kentoespdam/mail-migration/issues/62) | PersonalFolderValidator (depth-3, unique, empty-check) | Stories 13–15 | [x] |
 | 1m | `mail-service-81y` | [#63](https://github.com/kentoespdam/mail-migration/issues/63) | Lazy system folders pada first login | Story 16 | [x] |
 | 1n | `mail-service-5l7` | [#66](https://github.com/kentoespdam/mail-migration/issues/66) | MailSentEvent → MailResponseTimeListener async | Story 23 | [x] |
-| 1o | `mail-service-bj3` | [#71](https://github.com/kentoespdam/mail-migration/issues/71) | MailSignatureService.signMail + POST /sign | Stories 25, 29, 30 | [ ] |
+| 1o | `mail-service-bj3` | [#71](https://github.com/kentoespdam/mail-migration/issues/71) | MailSignatureService.signMail + POST /sign | Stories 25, 29, 30 | [x] |
 
 ---
 

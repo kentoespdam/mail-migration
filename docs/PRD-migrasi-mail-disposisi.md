@@ -230,7 +230,7 @@ bd dep add mail-service-t0v mail-service-lfe
 ### Open Questions (resolve at triage)
 
 1. [RESOLVED] **Plt model**: Menggunakan Opsi 1 (direct update `employee.emp_pos_id`). Konfirmasi DB legacy: 0 duplicate emp_id dan no assignment table. Lihat ADR 001.
-2. **Personal folder migration**: 609 folder dengan `folder_status=3` (deleted) — skip vs migrate as `status=DELETED`? — TBD, butuh cek apakah ada `sys_user_task.folder_id` orphan menunjuk ke folder ini.
+2. [RESOLVED] **Personal folder migration**: Menggunakan strategi **Clean DB & Move Tasks**. Task yang terjebak di folder status=3 dipindahkan ke folder DELETED (ID 6), lalu folder status=3 di-hard-delete. Lihat ADR 004.
 3. **Backfill `mail_respontime`**: dari pasangan parent-child Mail historis, count exact? — TBD, butuh `SELECT COUNT(*) FROM mail_respontime`, `MIN(orig_date)`, `MAX(orig_date)`.
 4. **Filter "Fwd:" untuk SLA report**: heuristik `subject LIKE 'Fwd:%'` — apa cukup? Berapa persen reply yang ter-tag "Fwd:" di legacy? — TBD, butuh query `mail_respontime JOIN mail`.
 5. **Default range laporan SLA**: month / quarter / year? — preferensi UX, tanya stakeholder.
