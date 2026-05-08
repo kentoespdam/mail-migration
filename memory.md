@@ -368,6 +368,8 @@ app:
 ### Other Core Services
 | Service | Package | Purpose |
 |---------|---------|---------|
+| `UserTaskCommandService` | `service/core/usertask` | UserTask projection from domain events (send, delete, etc) |
+| `UserTaskQueryService` | `service/core/usertask` | Inbox lookup, unread count, thread ownership check |
 | `MailFolderCommandService` | `service/core/folder` | Folder CRUD, move/delete/restore mails, empty trash |
 | `MailFolderQueryService` | `service/core/folder` | Folder tree, counters, mails in folder search |
 | `MailRecipientCommandService` | `service/core/recipient` | Batch recipient management, copy from/thread, notif flags |
@@ -496,14 +498,6 @@ docker compose up -d
 ```bash
 # Run all tests
 ./gradlew test
-
-# Run specific test class
-./gradlew test --tests MailSendServiceTest
-
-# Run with coverage
-./gradlew clean build jacocoTestReport
-```
-t
 
 # Run specific test class
 ./gradlew test --tests MailSendServiceTest

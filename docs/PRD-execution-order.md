@@ -14,39 +14,33 @@ Legend: **AFK** = autonomous · **HITL** = human-in-the-loop · 🔒 = blocked-b
 
 ---
 
-## Wave 0 — Pre-existing Blockers (kerjakan paling awal)
-
-Sudah ada di tracker, **wajib selesai** sebelum slice mail-write & verify endpoint:
+## Wave 0 — Pre-existing Blockers (SELESAI)
 
 | # | Beads | GH | Tipe | Judul | Status |
 |---|---|---|---|---|---|
 | 0a | `mail-service-a3s` | (ada) | AFK · P1 | Fix `ArchivePublishedEventListener` (wrong table, missing pos→user resolution, missing notif_log fan-out) | [x] |
 | 0b | `mail-service-s31` | (ada) | AFK · P1 | Fix numbering placeholder bugs di `AbstractMailNumberGenerator` (`#MR#` roman, `#type#` letter, MailType load) | [x] |
-| 0c | `mail-service-lfe` | (ada) | AFK · P3 | Rate-limit `/api/mails/verify-sign/{code}` (Bucket4j atau Redis token bucket, 30 req/min/IP) | [x] blocked |
-
-Plus: **plan 24 migration** (Flyway V15–V30, beads issues + GH #31–#54) jalan di track terpisah oleh tim DBA.
+| 0c | `mail-service-lfe` | (ada) | AFK · P3 | Rate-limit `/api/mails/verify-sign/{code}` (Bucket4j atau Redis token bucket, 30 req/min/IP) | [x] |
 
 ---
 
-## Wave 1 — Kick off paralel (start day 1)
+## Wave 1 — Kick off paralel
 
-HITL discovery dan AFK independent. Tidak ada blocker antar wave 1.
-
-### HITL (paralel research / decision)
+### HITL (Discovery / Decision)
 
 | # | Beads | GH | Topik | Output | Status |
 |---|---|---|---|---|---|
-| 1a | `mail-service-6eb` | [#57](https://github.com/kentoespdam/mail-migration/issues/57) | **Plt model** (emp_pos_id vs employee_assignment) | ADR — blocker untuk role-in-context | [x] |
-| 1b | `mail-service-293` | [#60](https://github.com/kentoespdam/mail-migration/issues/60) | Sender snapshot strategy (JSON column vs reconstruct) | ADR | [x] |
-| 1c | `mail-service-qej` | [#61](https://github.com/kentoespdam/mail-migration/issues/61) | HR cache invalidation protocol (webhook/Kafka/Redis pub-sub) | ADR + endpoint stub | [x] |
-| 1d | `mail-service-aaj` | [#64](https://github.com/kentoespdam/mail-migration/issues/64) | Legacy `folder_status=3` migration (skip vs DELETED) | ADR + migration script update | [x] |
-| 1e | `mail-service-4kp` | [#65](https://github.com/kentoespdam/mail-migration/issues/65) | Folder counter badge (total vs unread) | ADR | [x] |
-| 1f | `mail-service-arb` | [#68](https://github.com/kentoespdam/mail-migration/issues/68) | Default SLA report range (month/quarter/year) | ADR | [ ] |
-| 1g | `mail-service-egf` | [#69](https://github.com/kentoespdam/mail-migration/issues/69) | Backfill `mail_respontime` strategy (cutoff date) | ADR + migration script | [ ] |
-| 1h | `mail-service-0cv` | [#70](https://github.com/kentoespdam/mail-migration/issues/70) | Validate "Fwd:" filter heuristic (% coverage legacy) | ADR — input untuk SLA dashboard | [ ] |
-| 1i | `mail-service-421` | [#73](https://github.com/kentoespdam/mail-migration/issues/73) | Crypto vendor (BSrE BSSN vs PrivyID) — **post-MVP marker** | ADR + post-MVP roadmap | [ ] |
+| 1a | `mail-service-6eb` | [#57](https://github.com/kentoespdam/mail-migration/issues/57) | **Plt model** (emp_pos_id vs employee_assignment) | ADR 001 | [x] |
+| 1b | `mail-service-293` | [#60](https://github.com/kentoespdam/mail-migration/issues/60) | Sender snapshot strategy (JSON column vs reconstruct) | ADR 002 | [x] |
+| 1c | `mail-service-qej` | [#61](https://github.com/kentoespdam/mail-migration/issues/61) | HR cache invalidation protocol (webhook/Kafka/Redis pub-sub) | ADR 003 | [x] |
+| 1d | `mail-service-aaj` | [#64](https://github.com/kentoespdam/mail-migration/issues/64) | Legacy `folder_status=3` migration (skip vs DELETED) | ADR 004 | [x] |
+| 1e | `mail-service-4kp` | [#65](https://github.com/kentoespdam/mail-migration/issues/65) | Folder counter badge (total vs unread) | ADR 005 | [x] |
+| 1f | `mail-service-arb` | [#68](https://github.com/kentoespdam/mail-migration/issues/68) | Default SLA report range (month/quarter/year) | ADR 006 | [x] |
+| 1g | `mail-service-egf` | [#69](https://github.com/kentoespdam/mail-migration/issues/69) | Backfill `mail_respontime` strategy (full backfill) | ADR 007 + V37 script | [x] |
+| 1h | `mail-service-0cv` | [#70](https://github.com/kentoespdam/mail-migration/issues/70) | Validate "Fwd:" filter heuristic (% coverage legacy) | ADR — input untuk SLA dashboard | [x] |
+| 1i | `mail-service-421` | [#73](https://github.com/kentoespdam/mail-migration/issues/73) | Crypto vendor (BSrE BSSN vs PrivyID) — **post-MVP marker** | ADR + post-MVP roadmap | [x] |
 
-### AFK (independent, bisa langsung dikerjakan)
+### AFK (Independent)
 
 | # | Beads | GH | Slice | Catatan | Status |
 |---|---|---|---|---|---|
@@ -61,12 +55,10 @@ HITL discovery dan AFK independent. Tidak ada blocker antar wave 1.
 
 ## Wave 2 — Tergantung Wave 1
 
-Mulai begitu blocker masing-masing selesai. **Tidak perlu** menunggu seluruh Wave 1 selesai.
-
 | # | Beads | GH | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
-| 2a | `mail-service-4z6` | [#58](https://github.com/kentoespdam/mail-migration/issues/58) | MailPrincipal.activePosId resolver (JWT + header) | `mail-service-6eb` (1a) | [ ] |
-| 2b | `mail-service-nyb` | [#67](https://github.com/kentoespdam/mail-migration/issues/67) | ResponseTimeAggregator + dashboard endpoint (p50/p90/p99) | `mail-service-5l7` (1n); informed by 1f, 1g, 1h | [ ] |
+| 2a | `mail-service-4z6` | [#58](https://github.com/kentoespdam/mail-migration/issues/58) | MailPrincipal.activePosId resolver (JWT + header) | `mail-service-6eb` (1a) | [x] |
+| 2b | `mail-service-nyb` | [#67](https://github.com/kentoespdam/mail-migration/issues/67) | ResponseTimeAggregator + dashboard endpoint (p50/p90/p99) | `mail-service-5l7` (1n) | [ ] |
 | 2c | `mail-service-xw6` | [#72](https://github.com/kentoespdam/mail-migration/issues/72) | Public verify endpoint (always 200, deleted→invalid) | `mail-service-bj3` (1o), `mail-service-lfe` (0c) | [ ] |
 
 ---
@@ -79,30 +71,59 @@ Mulai begitu blocker masing-masing selesai. **Tidak perlu** menunggu seluruh Wav
 
 ---
 
+## Wave 4 — CQRS & Integration (Plan 15, 18)
+
+Fokus pada fondasi baca yang bersih dan integrasi `Mail` ↔ `UserTask`.
+
+| # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
+|---|---|---|---|---|---|
+| 4a | `mail-service-cqrs-ut` | AFK | Refactor `UserTask` to CQRS-lite (Command JPA / Query JOOQ) | — | [ ] |
+| 4b | `mail-service-cqrs-mail`| AFK | Refactor `Mail` & `Recipient` to CQRS-lite | 4a | [ ] |
+| 4c | `mail-service-lookup` | AFK | `GET /api/v1/mails/lookup` (PagedModel, folder filter) | 4b | [ ] |
+| 4d | `mail-service-detail` | AFK | `GET /api/v1/mails/{id}` (Detail + auto mark-read) | 4c | [ ] |
+
+---
+
+## Wave 5 — Advanced Tracking & Search (Plan 15, 18, V10)
+
+| # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
+|---|---|---|---|---|---|
+| 5a | `mail-service-tracking`| AFK | `GET /api/v1/mails/{id}/tracking` (Thread-based resolver) | 4d | [ ] |
+| 5b | `mail-service-search` | AFK | FULLTEXT Search integration (Subject/Content/Metadata) | V10 | [ ] |
+
+---
+
 ## Critical Path (jalur terpanjang)
 
 ```
-0a/0b/0c (existing fixes)
+0a/0b/0c (DONE)
         │
         ▼
-1a (Plt ADR) ── 2a (activePosId resolver) ── 3a (/api/me/positions)
-        ▲
-        └─ paralel dengan: 1n (event) ── 2b (SLA dashboard)
-                            1o (sign)   ── 2c (verify endpoint)  ← juga butuh 0c
+1a (DONE) ── 2a (DONE) ── 3a (positions)
+        │                 ▲
+        ▼                 │
+1o (sign) ── 2c (verify) ─┘
+        │
+        ▼
+4a (CQRS UT) ── 4b (CQRS Mail) ── 4c (Lookup) ── 4d (Detail) ── 5a (Tracking)
 ```
 
-Critical path: **0a/0b → 1a → 2a → 3a** (4 hop). Parallelizable: signature track, SLA track, folder track.
+Critical path saat ini: **1o → 2c → 4a → 4b → 4c → 4d → 5a**.
 
 ---
 
 ## Rekomendasi Eksekusi
 
-1. **Hari 1**: Selesaikan / verifikasi Wave 0 sudah selesai. Spawn paralel:
-   - HITL Wave 1: 1a, 1b, 1c, 1d, 1e, 1f, 1g, 1h, 1i — kirim ke stakeholder.
-   - AFK Wave 1: claim 1j, 1k, 1l, 1m, 1n, 1o (gunakan `bd ready` untuk pick).
-2. **Hari 3–5**: Begitu 1a (Plt ADR) selesai → mulai 2a. Begitu 1n selesai → mulai 2b (SLA dashboard). Begitu 1o + 0c selesai → mulai 2c (verify endpoint).
-3. **Hari 6+**: Begitu 2a selesai → 3a.
-4. HITL keputusan post-MVP (1i) tidak block apapun, parkir setelah ADR.
+1. **Selesaikan 1o (signMail)** segera karena memblock track verifikasi (2c) dan merupakan bagian dari core signature.
+2. **Eksekusi Wave 4 (CQRS)** secara paralel dengan sisa HITL (1g, 1h, 1i). CQRS refactor adalah fondasi untuk endpoint lookup dan detail yang lebih bersih.
+3. **Gunakan Plan 24** untuk track migrasi database (V15-V36) secara terpisah. Pastikan dual-versioning pada V30/V31 di-resolve (conflict di `src/main/resources/db/migration/`).
+4. **Validasi "Fwd:" (1h)** penting untuk akurasi SLA Dashboard (2b).
+
+---
+
+## Out of Scope (tidak masuk wave)
+... (tetap sama)
+
 
 ---
 
