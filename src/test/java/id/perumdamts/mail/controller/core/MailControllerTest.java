@@ -56,7 +56,7 @@ class MailControllerTest {
     @BeforeEach
     void setUp() {
         controller = new MailController(commandService, queryService, recipientQueryService, encoder, dispositionStatusDeriver);
-        principal = new MailPrincipal("1", "Test User", "test@mail.com",
+        principal = MailPrincipal.from("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
 

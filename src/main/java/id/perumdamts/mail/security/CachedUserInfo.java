@@ -14,15 +14,17 @@ public record CachedUserInfo(
         String userId,
         String name,
         String email,
-        List<String> roles
+        List<String> roles,
+        Long aktifPosisiId
 ) implements Serializable {
 
-    public static CachedUserInfo from(AppWriteUser user) {
+    public static CachedUserInfo from(AppWriteUser user, Long aktifPosisiId) {
         return new CachedUserInfo(
                 user.id(),
                 user.name(),
                 user.email(),
-                user.getRoles()
+                user.getRoles(),
+                aktifPosisiId
         );
     }
 

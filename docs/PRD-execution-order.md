@@ -40,7 +40,7 @@ HITL discovery dan AFK independent. Tidak ada blocker antar wave 1.
 | 1b | `mail-service-293` | [#60](https://github.com/kentoespdam/mail-migration/issues/60) | Sender snapshot strategy (JSON column vs reconstruct) | ADR | [x] |
 | 1c | `mail-service-qej` | [#61](https://github.com/kentoespdam/mail-migration/issues/61) | HR cache invalidation protocol (webhook/Kafka/Redis pub-sub) | ADR + endpoint stub | [x] |
 | 1d | `mail-service-aaj` | [#64](https://github.com/kentoespdam/mail-migration/issues/64) | Legacy `folder_status=3` migration (skip vs DELETED) | ADR + migration script update | [x] |
-| 1e | `mail-service-4kp` | [#65](https://github.com/kentoespdam/mail-migration/issues/65) | Folder counter badge (total vs unread) | ADR | [ ] |
+| 1e | `mail-service-4kp` | [#65](https://github.com/kentoespdam/mail-migration/issues/65) | Folder counter badge (total vs unread) | ADR | [x] |
 | 1f | `mail-service-arb` | [#68](https://github.com/kentoespdam/mail-migration/issues/68) | Default SLA report range (month/quarter/year) | ADR | [ ] |
 | 1g | `mail-service-egf` | [#69](https://github.com/kentoespdam/mail-migration/issues/69) | Backfill `mail_respontime` strategy (cutoff date) | ADR + migration script | [ ] |
 | 1h | `mail-service-0cv` | [#70](https://github.com/kentoespdam/mail-migration/issues/70) | Validate "Fwd:" filter heuristic (% coverage legacy) | ADR — input untuk SLA dashboard | [ ] |

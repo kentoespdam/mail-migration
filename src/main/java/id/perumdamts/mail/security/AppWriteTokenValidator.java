@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.perumdamts.mail.config.AppWriteProperties;
 import id.perumdamts.mail.config.CacheConfig;
+import id.perumdamts.mail.integration.hr.EmployeeDto;
+import id.perumdamts.mail.integration.hr.HrServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatusCode;
@@ -39,13 +41,16 @@ public class AppWriteTokenValidator {
     private final WebClient appWriteClient;
     private final AppWriteProperties props;
     private final StringRedisTemplate redisTemplate;
+    private final HrServiceClient hrServiceClient;
 
     public AppWriteTokenValidator(AppWriteProperties props,
                                   WebClient.Builder webClientBuilder,
-                                  StringRedisTemplate redisTemplate) {
+                                  StringRedisTemplate redisTemplate,
+                                  HrServiceClient hrServiceClient) {
         this.props = props;
         this.appWriteClient = webClientBuilder.baseUrl(props.endpoint()).build();
         this.redisTemplate = redisTemplate;
+        this.hrServiceClient = hrServiceClient;
     }
 
     /**
@@ -54,6 +59,8 @@ public class AppWriteTokenValidator {
      * <p>TTL cache diambil dari {@code exp} claim JWT token, sehingga cache otomatis
      * expired saat token expired. Jika {@code exp} tidak bisa dibaca, fallback ke
      * {@code tokenCacheTtlMinutes} dari konfigurasi.
+     *
+     * <p>ActivePosId diambil dari HR Service (employee.jabatanId).
      *
      * @param token JWT token dari header Authorization
      * @return {@link CachedUserInfo} jika token valid
@@ -87,7 +94,11 @@ public class AppWriteTokenValidator {
         assert user != null;
         log.debug("Token valid, user ID: {}", user.id());
 
-        CachedUserInfo info = CachedUserInfo.from(user);
+        // Ambil activePosId dari JWT claim atau HR Service
+        Long activePosClaim = extractActivePosClaim(token);
+        Long activePosId = resolveActivePosId(user.id(), activePosClaim);
+
+        CachedUserInfo info = CachedUserInfo.from(user, activePosId);
 
         // Simpan ke cache dengan TTL dari exp token
         Duration ttl = extractTtlFromToken(token);
@@ -99,6 +110,39 @@ public class AppWriteTokenValidator {
         }
 
         return info;
+    }
+
+    private Long resolveActivePosId(String userId, Long jwtClaimPosId) {
+        // Priority: JWT claim > HR default
+        if (jwtClaimPosId != null) {
+            return jwtClaimPosId;
+        }
+        try {
+            Long empId = Long.parseLong(userId);
+            return hrServiceClient.getEmployee(empId)
+                    .map(EmployeeDto::jabatanId)
+                    .orElse(null);
+        } catch (Exception e) {
+            log.warn("Gagal resolve activePosId dari HR: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private Long extractActivePosClaim(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) return null;
+
+            String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
+            Map<String, Object> claims = MAPPER.readValue(payload, Map.class);
+            Object claim = claims.get("active_pos");
+            if (claim instanceof Number num) {
+                return num.longValue();
+            }
+        } catch (Exception e) {
+            log.debug("Gagal extract active_pos claim: {}", e.getMessage());
+        }
+        return null;
     }
 
     private String buildCacheKey(String token) {

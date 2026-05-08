@@ -29,7 +29,9 @@ public record MailPrincipal(
         String userId,
         String name,
         String email,
-        List<SimpleGrantedAuthority> authorities) implements UserDetails {
+        List<SimpleGrantedAuthority> authorities,
+        Long aktifPosisiId
+) implements UserDetails {
 
     /**
      * Factory method — konversi {@link AppWriteUser} ke {@link MailPrincipal}.
@@ -39,7 +41,7 @@ public record MailPrincipal(
         List<SimpleGrantedAuthority> grantedAuthorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .toList();
-        return new MailPrincipal(user.id(), user.name(), user.email(), grantedAuthorities);
+        return new MailPrincipal(user.id(), user.name(), user.email(), grantedAuthorities, null);
     }
 
     /**
@@ -50,7 +52,21 @@ public record MailPrincipal(
         List<SimpleGrantedAuthority> grantedAuthorities = info.roles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .toList();
-        return new MailPrincipal(info.userId(), info.name(), info.email(), grantedAuthorities);
+        return new MailPrincipal(info.userId(), info.name(), info.email(), grantedAuthorities, info.aktifPosisiId());
+    }
+
+    public static MailPrincipal withActivePosition(MailPrincipal original, Long newPositionId) {
+        return new MailPrincipal(
+                original.userId(),
+                original.name(),
+                original.email(),
+                original.authorities(),
+                newPositionId
+        );
+    }
+
+    public static MailPrincipal from(String userId, String name, String email, List<SimpleGrantedAuthority> authorities) {
+        return new MailPrincipal(userId, name, email, authorities, null);
     }
 
     // ── UserDetails ───────────────────────────────────────────────────────────
@@ -72,6 +88,14 @@ public record MailPrincipal(
 
     public Long userIdLong() {
         return Long.parseLong(userId);
+    }
+
+    public Long activePosId() {
+        return aktifPosisiId;
+    }
+
+    public boolean hasActivePosition() {
+        return aktifPosisiId != null;
     }
 
 }

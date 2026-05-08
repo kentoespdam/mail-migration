@@ -47,7 +47,7 @@ class MailFolderControllerTest {
     @BeforeEach
     void setUp() {
         controller = new MailFolderController(queryService, commandService, encoder);
-        principal = new MailPrincipal("1", "Test User", "test@mail.com",
+        principal = MailPrincipal.from("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
         lenient().when(encoder.decode(eq(MailFolder.class), anyString())).thenReturn(10L);

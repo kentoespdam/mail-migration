@@ -41,7 +41,7 @@ class MailRecipientControllerTest {
     @BeforeEach
     void setUp() {
         controller = new MailRecipientController(queryService, commandService, encoder);
-        principal = new MailPrincipal("1", "Test User", "test@mail.com",
+        principal = MailPrincipal.from("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
         lenient().when(encoder.decode(eq(Mail.class), anyString())).thenReturn(1L);

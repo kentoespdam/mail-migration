@@ -42,7 +42,7 @@ class AttachmentCommandServiceTest {
 
     @BeforeEach
     void setUp() {
-        principal = new MailPrincipal("1", "Test User", "test@mail.com",
+        principal = MailPrincipal.from("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
 

@@ -41,7 +41,7 @@ class PublicationControllerTest {
     @BeforeEach
     void setUp() {
         controller = new PublicationController(commandHandler, queryHandler, encoder);
-        principal = new MailPrincipal("1", "Test User", "test@mail.com",
+        principal = MailPrincipal.from("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
 

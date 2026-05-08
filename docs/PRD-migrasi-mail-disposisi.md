@@ -236,7 +236,7 @@ bd dep add mail-service-t0v mail-service-lfe
 5. **Default range laporan SLA**: month / quarter / year? — preferensi UX, tanya stakeholder.
 6. **HR cache invalidation protocol**: HTTP webhook / Kafka / Redis pub-sub? — preferensi infra, tanya tim HR.
 7. [RESOLVED] **Audit historis sender**: Menggunakan snapshot `employee` ke kolom JSON di `mail` (`m_sender_snapshot`) saat insert. Lihat [ADR 002](adr/002-sender-snapshot-strategy.md).
-8. **Counter badge personal folder**: total items vs unread only? — preferensi UX.
+8. [RESOLVED] **Counter badge personal folder**: total items vs unread only? — Menggunakan strategi **Unread-First** (Unread untuk Inbox/Personal, Total untuk Sent/Draft). Lihat [ADR 005](adr/005-folder-counter-semantics.md).
 9. **Crypto vendor**: BSrE BSSN (free, gov-mandated, PKI X.509) vs PrivyID (paid, e-meterai integration)? — keputusan post-MVP, tanya legal/procurement.
 
 ### Catatan teknis tambahan
