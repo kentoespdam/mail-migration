@@ -22,6 +22,10 @@ class MailRoleContextResolverTest {
 
     private MailRoleContextResolver resolver;
 
+    private static id.perumdamts.mail.integration.hr.JabatanDto jabatan(Long id) {
+        return new id.perumdamts.mail.integration.hr.JabatanDto(id, "J" + id, "Posisi " + id, null);
+    }
+
     @BeforeEach
     void setUp() {
         resolver = new MailRoleContextResolver(hrServiceClient);
@@ -30,7 +34,7 @@ class MailRoleContextResolverTest {
     @Test
     void resolveActivePosition_withHeaderOwnedByUser_returnsHeaderPosition() {
         when(hrServiceClient.getEmployee(1L)).thenReturn(Optional.of(
-                new EmployeeDto(1L, "N001", "Test User", "AKTIF", null, null, null)
+                new EmployeeDto(1L, "N001", "Test User", "AKTIF", jabatan(100L), null, null)
         ));
 
         Long result = resolver.resolveActivePosition("1", null, 100L);
@@ -41,7 +45,7 @@ class MailRoleContextResolverTest {
     @Test
     void resolveActivePosition_withHeaderNotOwnedByUser_returnsNull() {
         when(hrServiceClient.getEmployee(1L)).thenReturn(Optional.of(
-                new EmployeeDto(1L, "N001", "Test User", "AKTIF", null, null, null)
+                new EmployeeDto(1L, "N001", "Test User", "AKTIF", jabatan(100L), null, null)
         ));
 
         Long result = resolver.resolveActivePosition("1", null, 999L);
@@ -52,7 +56,7 @@ class MailRoleContextResolverTest {
     @Test
     void resolveActivePosition_withJwtClaimNoHeader_returnsJwtClaim() {
         when(hrServiceClient.getEmployee(1L)).thenReturn(Optional.of(
-                new EmployeeDto(1L, "N001", "Test User", "AKTIF", null, null, null)
+                new EmployeeDto(1L, "N001", "Test User", "AKTIF", jabatan(100L), null, null)
         ));
 
         Long result = resolver.resolveActivePosition("1", 200L, null);
@@ -63,9 +67,7 @@ class MailRoleContextResolverTest {
     @Test
     void resolveActivePosition_noHeaderNoClaim_returnsDefaultFromHr() {
         when(hrServiceClient.getEmployee(1L)).thenReturn(Optional.of(
-                new EmployeeDto(1L, "N001", "Test User", "AKTIF", 
-                        new id.perumdamts.mail.integration.hr.JabatanDto(300L, "J01", "Staff", null),
-                        null, null)
+                new EmployeeDto(1L, "N001", "Test User", "AKTIF", jabatan(300L), null, null)
         ));
 
         Long result = resolver.resolveActivePosition("1", null, null);
@@ -76,9 +78,7 @@ class MailRoleContextResolverTest {
     @Test
     void isPLT_withDifferentPosition_returnsTrue() {
         when(hrServiceClient.getEmployee(1L)).thenReturn(Optional.of(
-                new EmployeeDto(1L, "N001", "Test User", "AKTIF",
-                        new id.perumdamts.mail.integration.hr.JabatanDto(100L, "J01", "Sekretaris", null),
-                        null, null)
+                new EmployeeDto(1L, "N001", "Test User", "AKTIF", jabatan(100L), null, null)
         ));
 
         boolean result = resolver.isPLT("1", 200L);
@@ -89,9 +89,7 @@ class MailRoleContextResolverTest {
     @Test
     void isPLT_withSamePosition_returnsFalse() {
         when(hrServiceClient.getEmployee(1L)).thenReturn(Optional.of(
-                new EmployeeDto(1L, "N001", "Test User", "AKTIF",
-                        new id.perumdamts.mail.integration.hr.JabatanDto(100L, "J01", "Staff", null),
-                        null, null)
+                new EmployeeDto(1L, "N001", "Test User", "AKTIF", jabatan(100L), null, null)
         ));
 
         boolean result = resolver.isPLT("1", 100L);
