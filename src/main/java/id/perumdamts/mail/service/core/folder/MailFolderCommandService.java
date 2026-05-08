@@ -124,6 +124,16 @@ public class MailFolderCommandService {
         userTaskCommandService.purgeTrash(userId);
     }
 
+    @Transactional
+    @CacheEvict(value = CacheConfig.CacheNames.MAIL_FOLDER, key = "'tree:' + #userId")
+    public void ensureSystemFolders(Long userId) {
+        if (folderRepository.existsByOwnerIdAndStatus(userId, 1)) {
+            return;
+        }
+        var personalRoot = new MailFolder(userId, SystemFolder.PERSONAL_ROOT.getId(), "Personal Folder");
+        folderRepository.save(personalRoot);
+    }
+
     private MailFolder getOwnedPersonalFolder(Long userId, Long folderId) {
         var folder = folderRepository.findById(folderId)
                 .orElseThrow(() -> new EntityNotFoundException("Folder not found: " + folderId));

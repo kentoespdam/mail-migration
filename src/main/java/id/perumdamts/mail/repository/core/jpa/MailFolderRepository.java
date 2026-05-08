@@ -24,4 +24,6 @@ public interface MailFolderRepository extends JpaRepository<MailFolder, Long> {
     Optional<MailFolder> findByOwnerIdAndParentFolderIdAndName(Long ownerId, Long parentFolderId, String name);
 
     long countByOwnerIdAndParentFolderId(Long ownerId, Long parentFolderId);
+
+    boolean existsByOwnerIdAndStatus(Long ownerId, int status);
 }

@@ -91,6 +91,7 @@ class MailFolderControllerTest {
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().name()).isEqualTo("INBOX");
         verify(queryService).getFolderTree(1L);
+        verify(commandService).ensureSystemFolders(1L);
     }
 
     @Test
@@ -103,6 +104,7 @@ class MailFolderControllerTest {
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().unread()).isEqualTo(5L);
         verify(queryService).getCounters(1L);
+        verify(commandService).ensureSystemFolders(1L);
     }
 
     @Test
@@ -180,5 +182,25 @@ class MailFolderControllerTest {
         controller.emptyTrash(principal);
 
         verify(commandService).emptyTrash(1L);
+    }
+
+    @Test
+    void getFolderTree_shouldCallEnsureSystemFolders_onFirstAccess() {
+        var folders = List.of(sampleFolderResponse());
+        when(queryService.getFolderTree(1L)).thenReturn(folders);
+
+        controller.getFolderTree(principal);
+
+        verify(commandService).ensureSystemFolders(1L);
+    }
+
+    @Test
+    void getCounters_shouldCallEnsureSystemFolders_onFirstAccess() {
+        var counters = List.of(sampleCounterResponse());
+        when(queryService.getCounters(1L)).thenReturn(counters);
+
+        controller.getCounters(principal);
+
+        verify(commandService).ensureSystemFolders(1L);
     }
 }

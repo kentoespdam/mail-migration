@@ -42,17 +42,21 @@ public class MailFolderController {
 
     /**
      * Get folder tree untuk user (system + personal folders) dengan counter badge.
+     * Lazy create personal root folder on first access.
      */
     @GetMapping("/folders")
     public List<MailFolderResponse> getFolderTree(@AuthenticationPrincipal MailPrincipal principal) {
+        commandService.ensureSystemFolders(principal.userIdLong());
         return queryService.getFolderTree(principal.userIdLong());
     }
 
     /**
      * Get counter badge per folder (unread/total).
+     * Lazy create personal root folder on first access.
      */
     @GetMapping("/folders/counters")
     public List<FolderCounterResponse> getCounters(@AuthenticationPrincipal MailPrincipal principal) {
+        commandService.ensureSystemFolders(principal.userIdLong());
         return queryService.getCounters(principal.userIdLong());
     }
 
