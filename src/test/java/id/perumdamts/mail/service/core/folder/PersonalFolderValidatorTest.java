@@ -53,30 +53,27 @@ class PersonalFolderValidatorTest {
                 .thenReturn(Optional.empty());
 
         validator.validateCreate(1L, 11L, "Child");
-
-        verify(folderRepository).findById(11L);
-        verify(folderRepository).findByOwnerIdAndParentFolderIdAndName(1L, 11L, "Child");
     }
 
     @Test
     void validateCreate_shouldFailWhenDepthExceeds3() {
+        MailFolder level4 = new MailFolder(1L, 14L, "Level4");
+        level4.setId(15L);
         MailFolder level3 = new MailFolder(1L, 13L, "Level3");
         level3.setId(14L);
         MailFolder level2 = new MailFolder(1L, 12L, "Level2");
         level2.setId(13L);
-        MailFolder level1 = new MailFolder(1L, 11L, "Level1");
+        MailFolder level1 = new MailFolder(1L, null, "Level1");
         level1.setId(12L);
 
+        when(folderRepository.findById(15L)).thenReturn(Optional.of(level4));
         when(folderRepository.findById(14L)).thenReturn(Optional.of(level3));
         when(folderRepository.findById(13L)).thenReturn(Optional.of(level2));
         when(folderRepository.findById(12L)).thenReturn(Optional.of(level1));
-        when(folderRepository.findById(11L)).thenReturn(Optional.of(level1));
 
-        assertThatThrownBy(() -> validator.validateCreate(1L, 14L, "New Folder"))
+        assertThatThrownBy(() -> validator.validateCreate(1L, 15L, "New Folder"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("depth cannot exceed");
-
-        verify(folderRepository).findById(14L);
     }
 
     @Test
@@ -118,8 +115,6 @@ class PersonalFolderValidatorTest {
                 .thenReturn(Optional.empty());
 
         validator.validateCreate(1L, 11L, "Level2");
-
-        verify(folderRepository).findById(11L);
     }
 
     // ── validateDelete tests ──

@@ -37,7 +37,7 @@ HITL discovery dan AFK independent. Tidak ada blocker antar wave 1.
 | # | Beads | GH | Topik | Output | Status |
 |---|---|---|---|---|---|
 | 1a | `mail-service-6eb` | [#57](https://github.com/kentoespdam/mail-migration/issues/57) | **Plt model** (emp_pos_id vs employee_assignment) | ADR — blocker untuk role-in-context | [x] |
-| 1b | `mail-service-293` | [#60](https://github.com/kentoespdam/mail-migration/issues/60) | Sender snapshot strategy (JSON column vs reconstruct) | ADR | [ ] |
+| 1b | `mail-service-293` | [#60](https://github.com/kentoespdam/mail-migration/issues/60) | Sender snapshot strategy (JSON column vs reconstruct) | ADR | [x] |
 | 1c | `mail-service-qej` | [#61](https://github.com/kentoespdam/mail-migration/issues/61) | HR cache invalidation protocol (webhook/Kafka/Redis pub-sub) | ADR + endpoint stub | [ ] |
 | 1d | `mail-service-aaj` | [#64](https://github.com/kentoespdam/mail-migration/issues/64) | Legacy `folder_status=3` migration (skip vs DELETED) | ADR + migration script update | [ ] |
 | 1e | `mail-service-4kp` | [#65](https://github.com/kentoespdam/mail-migration/issues/65) | Folder counter badge (total vs unread) | ADR | [ ] |
@@ -52,7 +52,7 @@ HITL discovery dan AFK independent. Tidak ada blocker antar wave 1.
 |---|---|---|---|---|---|
 | 1j | `mail-service-8cq` | [#55](https://github.com/kentoespdam/mail-migration/issues/55) | DispositionStatusDeriver + status endpoint (Redis 5min) | Stories 1, 2, 4, 6 | [x] |
 | 1k | `mail-service-31c` | [#56](https://github.com/kentoespdam/mail-migration/issues/56) | Auto-prefix "Fwd:" pada child mail subject | Story 5 | [x] |
-| 1l | `mail-service-imv` | [#62](https://github.com/kentoespdam/mail-migration/issues/62) | PersonalFolderValidator (depth-3, unique, empty-check) | Stories 13–15 | [ ] |
+| 1l | `mail-service-imv` | [#62](https://github.com/kentoespdam/mail-migration/issues/62) | PersonalFolderValidator (depth-3, unique, empty-check) | Stories 13–15 | [x] |
 | 1m | `mail-service-81y` | [#63](https://github.com/kentoespdam/mail-migration/issues/63) | Lazy system folders pada first login | Story 16 | [ ] |
 | 1n | `mail-service-5l7` | [#66](https://github.com/kentoespdam/mail-migration/issues/66) | MailSentEvent → MailResponseTimeListener async | Story 23 | [ ] |
 | 1o | `mail-service-bj3` | [#71](https://github.com/kentoespdam/mail-migration/issues/71) | MailSignatureService.signMail + POST /sign | Stories 25, 29, 30 | [ ] |

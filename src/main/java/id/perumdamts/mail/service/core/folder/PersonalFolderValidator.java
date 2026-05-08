@@ -7,7 +7,9 @@ import id.perumdamts.mail.repository.core.jpa.UserTaskRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class PersonalFolderValidator {
@@ -58,8 +60,13 @@ public class PersonalFolderValidator {
         }
         int depth = 0;
         Long currentId = folderId;
+        Set<Long> visited = new HashSet<>();
 
         while (currentId != null && SystemFolder.isPersonalFolder(currentId)) {
+            if (visited.contains(currentId)) {
+                throw new IllegalStateException("Circular folder reference detected");
+            }
+            visited.add(currentId);
             depth++;
             MailFolder folder = folderRepository.findById(currentId)
                     .orElseThrow(() -> new EntityNotFoundException("Folder not found: " + folderId));
