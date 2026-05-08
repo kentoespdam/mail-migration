@@ -1,3 +1,4 @@
 # Gemini Instructions
 
-Read `AGENTS.md` for issue tracking, shell rules, session completion, and context discovery workflow.
+Refer to `AGENTS.md` for tools (`beads`, `graphify`, `context7`) and workflow.
+Follow `CLAUDE.md` for build/test commands and `memory.md` for project specs.

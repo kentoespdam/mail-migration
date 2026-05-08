@@ -1133,10 +1133,7 @@ diberi posisi plt sebagai satu-satunya posisi aktif.
   optional "(posisi terkini)" runtime — bukan "(posisi saat kirim)".
 
 **Open question (tindak lanjut)**
-- Plt: apakah `employee.emp_pos_id` di-update langsung saat plt aktif,
-  atau ada tabel terpisah `employee_assignment(emp_id, pos_id, type,
-  start, end)`? Jika kedua, perlu integrasi HR untuk pick "active
-  assignment" pada timestamp. Konfirmasi dengan tim HR.
+- [RESOLVED] Plt: menggunakan Opsi 1 (direct update `employee.emp_pos_id`). Lihat `docs/adr/001-plt-model-representation.md`.
 - Mutasi inflight: apakah perlu notifikasi otomatis ke atasan baru saat
   ada mail belum-diproses milik user yang dimutasi? Tidak di MVP, tapi
   worth tracked.

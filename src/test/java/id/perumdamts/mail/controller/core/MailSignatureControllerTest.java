@@ -4,7 +4,10 @@ import id.perumdamts.mail.dto.core.mail.MailSignatureVerificationResponse;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.mail.MailSignatureService;
+import id.perumdamts.mail.service.security.RateLimitService;
 import id.perumdamts.mail.util.SqidsEncoder;
+import io.github.bucket4j.Bucket;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +27,16 @@ class MailSignatureControllerTest {
     private MailSignatureService signatureService;
 
     @Mock
+    private RateLimitService rateLimitService;
+
+    @Mock
     private SqidsEncoder encoder;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private Bucket bucket;
 
     private MailSignatureController controller;
 
@@ -32,7 +44,7 @@ class MailSignatureControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new MailSignatureController(signatureService, encoder);
+        controller = new MailSignatureController(signatureService, rateLimitService, encoder);
         principal = new MailPrincipal("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
@@ -54,9 +66,13 @@ class MailSignatureControllerTest {
         String authCode = "valid-code";
         MailSignatureVerificationResponse response = MailSignatureVerificationResponse.valid(
                 "1", "001", "Subject", null, "User", "127.0.0.1");
+        
+        when(request.getRemoteAddr()).thenReturn("127.0.0.1");
+        when(rateLimitService.resolveBucket("127.0.0.1")).thenReturn(bucket);
+        when(bucket.tryConsume(1)).thenReturn(true);
         when(signatureService.verifySignature(authCode)).thenReturn(response);
 
-        MailSignatureVerificationResponse result = controller.verifySignature(authCode);
+        MailSignatureVerificationResponse result = controller.verifySignature(authCode, request);
 
         assertThat(result).isEqualTo(response);
         verify(signatureService).verifySignature(authCode);

@@ -20,14 +20,14 @@
 
 ## Architecture Principles
 
-- **CQRS-lite**: `CommandService` (JPA write) + `QueryService` (JOOQ read)
-- **Layered**: Controller → Service → Repository · Domain Events via `@TransactionalEventListener` + `@Async`
-- **Soft Delete**: `@SQLRestriction("status != 'DELETED'")` on all entities · `MailFolder`: `folder_status = 1` (1=Active, 3=Deleted)
-- **Security**: `AppWriteAuthFilter extends OncePerRequestFilter` — JWT validation per request
-- **Tenant**: Replace `CLIENT_CODE if-else` with `TenantConfig`
-- **Virtual Threads**: `spring.threads.virtual.enabled: true` — avoid `synchronized` (use `ReentrantLock`)
-- **CQRS Split**: All core modules now follow Command/Query separation (Folder, Recipient, Mail, Archive, Publication)
-- **Performance**: FULLTEXT index on `mail` (subject, content) for optimized global search via `MATCH ... AGAINST`
+- **IDs**: **Sqids** for external (String) in Controller/DTO → decode to internal Long/Integer in Service.
+- **CQRS-lite**: `CommandService` (JPA write) + `QueryService` (JOOQ read).
+- **Security**: `AppWriteAuthFilter` JWT validation + **UserTask** ownership check for all mail/attachment ops.
+- **Layered**: Controller → Service → Repository · Domain Events via `@TransactionalEventListener` + `@Async`.
+- **Soft Delete**: `@SQLRestriction("status != 'DELETED'")` on all entities · `MailFolder`: `folder_status = 1` (1=Active, 3=Deleted).
+- **Tenant**: Replace `CLIENT_CODE if-else` with `TenantConfig`.
+- **Virtual Threads**: `spring.threads.virtual.enabled: true` — avoid `synchronized` (use `ReentrantLock`).
+- **Performance**: FULLTEXT index on `mail` (subject, content) for optimized global search via `MATCH ... AGAINST`.
 
 ---
 

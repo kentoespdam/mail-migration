@@ -101,6 +101,11 @@ app:
     inbox-sort-ascending: false
     default-mail-type-id: 1
     default-mail-category-id: 1
+  # ── Rate Limit ──
+  rate-limit:
+    verify-sign:
+      capacity: ${RATE_LIMIT_VERIFY_CAPACITY:30}
+      duration: ${RATE_LIMIT_VERIFY_DURATION:1m}
   # ── Scheduler ──
   scheduler:
     publication-notif:

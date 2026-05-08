@@ -86,6 +86,9 @@ dependencies {
     // == Actuator ==
     implementation("org.springframework.boot:spring-boot-starter-actuator")
 
+    // == Bucket4j — Rate Limiting ==
+    implementation("com.bucket4j:bucket4j-core:8.10.1")
+
     // == Sqids — obfuscated public IDs ==
     implementation("org.sqids:sqids:0.1.0")
 
