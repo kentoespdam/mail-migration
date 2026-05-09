@@ -1,8 +1,6 @@
 package id.perumdamts.mail.config;
 
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
-import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
@@ -31,7 +29,7 @@ class CacheSerializationTest {
     @Test
     void shouldSerializeAndDeserializePublicationResponse() {
         PublicationResponse response = new PublicationResponse(
-                "pbl_1", "Title", "Desc", null, "PUBLISHED",
+                new id.perumdamts.mail.dto.id.PublicationId(1L), "Title", "Desc", null, "PUBLISHED",
                 LocalDateTime.now(), "file.pdf", 100, "User", "Title",
                 LocalDateTime.now(), LocalDateTime.now()
         );
@@ -50,7 +48,7 @@ class CacheSerializationTest {
     @Test
     void shouldSerializeAndDeserializePage() {
         PublicationResponse p1 = new PublicationResponse(
-                "pbl_1", "Title 1", "Desc 1", null, "PUBLISHED",
+                new id.perumdamts.mail.dto.id.PublicationId(1L), "Title 1", "Desc 1", null, "PUBLISHED",
                 LocalDateTime.now(), "file1.pdf", 100, "User", "Title",
                 LocalDateTime.now(), LocalDateTime.now()
         );

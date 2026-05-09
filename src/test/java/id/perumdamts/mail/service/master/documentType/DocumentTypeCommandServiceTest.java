@@ -2,7 +2,6 @@ package id.perumdamts.mail.service.master.documentType;
 
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
 import id.perumdamts.mail.entity.master.DocumentType;
-import id.perumdamts.mail.enums.RecordStatus;
 import id.perumdamts.mail.enums.RecordStatusActive;
 import id.perumdamts.mail.repository.master.jooq.DocumentTypeQueryRepository;
 import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;

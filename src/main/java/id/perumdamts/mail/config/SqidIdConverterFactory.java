@@ -8,6 +8,8 @@ import id.perumdamts.mail.dto.id.marker.User;
 import id.perumdamts.mail.entity.core.Attachment;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.entity.core.Publication;
+import id.perumdamts.mail.entity.master.AllowedFileType;
+import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.entity.master.MailCategory;
 import id.perumdamts.mail.entity.master.MailType;
 import id.perumdamts.mail.entity.master.MessageTemplate;
@@ -33,6 +35,8 @@ public class SqidIdConverterFactory implements ConverterFactory<String, SqidId> 
             Map.entry(MailCategoryId.class, MailCategory.class),
             Map.entry(AttachmentId.class, Attachment.class),
             Map.entry(PublicationId.class, Publication.class),
+            Map.entry(DocumentTypeId.class, DocumentType.class),
+            Map.entry(AllowedFileTypeId.class, AllowedFileType.class),
             Map.entry(QuickMessageId.class, QuickMessage.class),
             Map.entry(MessageTemplateId.class, MessageTemplate.class),
             Map.entry(EmployeeId.class, Employee.class),

@@ -4,7 +4,6 @@ import id.perumdamts.mail.integration.hr.EmployeeDto;
 import id.perumdamts.mail.integration.hr.HrServiceClient;
 import id.perumdamts.mail.integration.hr.PageResponse;
 import org.jooq.*;
-import org.jooq.Record;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.MockConnection;
 import org.jooq.tools.jdbc.MockDataProvider;

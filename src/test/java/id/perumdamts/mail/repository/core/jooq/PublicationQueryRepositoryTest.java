@@ -63,7 +63,7 @@ class PublicationQueryRepositoryTest {
 
         assertThat(page.getContent()).hasSize(2);
         assertThat(page.getTotalElements()).isEqualTo(2);
-        assertThat(page.getContent().getFirst().getId()).startsWith("pbl_");
+        assertThat(page.getContent().getFirst().getId().value()).isPositive();
         assertThat(page.getContent().getFirst().getDocumentType()).isNotNull();
         assertThat(page.getContent().get(1).getDocumentType()).isNull();
         assertThat(normalize(capturedSql.get())).contains("p.status <> 'deleted'");
@@ -118,7 +118,7 @@ class PublicationQueryRepositoryTest {
         Optional<PublicationResponse> result = repository.findById(10L);
 
         assertThat(result).isPresent();
-        assertThat(result.get().getId()).startsWith("pbl_");
+        assertThat(result.get().getId().value()).isPositive();
         assertThat(result.get().getDocumentType().getId()).isNotNull();
     }
 

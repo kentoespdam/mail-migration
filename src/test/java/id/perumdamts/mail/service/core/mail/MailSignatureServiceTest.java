@@ -7,7 +7,6 @@ import id.perumdamts.mail.repository.core.jpa.MailArchiveRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
 import id.perumdamts.mail.repository.core.jpa.PrintLogRepository;
 import id.perumdamts.mail.util.SqidsEncoder;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

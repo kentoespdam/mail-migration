@@ -1,6 +1,7 @@
 package id.perumdamts.mail.dto.core.publication;
 
 import id.perumdamts.mail.dto.common.HasSqid;
+import id.perumdamts.mail.dto.id.PublicationId;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import lombok.Value;
 
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 @lombok.AllArgsConstructor
 @lombok.NoArgsConstructor(force = true, access = lombok.AccessLevel.PRIVATE)
 public class PublicationResponse implements HasSqid {
-    String id;
+    PublicationId id;
     String title;
     String description;
     DocumentTypeLookup documentType;

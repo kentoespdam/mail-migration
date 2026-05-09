@@ -4,14 +4,13 @@ import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.core.publication.CreatePublicationRequest;
 import id.perumdamts.mail.dto.core.publication.PublicationCommandResult;
 import id.perumdamts.mail.dto.core.publication.UpdatePublicationRequest;
+import id.perumdamts.mail.dto.id.PublicationId;
 import id.perumdamts.mail.entity.core.Publication;
-import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.event.PublicationPublishedEvent;
 import id.perumdamts.mail.repository.core.jpa.PublicationRepository;
 import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.master.allowedFileType.AllowedFileTypeService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +33,6 @@ public class PublicationCommandServiceImpl implements PublicationCommandHandler 
     private final AllowedFileTypeService allowedFileTypeService;
     private final ApplicationEventPublisher eventPublisher;
     private final PublicationFileStorageService fileStorageService;
-    private final SqidsEncoder encoder;
 
     @Override
     @Transactional
@@ -44,8 +42,7 @@ public class PublicationCommandServiceImpl implements PublicationCommandHandler 
         var pub = new Publication();
         pub.setTitle(request.getTitle());
         pub.setDescription(request.getDescription());
-        long documentTypeId = encoder.decode(DocumentType.class, request.getDocumentTypeId());
-        pub.setDocumentType(documentTypeRepository.getReferenceById(documentTypeId));
+        pub.setDocumentType(documentTypeRepository.getReferenceById(request.getDocumentTypeId().value()));
         pub.setCreatedByUserId(Integer.parseInt(principal.userId()));
         pub.setCreatedByName(principal.name());
         pub.setCreatedAt(LocalDateTime.now());
@@ -79,8 +76,7 @@ public class PublicationCommandServiceImpl implements PublicationCommandHandler 
 
         pub.setTitle(request.getTitle());
         pub.setDescription(request.getDescription());
-        long documentTypeId = encoder.decode(DocumentType.class, request.getDocumentTypeId());
-        pub.setDocumentType(documentTypeRepository.getReferenceById(documentTypeId));
+        pub.setDocumentType(documentTypeRepository.getReferenceById(request.getDocumentTypeId().value()));
         pub.setUpdatedAt(LocalDateTime.now());
 
         var file = request.getFile();
@@ -131,7 +127,7 @@ public class PublicationCommandServiceImpl implements PublicationCommandHandler 
 
     private PublicationCommandResult toResult(Publication pub) {
         return new PublicationCommandResult(
-                encoder.encode(Publication.class, pub.getId()),
+                new PublicationId(pub.getId()),
                 pub.getStatus().name(),
                 pub.getUpdatedAt() != null ? pub.getUpdatedAt() : pub.getCreatedAt()
         );

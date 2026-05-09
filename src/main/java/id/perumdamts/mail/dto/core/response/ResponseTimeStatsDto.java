@@ -1,7 +1,5 @@
 package id.perumdamts.mail.dto.core.response;
 
-import java.time.LocalDate;
-
 public record ResponseTimeStatsDto(
         Long count,
         Double avg,

@@ -8,7 +8,6 @@ import id.perumdamts.mail.entity.core.PrintLog;
 import id.perumdamts.mail.repository.core.jpa.MailArchiveRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
 import id.perumdamts.mail.repository.core.jpa.PrintLogRepository;
-import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;

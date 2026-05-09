@@ -13,6 +13,6 @@ public abstract class DocumentTypeMapper extends SqidMapper<DocumentType> {
     @Mapping(target = "publicationCount", expression = "java(entity.getPublications() != null ? entity.getPublications().size() : 0)")
     public abstract DocumentTypeResponse toResponse(DocumentType entity);
 
-    @Mapping(target = "id", expression = "java(sqid(entity))")
+    @Mapping(target = "id", expression = "java(new id.perumdamts.mail.dto.id.DocumentTypeId(entity.getId()))")
     public abstract DocumentTypeLookup toLookup(DocumentType entity);
 }
