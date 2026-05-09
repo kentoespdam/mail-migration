@@ -25,7 +25,7 @@ Legend: **AFK** = autonomous · 🔒 = blocked-by · ⚠️ = side-effect bug fi
 
 | # | Beads | Tipe | Slice | Catatan | Status |
 |---|---|---|---|---|---|
-| 0a | `mail-service-hzx` | AFK · P2 | `SqidId` sealed interface + 11 record wrapper di `dto/id/`, `SqidIdConverter` (Spring `Converter`), `SqidJsonModule` (`@JsonComponent`), `RestControllerAdvice` map `IllegalArgumentException` decoder → 400 | Tidak menyentuh controller/DTO existing — semua test lama tetap hijau | [ ] |
+| 0a | `mail-service-hzx` | AFK · P2 | `SqidId` sealed interface + 11 record wrapper di `dto/id/`, `SqidIdConverter` (Spring `Converter`), `SqidJsonModule` (`@JsonComponent`), `RestControllerAdvice` map `IllegalArgumentException` decoder → 400 | Tidak menyentuh controller/DTO existing — semua test lama tetap hijau | [x] |
 
 ---
 
