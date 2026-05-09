@@ -2,8 +2,6 @@ package id.perumdamts.mail.repository.master.jooq;
 
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageParams;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageResponse;
-import id.perumdamts.mail.entity.master.QuickMessage;
-import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -22,7 +20,6 @@ import static org.jooq.impl.DSL.*;
 @RequiredArgsConstructor
 public class QuickMessageQueryRepository {
     private final DSLContext dsl;
-    private final SqidsEncoder encoder;
 
     public Page<QuickMessageResponse> findAll(QuickMessageParams params) {
         Condition condition = field("ps.is_deleted").eq(0);
@@ -69,7 +66,7 @@ public class QuickMessageQueryRepository {
     private QuickMessageResponse mapRecordToResponse(Record r) {
         Long id = r.get(field("ps.id"), Long.class);
         return new QuickMessageResponse(
-                encoder.encode(QuickMessage.class, id),
+                new id.perumdamts.mail.dto.id.QuickMessageId(id),
                 r.get(field("ps.pesan"), String.class));
     }
 }

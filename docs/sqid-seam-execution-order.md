@@ -33,7 +33,7 @@ Legend: **AFK** = autonomous · 🔒 = blocked-by · ⚠️ = side-effect bug fi
 
 | # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
-| 1a | `mail-service-64h` | AFK · P2 | Migrasi **QuickMessage** ke typed wrapper (controller path var, request/response DTO, mapper) | `mail-service-hzx` (0a) | [ ] |
+| 1a | `mail-service-64h` | AFK · P2 | Migrasi **QuickMessage** ke typed wrapper (controller path var, request/response DTO, mapper) | `mail-service-hzx` (0a) | [x] |
 
 **Acceptance gate**: setelah 1a, wire JSON harus identik dengan sebelumnya
 (klien tidak melihat perubahan), dan `grep encoder.decode/encode` di scope
