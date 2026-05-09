@@ -1,6 +1,5 @@
 package id.perumdamts.mail.dto.core.folder;
 
-import id.perumdamts.mail.dto.common.SqidMapper;
 import id.perumdamts.mail.dto.id.MailFolderId;
 import id.perumdamts.mail.entity.core.MailFolder;
 import org.mapstruct.Mapper;
@@ -12,7 +11,7 @@ import org.mapstruct.MappingConstants;
  * Menggunakan typed wrappers untuk ID.
  */
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public abstract class MailFolderMapper extends SqidMapper<MailFolder> {
+public abstract class MailFolderMapper {
 
     @Mapping(target = "id", expression = "java(toFolderId(entity))")
     @Mapping(target = "parentFolderId", expression = "java(entity.getParentFolderId() != null ? new MailFolderId(entity.getParentFolderId()) : null)")

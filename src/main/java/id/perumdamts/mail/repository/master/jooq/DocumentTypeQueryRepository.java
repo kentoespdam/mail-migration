@@ -1,10 +1,9 @@
 package id.perumdamts.mail.repository.master.jooq;
 
+import id.perumdamts.mail.dto.id.DocumentTypeId;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeParams;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
-import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.enums.RecordStatusActive;
-import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
@@ -26,7 +25,6 @@ import static org.jooq.impl.DSL.*;
 public class DocumentTypeQueryRepository {
 
     private final DSLContext dsl;
-    private final SqidsEncoder encoder;
 
     public Page<DocumentTypeResponse> findAll(DocumentTypeParams params) {
         Condition condition = field("jd.is_deleted").eq(0);
@@ -85,7 +83,7 @@ public class DocumentTypeQueryRepository {
     private DocumentTypeResponse mapRecordToResponse(Record r) {
         Long docId = r.get(field("jd.id"), Long.class);
         return new DocumentTypeResponse(
-                encoder.encode(DocumentType.class, docId),
+                new DocumentTypeId(docId),
                 r.get(field("jd.jenis_dokumen"), String.class),
                 RecordStatusActive.valueOf(r.get(field("jd.status_new"), String.class)),
                 r.get(field("publication_count"), Long.class));

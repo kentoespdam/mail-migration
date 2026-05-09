@@ -1,6 +1,5 @@
 package id.perumdamts.mail.dto.core.recipient;
 
-import id.perumdamts.mail.dto.common.SqidMapper;
 import id.perumdamts.mail.dto.id.EmployeeId;
 import id.perumdamts.mail.dto.id.MailRecipientId;
 import id.perumdamts.mail.dto.id.UserId;
@@ -10,7 +9,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public abstract class RecipientMapper extends SqidMapper<MailRecipient> {
+public abstract class RecipientMapper {
 
     @Mapping(target = "id", expression = "java(toRecipientId(entity))")
     @Mapping(target = "employee", expression = "java(toEmployeeDto(entity))")

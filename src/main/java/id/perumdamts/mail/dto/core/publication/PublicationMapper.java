@@ -1,6 +1,5 @@
 package id.perumdamts.mail.dto.core.publication;
 
-import id.perumdamts.mail.dto.common.SqidMapper;
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.entity.core.Publication;
@@ -11,7 +10,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public abstract class PublicationMapper extends SqidMapper<Publication> {
+public abstract class PublicationMapper {
 
     @Mapping(target = "id", expression = "java(new PublicationId(entity.getId()))")
     @Mapping(source = "documentType", target = "documentType")

@@ -1,6 +1,6 @@
 # ADR-010: Opaque External Id via Typed Wrappers
 
-- **Status**: Accepted
+- **Status**: Final
 - **Date**: 2026-05-09
 - **Supersedes**: —
 - **Related**: `SqidsEncoder`, `MailMapper`, all controllers in `controller/core` & `controller/master`

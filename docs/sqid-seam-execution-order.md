@@ -88,7 +88,7 @@ multiple wrapper types dalam satu DTO, dan kompiler-tolak class-mismatch.
 
 | # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
-| 5a | `mail-service-8hr` | AFK · P3 | Sweep: `grep encoder.decode/encode` di `controller/` + mapper = 0 hit. ArchUnit rule (opsional) cegah controller/mapper memanggil `SqidsEncoder` langsung. Konfirmasi ADR-010 status final | `mail-service-een` (4a) | [ ] |
+| 5a | `mail-service-8hr` | AFK · P3 | Sweep: `grep encoder.decode/encode` di `controller/` + mapper = 0 hit. ArchUnit rule (opsional) cegah controller/mapper memanggil `SqidsEncoder` langsung. Konfirmasi ADR-010 status final | `mail-service-een` (4a) | [x] |
 
 ---
 

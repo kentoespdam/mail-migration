@@ -1,13 +1,12 @@
 package id.perumdamts.mail.controller.master;
 
+import id.perumdamts.mail.dto.id.DocumentTypeId;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeParams;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeRequest;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
-import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.service.master.documentType.DocumentTypeCommandService;
 import id.perumdamts.mail.service.master.documentType.DocumentTypeQueryService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -25,7 +24,6 @@ public class DocumentTypeController {
 
     private final DocumentTypeCommandService commandService;
     private final DocumentTypeQueryService queryService;
-    private final SqidsEncoder encoder;
 
     @GetMapping
     public PagedModel<DocumentTypeResponse> findAll(@ParameterObject DocumentTypeParams params) {
@@ -38,9 +36,8 @@ public class DocumentTypeController {
     }
 
     @GetMapping("/{id}")
-    public DocumentTypeResponse findById(@PathVariable String id) {
-        long rawId = encoder.decode(DocumentType.class, id);
-        return queryService.findById(rawId);
+    public DocumentTypeResponse findById(@PathVariable DocumentTypeId id) {
+        return queryService.findById(id.value());
     }
 
     @PostMapping
@@ -49,21 +46,18 @@ public class DocumentTypeController {
     }
 
     @PutMapping("/{id}")
-    public DocumentTypeResponse update(@PathVariable String id, @Valid @RequestBody DocumentTypeRequest request) {
-        long rawId = encoder.decode(DocumentType.class, id);
-        return commandService.update(rawId, request);
+    public DocumentTypeResponse update(@PathVariable DocumentTypeId id, @Valid @RequestBody DocumentTypeRequest request) {
+        return commandService.update(id.value(), request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String id) {
-        long rawId = encoder.decode(DocumentType.class, id);
-        commandService.delete(rawId);
+    public void delete(@PathVariable DocumentTypeId id) {
+        commandService.delete(id.value());
     }
 
     @PatchMapping("/{id}/status")
-    public DocumentTypeResponse toggleStatus(@PathVariable String id) {
-        long rawId = encoder.decode(DocumentType.class, id);
-        return commandService.toggleStatus(rawId);
+    public DocumentTypeResponse toggleStatus(@PathVariable DocumentTypeId id) {
+        return commandService.toggleStatus(id.value());
     }
 }

@@ -1,6 +1,5 @@
 package id.perumdamts.mail.dto.core.mail;
 
-import id.perumdamts.mail.dto.common.SqidMapper;
 import id.perumdamts.mail.dto.core.attachment.AttachmentMapper;
 import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
 import id.perumdamts.mail.dto.id.MailCategoryId;
@@ -19,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public abstract class MailMapper extends SqidMapper<Mail> {
+public abstract class MailMapper {
 
     @Autowired
     protected AttachmentMapper attachmentMapper;
