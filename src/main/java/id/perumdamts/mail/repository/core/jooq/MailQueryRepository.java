@@ -2,6 +2,8 @@ package id.perumdamts.mail.repository.core.jooq;
 
 import id.perumdamts.mail.dto.core.folder.MailFolderLookup;
 import id.perumdamts.mail.dto.core.mail.*;
+import id.perumdamts.mail.dto.id.MailCategoryId;
+import id.perumdamts.mail.dto.id.MailTypeId;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
 import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import id.perumdamts.mail.entity.core.Mail;
@@ -291,14 +293,12 @@ public class MailQueryRepository {
                                 r.get("mailDate", LocalDate.class),
                                 new MailTypeLookup(
                                                 r.get("mailTypeId") != null
-                                                                ? encoder.encode(MailType.class,
-                                                                                r.get("mailTypeId", Long.class))
+                                                                ? new MailTypeId(r.get("mailTypeId", Long.class))
                                                                 : null,
                                                 r.get("mailTypeName", String.class)),
                                 new MailCategoryLookup(
                                                 r.get("mailCategoryId") != null
-                                                                ? encoder.encode(MailCategory.class,
-                                                                                r.get("mailCategoryId", Long.class))
+                                                                ? new MailCategoryId(r.get("mailCategoryId", Long.class))
                                                                 : null,
                                                 r.get("mailCategoryName", String.class)),
                                 r.get("subject", String.class),

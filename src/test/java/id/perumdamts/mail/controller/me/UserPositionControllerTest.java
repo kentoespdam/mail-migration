@@ -1,5 +1,6 @@
 package id.perumdamts.mail.controller.me;
 
+import id.perumdamts.mail.dto.id.PositionId;
 import id.perumdamts.mail.dto.me.PositionResponse;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.me.UserPositionService;
@@ -35,14 +36,14 @@ class UserPositionControllerTest {
     @Test
     void getPositions_shouldReturnPositionList() {
         var positions = List.of(
-                new PositionResponse(10L, "Manager", "IT Division", false, true)
+                new PositionResponse(new PositionId(10L), "Manager", "IT Division", false, true)
         );
         when(service.getPositionsForUser(principal)).thenReturn(positions);
 
         var result = controller.getPositions(principal);
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().getPosId()).isEqualTo(10L);
+        assertThat(result.getFirst().getPosId()).isEqualTo(new PositionId(10L));
         assertThat(result.getFirst().isActive()).isTrue();
         assertThat(result.getFirst().isPlt()).isFalse();
     }
@@ -50,7 +51,7 @@ class UserPositionControllerTest {
     @Test
     void getPositions_shouldReturnPltPosition() {
         var positions = List.of(
-                new PositionResponse(10L, "Manager", "IT Division", true, false)
+                new PositionResponse(new PositionId(10L), "Manager", "IT Division", true, false)
         );
         when(service.getPositionsForUser(principal)).thenReturn(positions);
 

@@ -3,12 +3,12 @@ package id.perumdamts.mail.dto.core.mail;
 import id.perumdamts.mail.dto.common.SqidMapper;
 import id.perumdamts.mail.dto.core.attachment.AttachmentMapper;
 import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
+import id.perumdamts.mail.dto.id.MailCategoryId;
+import id.perumdamts.mail.dto.id.MailTypeId;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
 import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import id.perumdamts.mail.entity.core.Attachment;
 import id.perumdamts.mail.entity.core.Mail;
-import id.perumdamts.mail.entity.master.MailCategory;
-import id.perumdamts.mail.entity.master.MailType;
 import id.perumdamts.mail.util.SqidsEncoder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -51,14 +51,13 @@ public abstract class MailMapper extends SqidMapper<Mail> {
 
     protected MailTypeLookup toTypeDto(Mail entity) {
         return new MailTypeLookup(
-                entity.getMailType() != null ? encoder.encode(MailType.class, entity.getMailType().getId()) : null,
+                entity.getMailType() != null ? new MailTypeId(entity.getMailType().getId()) : null,
                 entity.getMailType() != null ? entity.getMailType().getName() : null);
     }
 
     protected MailCategoryLookup toCategoryDto(Mail entity) {
         return new MailCategoryLookup(
-                entity.getMailCategory() != null ? encoder.encode(MailCategory.class, entity.getMailCategory().getId())
-                        : null,
+                entity.getMailCategory() != null ? new MailCategoryId(entity.getMailCategory().getId()) : null,
                 entity.getMailCategory() != null ? entity.getMailCategory().getName() : null);
     }
 

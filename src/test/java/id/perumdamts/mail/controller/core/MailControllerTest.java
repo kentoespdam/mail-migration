@@ -2,6 +2,8 @@ package id.perumdamts.mail.controller.core;
 
 import id.perumdamts.mail.dto.core.folder.MailFolderLookup;
 import id.perumdamts.mail.dto.core.mail.*;
+import id.perumdamts.mail.dto.id.MailCategoryId;
+import id.perumdamts.mail.dto.id.MailTypeId;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
 import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import id.perumdamts.mail.entity.core.Mail;
@@ -65,8 +67,8 @@ class MailControllerTest {
     private MailResponse sampleMailResponse() {
         return new MailResponse(
                 "1", "001/2025", LocalDate.of(2025, 1, 1),
-                new MailTypeLookup("1", "Surat Masuk"),
-                new MailCategoryLookup("1", "Umum"),
+                new MailTypeLookup(new MailTypeId(1L), "Surat Masuk"),
+                new MailCategoryLookup(new MailCategoryId(1L), "Umum"),
                 "Test Subject", "content", "note",
                 LocalDate.of(2025, 1, 15), 1,
                 new MailComponentDto.MailThreadInfoDto(null, null),

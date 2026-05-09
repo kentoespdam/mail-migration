@@ -1,5 +1,6 @@
 package id.perumdamts.mail.controller.master;
 
+import id.perumdamts.mail.dto.id.MessageTemplateId;
 import id.perumdamts.mail.dto.master.messagetemplate.MessageTemplateRequest;
 import id.perumdamts.mail.dto.master.messagetemplate.MessageTemplateResponse;
 import id.perumdamts.mail.service.master.MessageTemplateService;
@@ -17,8 +18,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +29,7 @@ class MessageTemplateControllerTest {
     private MessageTemplateService service;
 
     private MessageTemplateController controller;
+    private final MessageTemplateId id = new MessageTemplateId(1L);
 
     @BeforeEach
     void setUp() {
@@ -37,56 +38,56 @@ class MessageTemplateControllerTest {
 
     @Test
     void findAll_returnsPage() {
-        var response = new MessageTemplateResponse("ID", "Message", "Desc");
+        var response = new MessageTemplateResponse(id, "Message", "Desc");
         when(service.findAll(any(Pageable.class))).thenReturn(new PageImpl<>(List.of(response)));
 
         var result = controller.findAll(PageRequest.of(0, 10));
 
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
-        assertEquals("ID", result.getContent().iterator().next().getId());
+        assertEquals(id, result.getContent().iterator().next().getId());
     }
 
     @Test
     void findById_returnsData() {
-        var response = new MessageTemplateResponse("ID", "Message", "Desc");
-        when(service.findById("ID")).thenReturn(response);
+        var response = new MessageTemplateResponse(id, "Message", "Desc");
+        when(service.findById(id.value())).thenReturn(response);
 
-        var result = controller.findById("ID");
+        var result = controller.findById(id);
 
         assertNotNull(result);
-        assertEquals("ID", result.getId());
+        assertEquals(id, result.getId());
     }
 
     @Test
     void create_returnsCreated() {
         var request = new MessageTemplateRequest("Msg", "Desc");
-        var response = new MessageTemplateResponse("ID", "Msg", "Desc");
+        var response = new MessageTemplateResponse(id, "Msg", "Desc");
         when(service.create(any())).thenReturn(response);
 
         var result = controller.create(request);
 
         assertEquals(HttpStatus.CREATED, result.getStatusCode());
         assertNotNull(result.getBody());
-        assertEquals("ID", result.getBody().getId());
+        assertEquals(id, result.getBody().getId());
     }
 
     @Test
     void update_returnsOk() {
         var request = new MessageTemplateRequest("Msg", "Desc");
-        var response = new MessageTemplateResponse("ID", "Msg", "Desc");
-        when(service.update(eq("ID"), any())).thenReturn(response);
+        var response = new MessageTemplateResponse(id, "Msg", "Desc");
+        when(service.update(eq(id.value()), any())).thenReturn(response);
 
-        var result = controller.update("ID", request);
+        var result = controller.update(id, request);
 
         assertNotNull(result);
-        assertEquals("ID", result.getId());
+        assertEquals(id, result.getId());
     }
 
     @Test
     void delete_returnsOk() {
-        controller.delete("ID");
+        controller.delete(id);
 
-        verify(service).delete("ID");
+        verify(service).delete(id.value());
     }
 }

@@ -5,7 +5,6 @@ import id.perumdamts.mail.dto.master.messagetemplate.MessageTemplateRequest;
 import id.perumdamts.mail.dto.master.messagetemplate.MessageTemplateResponse;
 import id.perumdamts.mail.entity.master.MessageTemplate;
 import id.perumdamts.mail.repository.master.jpa.MessageTemplateRepository;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,14 +19,11 @@ public class MessageTemplateService {
 
     private final MessageTemplateRepository repository;
     private final MessageTemplateMapper mapper;
-    private final SqidsEncoder encoder;
 
     public MessageTemplateService(MessageTemplateRepository repository,
-                                  MessageTemplateMapper mapper,
-                                  SqidsEncoder encoder) {
+                                  MessageTemplateMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
-        this.encoder = encoder;
     }
 
     @Transactional(readOnly = true)
@@ -41,8 +37,8 @@ public class MessageTemplateService {
     }
 
     @Transactional(readOnly = true)
-    public MessageTemplateResponse findById(String id) {
-        return repository.findById(encoder.decode(MessageTemplate.class, id))
+    public MessageTemplateResponse findById(Long id) {
+        return repository.findById(id)
                 .map(mapper::toResponse)
                 .orElseThrow(() -> new EntityNotFoundException("MessageTemplate not found"));
     }
@@ -53,15 +49,15 @@ public class MessageTemplateService {
         return mapper.toResponse(entity);
     }
 
-    public MessageTemplateResponse update(String id, MessageTemplateRequest request) {
-        MessageTemplate entity = repository.findById(encoder.decode(MessageTemplate.class, id))
+    public MessageTemplateResponse update(Long id, MessageTemplateRequest request) {
+        MessageTemplate entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MessageTemplate not found"));
         mapper.updateEntity(entity, request);
         entity = repository.save(entity);
         return mapper.toResponse(entity);
     }
 
-    public void delete(String id) {
-        repository.deleteById(encoder.decode(MessageTemplate.class, id));
+    public void delete(Long id) {
+        repository.deleteById(id);
     }
 }

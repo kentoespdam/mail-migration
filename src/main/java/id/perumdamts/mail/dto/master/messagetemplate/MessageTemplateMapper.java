@@ -1,6 +1,7 @@
 package id.perumdamts.mail.dto.master.messagetemplate;
 
 import id.perumdamts.mail.dto.common.SqidMapper;
+import id.perumdamts.mail.dto.id.MessageTemplateId;
 import id.perumdamts.mail.entity.master.MessageTemplate;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -10,7 +11,7 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public abstract class MessageTemplateMapper extends SqidMapper<MessageTemplate> {
 
-    @Mapping(target = "id", expression = "java(sqid(entity))")
+    @Mapping(target = "id", expression = "java(new MessageTemplateId(entity.getId()))")
     public abstract MessageTemplateResponse toResponse(MessageTemplate entity);
 
     @Mapping(target = "id", ignore = true)

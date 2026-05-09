@@ -47,7 +47,7 @@ Modul-modul tanpa relasi nested. Bisa di-batch satu PR atau split per-modul.
 
 | # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
-| 2a | `mail-service-83t` | AFK · P2 ⚠️ | Migrasi **MessageTemplate + MailType + MailCategory + Office + Position**. Side effect: `MessageTemplateController` yang sebelumnya bypass sqid (id mentah masuk ke service) — kontrak diperbaiki, klien sekarang wajib kirim sqid | `mail-service-64h` (1a) | [ ] |
+| 2a | `mail-service-83t` | AFK · P2 ⚠️ | Migrasi **MessageTemplate + MailType + MailCategory + Office + Position**. Side effect: `MessageTemplateController` yang sebelumnya bypass sqid (id mentah masuk ke service) — kontrak diperbaiki, klien sekarang wajib kirim sqid | `mail-service-64h` (1a) | [x] |
 
 ⚠️ **Catatan kontrak**: Setelah 2a, `MessageTemplateController` berubah
 kontrak (id mentah → sqid). Catat di release note dan koordinasi dengan FE

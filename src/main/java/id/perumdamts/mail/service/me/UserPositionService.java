@@ -2,6 +2,7 @@ package id.perumdamts.mail.service.me;
 
 import id.perumdamts.mail.integration.hr.EmployeeDto;
 import id.perumdamts.mail.integration.hr.HrServiceClient;
+import id.perumdamts.mail.dto.id.PositionId;
 import id.perumdamts.mail.dto.me.PositionResponse;
 import id.perumdamts.mail.security.MailPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class UserPositionService {
         String unitName = emp.organisasiNama();
         boolean isActive = principal.activePosId() != null && principal.activePosId().equals(defPosId);
         boolean isPlt = principal.activePosId() != null && !principal.activePosId().equals(defPosId);
-        PositionResponse defPos = new PositionResponse(defPosId, defPosName, unitName, isPlt, isActive);
+        PositionResponse defPos = new PositionResponse(new PositionId(defPosId), defPosName, unitName, isPlt, isActive);
         return List.of(defPos);
     }
 }

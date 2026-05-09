@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import id.perumdamts.mail.dto.id.MessageTemplateId;
 import id.perumdamts.mail.dto.master.messagetemplate.MessageTemplateRequest;
 import id.perumdamts.mail.dto.master.messagetemplate.MessageTemplateResponse;
 import id.perumdamts.mail.service.master.MessageTemplateService;
@@ -48,8 +49,8 @@ public class MessageTemplateController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get message template by id")
-    public MessageTemplateResponse findById(@PathVariable String id) {
-        return service.findById(id);
+    public MessageTemplateResponse findById(@PathVariable MessageTemplateId id) {
+        return service.findById(id.value());
     }
 
     @PostMapping
@@ -61,14 +62,14 @@ public class MessageTemplateController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update message template")
-    public MessageTemplateResponse update(@PathVariable String id, @Valid @RequestBody MessageTemplateRequest request) {
-        return service.update(id, request);
+    public MessageTemplateResponse update(@PathVariable MessageTemplateId id, @Valid @RequestBody MessageTemplateRequest request) {
+        return service.update(id.value(), request);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete message template")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String id) {
-        service.delete(id);
+    public void delete(@PathVariable MessageTemplateId id) {
+        service.delete(id.value());
     }
 }

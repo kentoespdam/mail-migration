@@ -1,11 +1,10 @@
 package id.perumdamts.mail.repository.master.jooq;
 
+import id.perumdamts.mail.dto.id.MailCategoryId;
+import id.perumdamts.mail.dto.id.MailTypeId;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryParams;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryResponse;
 import id.perumdamts.mail.dto.master.mailType.MailTypeMiniResponse;
-import id.perumdamts.mail.entity.master.MailCategory;
-import id.perumdamts.mail.entity.master.MailType;
-import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -24,7 +23,6 @@ import static org.jooq.impl.DSL.*;
 @RequiredArgsConstructor
 public class MailCategoryQueryRepository {
     private final DSLContext dsl;
-    private final SqidsEncoder encoder;
 
     public Page<MailCategoryResponse> findAll(MailCategoryParams params) {
         Condition condition = field("mc.mcat_status").ne(inline("Deleted"));
@@ -36,9 +34,8 @@ public class MailCategoryQueryRepository {
             );
         }
 
-        if (params.getMailTypeId() != null && !params.getMailTypeId().isBlank()) {
-            long decodedId = encoder.decode(MailType.class, params.getMailTypeId());
-            condition = condition.and(field("mc.mail_type_id").eq(decodedId));
+        if (params.getMailTypeId() != null) {
+            condition = condition.and(field("mc.mail_type_id").eq(params.getMailTypeId().value()));
         }
 
         var records = dsl.select(
@@ -93,8 +90,8 @@ public class MailCategoryQueryRepository {
         Integer sort = r.get(field("mc.sort"), Integer.class);
 
         return new MailCategoryResponse(
-                encoder.encode(MailCategory.class, mcatId),
-                new MailTypeMiniResponse(encoder.encode(MailType.class, mailTypeId), r.get(field("mt.mail_type"), String.class)),
+                new MailCategoryId(mcatId),
+                new MailTypeMiniResponse(new MailTypeId(mailTypeId), r.get(field("mt.mail_type"), String.class)),
                 code,
                 name,
                 code + " - " + name,

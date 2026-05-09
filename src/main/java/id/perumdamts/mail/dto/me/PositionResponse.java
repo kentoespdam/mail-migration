@@ -1,5 +1,6 @@
 package id.perumdamts.mail.dto.me;
 
+import id.perumdamts.mail.dto.id.PositionId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PositionResponse {
-    private Long posId;
+    private PositionId posId;
     private String posName;
     private String unitName;
     private boolean isPlt;

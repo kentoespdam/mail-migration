@@ -8,7 +8,6 @@ import id.perumdamts.mail.entity.master.MailType;
 import id.perumdamts.mail.repository.master.jooq.MailCategoryQueryRepository;
 import id.perumdamts.mail.repository.master.jpa.MailCategoryRepository;
 import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -23,11 +22,10 @@ public class MailCategoryCommandService {
     private final MailCategoryRepository repository;
     private final MailTypeRepository mailTypeRepository;
     private final MailCategoryQueryRepository queryRepository;
-    private final SqidsEncoder encoder;
 
     @CacheEvict(value = CacheConfig.CacheNames.MAIL_CATEGORIES, allEntries = true)
     public MailCategoryResponse create(MailCategoryRequest request) {
-        long mailTypeId = encoder.decode(MailType.class, request.mailTypeId());
+        long mailTypeId = request.mailTypeId().value();
         MailType mailType = getMailTypeOrThrow(mailTypeId);
         if (repository.existsByMailTypeIdAndCode(mailTypeId, request.code())) {
             throw new IllegalStateException(
@@ -43,7 +41,7 @@ public class MailCategoryCommandService {
     public MailCategoryResponse update(Long id, MailCategoryRequest request) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MailCategory not found: " + id));
-        long mailTypeId = encoder.decode(MailType.class, request.mailTypeId());
+        long mailTypeId = request.mailTypeId().value();
         MailType mailType = getMailTypeOrThrow(mailTypeId);
 
         // Check unique constraint if code or type changed
