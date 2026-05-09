@@ -1426,3 +1426,24 @@ QR tetap valid karena cuma point ke record cetak.
 - Crypto signature provider mana yang prioritas (BSrE
   punya BSSN gratis vs PrivyID berbayar)? Belum saatnya
   diputus, tapi catat untuk pemilihan vendor.
+
+### SqidId (Opaque External Id)
+
+Wire-side wrapper untuk id eksternal. Internal id tetap `Long` (BIGINT);
+klien hanya melihat **sqid** — string opaque per-entity (prefix konsonan +
+shuffled alphabet) yang di-encode/decode oleh `SqidsEncoder`.
+
+Bentuknya: `sealed interface SqidId { long value(); }` dengan record per
+entity (`MailId`, `EmployeeId`, `MailTypeId`, `MailCategoryId`,
+`AttachmentId`, `PublicationId`, `QuickMessageId`, `MessageTemplateId`,
+`OfficeId`, `PositionId`, `UserId`, dst) di `dto/id/`.
+
+Dipakai sebagai **tipe DTO request & response** dan **path-var Spring
+`Converter`**. Service / repository / JOOQ tetap menerima `long` —
+controller meng-unwrap di edge.
+
+Tujuan utama: (1) mencegah expose id numerik mentah ke klien, (2) menutup
+bug class-mismatch (kompiler tolak `MailId` di slot `UserId`), (3)
+sentralisasi error mapping (sqid invalid → HTTP 400, bukan 500).
+
+Lihat `docs/adr/010-opaque-external-id-typed-wrappers.md`.
