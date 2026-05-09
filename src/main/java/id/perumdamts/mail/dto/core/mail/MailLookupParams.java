@@ -1,6 +1,7 @@
 package id.perumdamts.mail.dto.core.mail;
 
 import id.perumdamts.mail.dto.common.PagedRequest;
+import id.perumdamts.mail.dto.id.MailFolderId;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,7 +10,7 @@ import java.util.Map;
 @Getter
 @Setter
 public class MailLookupParams extends PagedRequest {
-    private String folderId;
+    private MailFolderId folderId;
 
     private static final Map<String, String> ALLOWED = Map.of(
             "mailDate", "m.m_date",

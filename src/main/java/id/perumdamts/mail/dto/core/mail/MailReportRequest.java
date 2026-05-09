@@ -1,6 +1,8 @@
 package id.perumdamts.mail.dto.core.mail;
 
 import id.perumdamts.mail.dto.common.PagedRequest;
+import id.perumdamts.mail.dto.id.MailCategoryId;
+import id.perumdamts.mail.dto.id.MailTypeId;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,11 +19,10 @@ public class MailReportRequest extends PagedRequest {
             "totalMails", "totalMails");
     private static final String DEFAULT_SORT = "mt.mail_type";
 
-    private String mailTypeId;
-    private String mailCategoryId;
+    private MailTypeId mailTypeId;
+    private MailCategoryId mailCategoryId;
     private LocalDate startDate;
     private LocalDate endDate;
-
     @Override
     protected Map<String, String> allowedSorts() {
         return ALLOWED_SORTS;

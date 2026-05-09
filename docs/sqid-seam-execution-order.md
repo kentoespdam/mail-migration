@@ -70,8 +70,8 @@ bug aktif (tabel attachment masih < `Integer.MAX_VALUE`), tapi latent.
 ## Wave 4 — Modul Terbesar (Mail + Recipient)
 
 | # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
-|---|---|---|---|---|---|
-| 4a | `mail-service-een` | AFK · P2 ⚠️ | Migrasi **Mail + MailRecipient**. Termasuk: `MailController` (11 path var), `MailCreateRequest`/`MailSendRequest`/`MailUpdateRequest`, `RecipientBatchRequest.empIds: List<EmployeeId>`, `MailResponse` + `MailComponentDto` inner records (`createdBy: UserId`, `rootMailId/parentMailId: MailId`, `mailTypeId: MailTypeId`, dst), `MailMapper` (hapus semua manual encode). Fix bug struktural `MailMapper.toAuditDto:73` (`createdBy` di-encode pakai token `Mail.class`) | `mail-service-lsr` (3b) | [ ] |
+|---|---|---|---|---|--------|
+| 4a | `mail-service-een` | AFK · P2 ⚠️ | Migrasi **Mail + MailRecipient**. Termasuk: `MailController` (11 path var), `MailCreateRequest`/`MailSendRequest`/`MailUpdateRequest`, `RecipientBatchRequest.empIds: List<EmployeeId>`, `MailResponse` + `MailComponentDto` inner records (`createdBy: UserId`, `rootMailId/parentMailId: MailId`, `mailTypeId: MailTypeId`, dst), `MailMapper` (hapus semua manual encode). Fix bug struktural `MailMapper.toAuditDto:73` (`createdBy` di-encode pakai token `Mail.class`) | `mail-service-lsr` (3b) | [x]    |
 
 ⚠️ **Catatan kontrak 4a**: Klien yang sebelumnya menerima sqid 'salah'
 untuk `createdBy` (encoded with `Mail.class`) sekarang menerima sqid valid

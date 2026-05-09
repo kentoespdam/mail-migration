@@ -6,7 +6,6 @@ import id.perumdamts.mail.entity.core.PrintLog;
 import id.perumdamts.mail.repository.core.jpa.MailArchiveRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
 import id.perumdamts.mail.repository.core.jpa.PrintLogRepository;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MailSignatureServiceTest {
@@ -31,14 +31,12 @@ class MailSignatureServiceTest {
     private MailArchiveRepository mailArchiveRepository;
     @Mock
     private HttpServletRequest httpServletRequest;
-    @Mock
-    private SqidsEncoder encoder;
 
     private MailSignatureService service;
 
     @BeforeEach
     void setUp() {
-        service = new MailSignatureService(printLogRepository, mailRepository, mailArchiveRepository, httpServletRequest, encoder);
+        service = new MailSignatureService(printLogRepository, mailRepository, mailArchiveRepository, httpServletRequest);
     }
 
     @Test
@@ -90,15 +88,12 @@ class MailSignatureServiceTest {
         when(mail.getMailNumber()).thenReturn("MAIL-001");
         when(mailRepository.findById(mailId)).thenReturn(Optional.of(mail));
 
-        when(encoder.encode(Mail.class, mailId)).thenReturn("encoded-id");
-
         // Act
         MailSignatureVerificationResponse response = service.verifySignature(authCode, "192.168.1.1");
 
         // Assert
         assertTrue(response.valid());
         assertEquals("MAIL-001", response.mailNumber());
-        assertEquals("encoded-id", response.mailId());
         assertEquals("123", response.signerPosition());
     }
 }

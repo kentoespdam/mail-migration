@@ -1,6 +1,7 @@
 package id.perumdamts.mail.service.core.mail;
 
 import id.perumdamts.mail.dto.core.mail.MailSummaryResponse;
+import id.perumdamts.mail.dto.id.MailId;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,11 +33,11 @@ public class MailThreadService {
         }
 
         // Map untuk menyimpan node by ID untuk O(1) lookup
-        Map<String, MailThreadNode> nodeMap = new HashMap<>();
+        Map<MailId, MailThreadNode> nodeMap = new HashMap<>();
 
         // Initialize semua node
         for (MailSummaryResponse mail : flatData) {
-            nodeMap.put(mail.getId(), new MailThreadNode(mail));
+            nodeMap.put(mail.id(), new MailThreadNode(mail));
         }
 
         // Root nodes (yang parent-nya null atau diri sendiri)
@@ -44,10 +45,10 @@ public class MailThreadService {
 
         // Build tree dengan 2-level fallback strategy
         for (MailSummaryResponse mail : flatData) {
-            MailThreadNode node = nodeMap.get(mail.getId());
-            String parentId = mail.getThread().rootMailId() != null ? getParentId(mail) : null;
+            MailThreadNode node = nodeMap.get(mail.id());
+            MailId parentId = mail.thread().rootMailId() != null ? getParentId(mail) : null;
 
-            if (parentId == null || parentId.equals(mail.getId())) {
+            if (parentId == null || parentId.equals(mail.id())) {
                 // Ini adalah root node
                 roots.add(node);
             } else {
@@ -74,9 +75,9 @@ public class MailThreadService {
      * @param parentId ID parent yang dicari
      * @return parent node atau null jika tidak ditemukan
      */
-    private MailThreadNode findNodeWithFallback(Map<String, MailThreadNode> nodeMap,
+    private MailThreadNode findNodeWithFallback(Map<MailId, MailThreadNode> nodeMap,
             MailSummaryResponse current,
-            String parentId) {
+            MailId parentId) {
         // Level 1: Cari parent langsung
         MailThreadNode parent = nodeMap.get(parentId);
         if (parent != null) {
@@ -84,15 +85,15 @@ public class MailThreadService {
         }
 
         // Level 2: Fallback ke root mail
-        if (current.getThread().rootMailId() != null && !current.getThread().rootMailId().equals(current.getId())) {
-            parent = nodeMap.get(current.getThread().rootMailId());
+        if (current.thread().rootMailId() != null && !current.thread().rootMailId().equals(current.id())) {
+            parent = nodeMap.get(current.thread().rootMailId());
             if (parent != null) {
                 return parent;
             }
         }
 
         // Level 3: Fallback ke parent ID jika berbeda dari root
-        if (parentId != null && !parentId.equals(current.getThread().rootMailId())) {
+        if (parentId != null && !parentId.equals(current.thread().rootMailId())) {
             parent = nodeMap.get(parentId);
             return parent;
         }
@@ -105,11 +106,11 @@ public class MailThreadService {
      * Get parent ID dari mail.
      * Prioritaskan parentMailId, fallback ke rootMailId.
      */
-    private String getParentId(MailSummaryResponse mail) {
-        if (mail.getThread().parentMailId() != null) {
-            return mail.getThread().parentMailId();
+    private MailId getParentId(MailSummaryResponse mail) {
+        if (mail.thread().parentMailId() != null) {
+            return mail.thread().parentMailId();
         }
-        return mail.getThread().rootMailId();
+        return mail.thread().rootMailId();
     }
 
     /**

@@ -1,22 +1,17 @@
 package id.perumdamts.mail.dto.core.attachment;
 
 import id.perumdamts.mail.dto.id.AttachmentId;
+import id.perumdamts.mail.dto.id.MailId;
 import id.perumdamts.mail.entity.core.Attachment;
-import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.enums.AttachmentRefType;
-import id.perumdamts.mail.util.SqidsEncoder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedSourcePolicy = ReportingPolicy.IGNORE)
 public abstract class AttachmentMapper {
-
-    @Autowired
-    protected SqidsEncoder encoder;
 
     @Mapping(target = "id", expression = "java(mapAttachmentId(entity))")
     @Mapping(target = "refType", expression = "java(entity.getRefType() != null ? entity.getRefType().getDbValue() : null)")
@@ -39,7 +34,7 @@ public abstract class AttachmentMapper {
             return null;
         AttachmentRefType type = entity.getRefType(); // null-safe guard
         if (type == AttachmentRefType.MAIL) {
-            return encoder.encode(Mail.class, entity.getRefId());
+            return new MailId(entity.getRefId()).toString();
         }
         return String.valueOf(entity.getRefId());
     }

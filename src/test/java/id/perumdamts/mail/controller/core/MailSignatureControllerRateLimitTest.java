@@ -3,8 +3,6 @@ package id.perumdamts.mail.controller.core;
 import id.perumdamts.mail.dto.core.mail.MailSignatureVerificationResponse;
 import id.perumdamts.mail.service.core.mail.MailSignatureService;
 import id.perumdamts.mail.service.security.RateLimitService;
-import id.perumdamts.mail.util.SqidsEncoder;
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,20 +25,11 @@ public class MailSignatureControllerRateLimitTest {
     @Mock
     private MailSignatureService signatureService;
 
-    @Mock
-    private RateLimitService rateLimitService;
-
-    @Mock
-    private SqidsEncoder encoder;
-
-    @Mock
-    private HttpServletRequest request;
-
     private final RateLimitService actualRateLimitService = new RateLimitService();
 
     @BeforeEach
     public void setup() {
-        MailSignatureController controller = new MailSignatureController(signatureService, actualRateLimitService, encoder);
+        MailSignatureController controller = new MailSignatureController(signatureService, actualRateLimitService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -52,32 +41,32 @@ public class MailSignatureControllerRateLimitTest {
         // Hit 30 times
         for (int i = 0; i < 30; i++) {
             mockMvc.perform(get("/api/mails/verify-sign/" + authCode)
-                    .with(req -> {
-                        req.setRemoteAddr("127.0.0.1");
-                        return req;
-                    }))
+                            .with(req -> {
+                                req.setRemoteAddr("127.0.0.1");
+                                return req;
+                            }))
                     .andExpect(status().isOk());
         }
 
         // 31st hit should still be OK (200) but with invalid response as per PRD "always 200"
         mockMvc.perform(get("/api/mails/verify-sign/" + authCode)
-                .with(req -> {
-                    req.setRemoteAddr("127.0.0.1");
-                    return req;
-                }))
+                        .with(req -> {
+                            req.setRemoteAddr("127.0.0.1");
+                            return req;
+                        }))
                 .andExpect(status().isOk())
                 .andExpect(result -> {
                     String content = result.getResponse().getContentAsString();
                     assertThat(content).contains("\"valid\":false");
                     assertThat(content).contains("Too many requests");
                 });
-        
+
         // Different IP should still be OK
         mockMvc.perform(get("/api/mails/verify-sign/" + authCode)
-                .with(req -> {
-                    req.setRemoteAddr("127.0.0.2");
-                    return req;
-                }))
+                        .with(req -> {
+                            req.setRemoteAddr("127.0.0.2");
+                            return req;
+                        }))
                 .andExpect(status().isOk());
     }
 }

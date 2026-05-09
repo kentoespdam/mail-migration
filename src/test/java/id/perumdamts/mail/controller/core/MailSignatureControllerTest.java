@@ -3,11 +3,10 @@ package id.perumdamts.mail.controller.core;
 import id.perumdamts.mail.dto.core.mail.MailSignRequest;
 import id.perumdamts.mail.dto.core.mail.MailSignResponse;
 import id.perumdamts.mail.dto.core.mail.MailSignatureVerificationResponse;
-import id.perumdamts.mail.entity.core.Mail;
+import id.perumdamts.mail.dto.id.MailId;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.mail.MailSignatureService;
 import id.perumdamts.mail.service.security.RateLimitService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +19,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MailSignatureControllerTest {
@@ -30,9 +30,6 @@ class MailSignatureControllerTest {
 
     @Mock
     private RateLimitService rateLimitService;
-
-    @Mock
-    private SqidsEncoder encoder;
 
     @Mock
     private HttpServletRequest request;
@@ -46,7 +43,7 @@ class MailSignatureControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new MailSignatureController(signatureService, rateLimitService, encoder);
+        controller = new MailSignatureController(signatureService, rateLimitService);
         principal = MailPrincipal.from("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("SCOPE_mail:write")));
     }
@@ -54,11 +51,10 @@ class MailSignatureControllerTest {
     @Test
     void signMail_shouldReturnAuthCodeAndQrUrl() {
         MailSignResponse response = new MailSignResponse("generated-code", "http://localhost:8081/api/mails/verify-sign/generated-code");
-        when(encoder.decode(Mail.class, "encoded-id")).thenReturn(1L);
         when(signatureService.signMail(1L, 123L)).thenReturn(response);
 
         MailSignRequest requestBody = new MailSignRequest(123L);
-        MailSignResponse result = controller.signMail(principal, "encoded-id", requestBody);
+        MailSignResponse result = controller.signMail(principal, new MailId(1L), requestBody);
 
         assertThat(result.authCode()).isEqualTo("generated-code");
         assertThat(result.qrUrl()).contains("verify-sign");

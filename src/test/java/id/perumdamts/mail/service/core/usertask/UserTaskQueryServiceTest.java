@@ -2,18 +2,18 @@ package id.perumdamts.mail.service.core.usertask;
 
 import id.perumdamts.mail.entity.core.UserTask;
 import id.perumdamts.mail.repository.core.jooq.UserTaskQueryRepository;
-import id.perumdamts.mail.util.SqidsEncoder;
+import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.jooq.DSLContext;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserTaskQueryServiceTest {
@@ -22,14 +22,12 @@ class UserTaskQueryServiceTest {
     private DSLContext dsl;
     @Mock
     private UserTaskQueryRepository userTaskQueryRepository;
-    @Mock
-    private SqidsEncoder encoder;
 
     private UserTaskQueryService queryService;
 
     @BeforeEach
     void setUp() {
-        queryService = new UserTaskQueryService(dsl, userTaskQueryRepository, encoder);
+        queryService = new UserTaskQueryService(dsl, userTaskQueryRepository);
     }
 
     @Test

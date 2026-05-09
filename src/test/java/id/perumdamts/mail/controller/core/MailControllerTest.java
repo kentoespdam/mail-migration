@@ -2,17 +2,14 @@ package id.perumdamts.mail.controller.core;
 
 import id.perumdamts.mail.dto.core.folder.MailFolderLookup;
 import id.perumdamts.mail.dto.core.mail.*;
-import id.perumdamts.mail.dto.id.MailCategoryId;
-import id.perumdamts.mail.dto.id.MailTypeId;
+import id.perumdamts.mail.dto.id.*;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
 import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
-import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.security.MailPrincipal;
+import id.perumdamts.mail.service.core.mail.DispositionStatusDeriver;
 import id.perumdamts.mail.service.core.mail.MailCommandService;
 import id.perumdamts.mail.service.core.mail.MailQueryService;
 import id.perumdamts.mail.service.core.recipient.MailRecipientQueryService;
-import id.perumdamts.mail.service.core.mail.DispositionStatusDeriver;
-import id.perumdamts.mail.util.SqidsEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,9 +43,6 @@ class MailControllerTest {
     private MailRecipientQueryService recipientQueryService;
 
     @Mock
-    private SqidsEncoder encoder;
-
-    @Mock
     private DispositionStatusDeriver dispositionStatusDeriver;
 
     private MailController controller;
@@ -57,7 +51,7 @@ class MailControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new MailController(commandService, queryService, recipientQueryService, encoder, dispositionStatusDeriver);
+        controller = new MailController(commandService, queryService, recipientQueryService, dispositionStatusDeriver);
         principal = MailPrincipal.from("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
@@ -66,14 +60,14 @@ class MailControllerTest {
 
     private MailResponse sampleMailResponse() {
         return new MailResponse(
-                "1", "001/2025", LocalDate.of(2025, 1, 1),
+                new MailId(1L), "001/2025", LocalDate.of(2025, 1, 1),
                 new MailTypeLookup(new MailTypeId(1L), "Surat Masuk"),
                 new MailCategoryLookup(new MailCategoryId(1L), "Umum"),
                 "Test Subject", "content", "note",
                 LocalDate.of(2025, 1, 15), 1,
                 new MailComponentDto.MailThreadInfoDto(null, null),
                 new MailComponentDto.MailSummaryInfoDto(0, "Recipient"),
-                new MailComponentDto.MailAuditInfoDto("1", "Test User", LocalDateTime.now(), LocalDateTime.now()),
+                new MailComponentDto.MailAuditInfoDto(new UserId(1L), "Test User", LocalDateTime.now(), LocalDateTime.now()),
                 null,
                 null,
                 null,
@@ -84,13 +78,13 @@ class MailControllerTest {
 
     private MailSummaryResponse sampleSummary() {
         return new MailSummaryResponse(
-                "1", "001/2025", LocalDate.of(2025, 1, 1),
+                new MailId(1L), "001/2025", LocalDate.of(2025, 1, 1),
                 "Test Subject",
                 new MailComponentDto.MailAuditInfoDto(null, "Test User", LocalDateTime.now(), null),
                 new MailComponentDto.MailSummaryInfoDto(0, "Recipient"),
-                0, "1",
-                new MailTypeLookup(null, "Surat Masuk"),
-                new MailCategoryLookup(null, "Umum"),
+                0, new MailFolderId(1L),
+                new MailTypeLookup(new MailTypeId(1L), "Surat Masuk"),
+                new MailCategoryLookup(new MailCategoryId(1L), "Umum"),
                 null,
                 new MailFolderLookup(null, null),
                 new MailComponentDto.MailThreadInfoDto(null, null),
@@ -100,7 +94,7 @@ class MailControllerTest {
     private MailCreateRequest sampleCreateRequest() {
         return new MailCreateRequest(
                 "Test Subject", "content", "note",
-                "1", "1", LocalDate.of(2025, 1, 1),
+                new MailTypeId(1L), new MailCategoryId(1L), LocalDate.of(2025, 1, 1),
                 LocalDate.of(2025, 1, 15),
                 null, null, null, null, null, null, null);
     }
@@ -108,7 +102,7 @@ class MailControllerTest {
     private MailUpdateRequest sampleUpdateRequest() {
         return new MailUpdateRequest(
                 "Updated Subject", "new content", "new note",
-                "1", "1", LocalDate.of(2025, 1, 1),
+                new MailTypeId(1L), new MailCategoryId(1L), LocalDate.of(2025, 1, 1),
                 LocalDate.of(2025, 1, 15),
                 null, null, null, null, null, null, null);
     }
@@ -132,7 +126,7 @@ class MailControllerTest {
     void sendMail_shouldReturnCreated() {
         var request = new MailSendRequest(
                 "Subject", "content", "note",
-                "1", "1", LocalDate.of(2025, 1, 1),
+                new MailTypeId(1L), new MailCategoryId(1L), LocalDate.of(2025, 1, 1),
                 LocalDate.of(2025, 1, 15),
                 null, null, null, null, null, null, null,
                 List.of());
@@ -149,10 +143,10 @@ class MailControllerTest {
     void updateDraft_shouldReturnResponse() {
         var request = sampleUpdateRequest();
         var response = sampleMailResponse();
-        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
+        var mailId = new MailId(1L);
         when(commandService.updateDraft(eq(1L), eq(request), eq(principal))).thenReturn(response);
 
-        var result = controller.updateDraft(principal, "1", request);
+        var result = controller.updateDraft(principal, mailId, request);
 
         assertThat(result).isEqualTo(response);
     }
@@ -160,34 +154,34 @@ class MailControllerTest {
     @Test
     void send_shouldReturnResponse() {
         var response = sampleMailResponse();
-        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
+        var mailId = new MailId(1L);
         when(commandService.send(1L, principal)).thenReturn(response);
 
-        var result = controller.send(principal, "1");
+        var result = controller.send(principal, mailId);
 
         assertThat(result).isEqualTo(response);
     }
 
     @Test
     void deleteMail_shouldDelegateToService() {
-        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
-        controller.deleteMail(principal, "1");
+        var mailId = new MailId(1L);
+        controller.deleteMail(principal, mailId);
 
         verify(commandService).deleteMail(1L, principal);
     }
 
     @Test
     void restoreMail_shouldDelegateToService() {
-        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
-        controller.restoreMail(principal, "1");
+        var mailId = new MailId(1L);
+        controller.restoreMail(principal, mailId);
 
         verify(commandService).restoreMail(1L, principal);
     }
 
     @Test
     void markRead_shouldDelegateToService() {
-        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
-        controller.markRead(principal, "1");
+        var mailId = new MailId(1L);
+        controller.markRead(principal, mailId);
 
         verify(commandService).markRead(1L, principal);
     }
@@ -195,22 +189,22 @@ class MailControllerTest {
     @Test
     void getThread_shouldReturnList() {
         var summaries = List.of(sampleSummary());
-        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
+        var mailId = new MailId(1L);
         when(queryService.findThread(1L)).thenReturn(summaries);
 
-        var result = controller.getThread("1");
+        var result = controller.getThread(mailId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().getId()).isEqualTo("1");
+        assertThat(result.getFirst().id()).isEqualTo(mailId);
     }
 
     @Test
     void getById_shouldReturnResponse() {
         var response = sampleMailResponse();
-        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
+        var mailId = new MailId(1L);
         when(queryService.getDetail(eq(1L), anyLong())).thenReturn(response);
 
-        var result = controller.getById(principal, "1");
+        var result = controller.getById(principal, mailId);
 
         assertThat(result).isEqualTo(response);
         verify(queryService).getDetail(eq(1L), eq(principal.userIdLong()));
@@ -219,16 +213,16 @@ class MailControllerTest {
     @Test
     void getTracking_shouldReturnList() {
         var tracking = List.of(
-                MailTrackingResponse.root("1", "Emp", "Pos", "MEMO", false, null),
-                MailTrackingResponse.child("2", "Emp2", "Pos2", "DISPOSISI", true, null, 1)
+                MailTrackingResponse.root(new MailRecipientId(1L), "Emp", "Pos", "MEMO", false, null),
+                MailTrackingResponse.child(new MailRecipientId(2L), "Emp2", "Pos2", "DISPOSISI", true, null, 1)
         );
-        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
+        var mailId = new MailId(1L);
         when(recipientQueryService.findTracking(1L)).thenReturn(tracking);
 
-        var result = controller.getTracking("1");
+        var result = controller.getTracking(mailId);
 
         assertThat(result).hasSize(2);
-        assertThat(result.getFirst().recipientId()).isEqualTo("1");
+        assertThat(result.getFirst().recipientId()).isEqualTo(new MailRecipientId(1L));
         assertThat(result.getFirst().isRoot()).isTrue();
         assertThat(result.get(1).isRoot()).isFalse();
         assertThat(result.get(1).depth()).isEqualTo(1);
@@ -236,14 +230,14 @@ class MailControllerTest {
 
     @Test
     void getReadStatus_shouldReturnList() {
-        var status = List.of(new RecipientReadStatusResponse("1", "1", "Emp", "Pos", "MEMO", 0, null));
-        when(encoder.decode(Mail.class, "1")).thenReturn(1L);
+        var status = List.of(new RecipientReadStatusResponse(new MailRecipientId(1L), new UserId(1L), "Emp", "Pos", "MEMO", 0, null));
+        var mailId = new MailId(1L);
         when(recipientQueryService.findReadStatus(1L)).thenReturn(status);
 
-        var result = controller.getReadStatus("1");
+        var result = controller.getReadStatus(mailId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().recipientId()).isEqualTo("1");
+        assertThat(result.getFirst().recipientId()).isEqualTo(new MailRecipientId(1L));
     }
 
     @Test
@@ -265,7 +259,7 @@ class MailControllerTest {
         params.setPage(0);
         params.setSize(20);
         var lookupItem = new MailLookupResponse(
-                "1", LocalDate.of(2025, 1, 1), "Test User",
+                new MailId(1L), LocalDate.of(2025, 1, 1), "Test User",
                 "Test Subject", "Surat Masuk", "Umum",
                 "DISPOSISI", LocalDate.of(2025, 1, 15), false);
         var page = new PageImpl<>(List.of(lookupItem), PageRequest.of(0, 20), 1L);

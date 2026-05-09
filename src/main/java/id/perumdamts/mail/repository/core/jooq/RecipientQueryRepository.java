@@ -4,9 +4,10 @@ import id.perumdamts.mail.dto.core.mail.MailTrackingResponse;
 import id.perumdamts.mail.dto.core.mail.RecipientReadStatusResponse;
 import id.perumdamts.mail.dto.core.recipient.RecipientComponentDto;
 import id.perumdamts.mail.dto.core.recipient.RecipientResponse;
-import id.perumdamts.mail.entity.core.MailRecipient;
+import id.perumdamts.mail.dto.id.EmployeeId;
+import id.perumdamts.mail.dto.id.MailRecipientId;
+import id.perumdamts.mail.dto.id.UserId;
 import id.perumdamts.mail.enums.CirculationType;
-import id.perumdamts.mail.util.SqidsEncoder;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
@@ -19,11 +20,9 @@ import static org.jooq.impl.DSL.*;
 public class RecipientQueryRepository {
 
     private final DSLContext dsl;
-    private final SqidsEncoder encoder;
 
-    public RecipientQueryRepository(DSLContext dsl, SqidsEncoder encoder) {
+    public RecipientQueryRepository(DSLContext dsl) {
         this.dsl = dsl;
-        this.encoder = encoder;
     }
 
     public List<RecipientResponse> findByMailId(Long mailId) {
@@ -37,13 +36,13 @@ public class RecipientQueryRepository {
     private RecipientResponse mapToRecipientResponse(org.jooq.Record r) {
         Integer circulation = r.get(field("r.circulation"), Integer.class);
         return new RecipientResponse(
-                encoder.encode(MailRecipient.class, r.get(field("r.id"), Long.class)),
+                new MailRecipientId(r.get(field("r.id"), Long.class)),
                 new RecipientComponentDto.EmployeeInfoDto(
                         r.get(field("r.user_id"), Long.class) != null
-                                ? encoder.encode(MailRecipient.class, r.get(field("r.user_id"), Long.class))
+                                ? new UserId(r.get(field("r.user_id"), Long.class))
                                 : null,
                         r.get(field("r.emp_id"), Long.class) != null
-                                ? encoder.encode(MailRecipient.class, r.get(field("r.emp_id"), Long.class))
+                                ? new EmployeeId(r.get(field("r.emp_id"), Long.class))
                                 : null,
                         r.get(field("r.emp_name"), String.class),
                         r.get(field("r.pos_name"), String.class)),
@@ -99,14 +98,14 @@ public class RecipientQueryRepository {
                 .orderBy(field("r.id").asc())
                 .fetch(r -> isRoot
                         ? MailTrackingResponse.root(
-                                encoder.encode(MailRecipient.class, r.get("recipientId", Long.class)),
+                                new MailRecipientId(r.get("recipientId", Long.class)),
                                 r.get("empName", String.class),
                                 r.get("posName", String.class),
                                 r.get("circulationName", String.class),
                                 r.get("isRead", Boolean.class),
                                 r.get("readDate", LocalDateTime.class))
                         : MailTrackingResponse.child(
-                                encoder.encode(MailRecipient.class, r.get("recipientId", Long.class)),
+                                new MailRecipientId(r.get("recipientId", Long.class)),
                                 r.get("empName", String.class),
                                 r.get("posName", String.class),
                                 r.get("circulationName", String.class),
@@ -143,7 +142,7 @@ public class RecipientQueryRepository {
                 .and(field("m.m_status").gt(0))
                 .orderBy(field("m.m_created_date").asc(), field("r.id").asc())
                 .fetch(r -> MailTrackingResponse.child(
-                        encoder.encode(MailRecipient.class, r.get("recipientId", Long.class)),
+                        new MailRecipientId(r.get("recipientId", Long.class)),
                         r.get("empName", String.class),
                         r.get("posName", String.class),
                         r.get("circulationName", String.class),
@@ -183,8 +182,8 @@ public class RecipientQueryRepository {
                 .where(field("r.mail_id").eq(mailId))
                 .orderBy(field("r.id").asc())
                 .fetch(r -> new RecipientReadStatusResponse(
-                        encoder.encode(MailRecipient.class, r.get("recipientId", Long.class)),
-                        encoder.encode(MailRecipient.class, r.get("userId", Long.class)), // Placeholder
+                        new MailRecipientId(r.get("recipientId", Long.class)),
+                        new UserId(r.get("userId", Long.class)),
                         r.get("empName", String.class),
                         r.get("posName", String.class),
                         r.get("circulationName", String.class),
@@ -192,11 +191,6 @@ public class RecipientQueryRepository {
                         r.get("readDate", LocalDateTime.class)));
     }
 
-    /**
-     * Find distinct recipients across all mails in a thread (by root_mail_id).
-     * Returns unique (user_id, emp_id, emp_name, pos_name) tuples,
-     * picking the most recent record per user.
-     */
     public List<ThreadRecipientRow> findDistinctThreadRecipients(Long rootMailId) {
         return dsl.select(
                 field("r.user_id"),

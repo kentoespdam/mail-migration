@@ -38,24 +38,24 @@ public class MailQueryService {
 
         var attachments = attachmentQueryRepository.findByRef(AttachmentRefType.MAIL, mailId);
         return new MailResponse(
-                mail.getId(),
-                mail.getMailNumber(),
-                mail.getMailDate(),
-                mail.getType(),
-                mail.getCategory(),
-                mail.getSubject(),
-                mail.getContent(),
-                mail.getNote(),
-                mail.getMaxResponseDate(),
-                mail.getStatus(),
-                mail.getThread(),
-                mail.getSummary(),
-                mail.getAudit(),
-                mail.getNoSuratMasuk(),
-                mail.getAsalSuratMasuk(),
-                mail.getTglSuratMasuk(),
-                mail.getTujuanSuratKeluar(),
-                mail.getPenerimaSuratKeluar(),
+                mail.id(),
+                mail.mailNumber(),
+                mail.mailDate(),
+                mail.type(),
+                mail.category(),
+                mail.subject(),
+                mail.content(),
+                mail.note(),
+                mail.maxResponseDate(),
+                mail.status(),
+                mail.thread(),
+                mail.summary(),
+                mail.audit(),
+                mail.noSuratMasuk(),
+                mail.asalSuratMasuk(),
+                mail.tglSuratMasuk(),
+                mail.tujuanSuratKeluar(),
+                mail.penerimaSuratKeluar(),
                 attachments
         );
     }
@@ -76,7 +76,7 @@ public class MailQueryService {
 
     public Page<MailSummaryResponse> search(MailSearchRequest request) {
         List<MailSummaryResponse> items = mailQueryRepository.searchMails(request);
-        long total = items.isEmpty() ? 0 : items.getFirst().getTotalCount();
+        long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
         return new PageImpl<>(items, PageRequest.of(request.getPage(), request.getSize()), total);
     }
 

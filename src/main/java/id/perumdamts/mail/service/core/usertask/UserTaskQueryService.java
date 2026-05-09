@@ -3,12 +3,11 @@ package id.perumdamts.mail.service.core.usertask;
 import id.perumdamts.mail.dto.core.mail.MailLookupParams;
 import id.perumdamts.mail.dto.core.mail.MailLookupResponse;
 import id.perumdamts.mail.dto.core.mail.MailTrackingItemResponse;
-import id.perumdamts.mail.entity.core.Mail;
+import id.perumdamts.mail.dto.id.MailId;
 import id.perumdamts.mail.entity.core.UserTask;
 import id.perumdamts.mail.enums.ReadStatus;
 import id.perumdamts.mail.enums.SystemFolder;
 import id.perumdamts.mail.repository.core.jooq.UserTaskQueryRepository;
-import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -32,7 +31,6 @@ import static org.jooq.impl.DSL.*;
 public class UserTaskQueryService {
     private final DSLContext dsl;
     private final UserTaskQueryRepository userTaskQueryRepository;
-    private final SqidsEncoder encoder;
 
     public boolean existsActive(Long userId, Long mailId) {
         return dsl.fetchExists(
@@ -69,9 +67,8 @@ public class UserTaskQueryService {
         Condition condition = field("ut.user_id").eq(userId)
                 .and(field("m.m_status").eq(1)); // SENT only
 
-        if (params.getFolderId() != null && !params.getFolderId().isBlank()) {
-            Long folderId = encoder.decode(id.perumdamts.mail.entity.core.MailFolder.class, params.getFolderId());
-            condition = condition.and(field("ut.folder_id").eq(folderId));
+        if (params.getFolderId() != null) {
+            condition = condition.and(field("ut.folder_id").eq(params.getFolderId().value()));
         } else {
             condition = condition.and(field("ut.folder_id").notIn(
                     SystemFolder.DELETED.getId(),
@@ -134,7 +131,7 @@ public class UserTaskQueryService {
 
     private MailLookupResponse mapToLookupResponse(Record r) {
         return new MailLookupResponse(
-                encoder.encode(Mail.class, r.get("id", Long.class)),
+                new MailId(r.get("id", Long.class)),
                 r.get("mailDate", LocalDate.class),
                 r.get("createdByName", String.class),
                 r.get("subject", String.class),
@@ -148,7 +145,7 @@ public class UserTaskQueryService {
 
     private MailTrackingItemResponse mapToTrackingItemResponse(Record r) {
         return new MailTrackingItemResponse(
-                encoder.encode(Mail.class, r.get("id", Long.class)),
+                new MailId(r.get("id", Long.class)),
                 r.get("mailNumber", String.class),
                 r.get("mailDate", LocalDate.class),
                 r.get("subject", String.class),

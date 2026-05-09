@@ -2,13 +2,13 @@ package id.perumdamts.mail.service.core.mail;
 
 import id.perumdamts.mail.dto.core.mail.MailSignResponse;
 import id.perumdamts.mail.dto.core.mail.MailSignatureVerificationResponse;
+import id.perumdamts.mail.dto.id.MailId;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.entity.core.MailArchive;
 import id.perumdamts.mail.entity.core.PrintLog;
 import id.perumdamts.mail.repository.core.jpa.MailArchiveRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
 import id.perumdamts.mail.repository.core.jpa.PrintLogRepository;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,7 +34,6 @@ public class MailSignatureService {
     private final MailRepository mailRepository;
     private final MailArchiveRepository mailArchiveRepository;
     private final HttpServletRequest httpServletRequest;
-    private final SqidsEncoder encoder;
 
     @Value("${app.base-url:http://localhost:8081}")
     private String baseUrl;
@@ -42,13 +41,11 @@ public class MailSignatureService {
     public MailSignatureService(PrintLogRepository printLogRepository,
             MailRepository mailRepository,
             MailArchiveRepository mailArchiveRepository,
-            HttpServletRequest httpServletRequest,
-            SqidsEncoder encoder) {
+            HttpServletRequest httpServletRequest) {
         this.printLogRepository = printLogRepository;
         this.mailRepository = mailRepository;
         this.mailArchiveRepository = mailArchiveRepository;
         this.httpServletRequest = httpServletRequest;
-        this.encoder = encoder;
     }
 
     /**
@@ -134,7 +131,7 @@ public class MailSignatureService {
         String archiveStatus = getArchiveStatus(printLog.getMailId());
 
         return MailSignatureVerificationResponse.valid(
-                encoder.encode(Mail.class, printLog.getMailId()),
+                new MailId(printLog.getMailId()).toString(),
                 mail.getMailNumber(),
                 printLog.getPrintDate(),
                 signerName,

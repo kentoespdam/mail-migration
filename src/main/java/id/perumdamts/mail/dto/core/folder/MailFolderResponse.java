@@ -1,6 +1,8 @@
 package id.perumdamts.mail.dto.core.folder;
 
 import id.perumdamts.mail.dto.common.HasSqid;
+import id.perumdamts.mail.dto.id.MailFolderId;
+import id.perumdamts.mail.dto.id.UserId;
 
 /**
  * Response DTO untuk folder tree.
@@ -16,9 +18,9 @@ import id.perumdamts.mail.dto.common.HasSqid;
  * @param total          Total jumlah mail
  */
 public record MailFolderResponse(
-        String id,
-        String parentFolderId,
-        String ownerId,
+        MailFolderId id,
+        MailFolderId parentFolderId,
+        UserId ownerId,
         String name,
         String iconCls,
         boolean system,
@@ -27,6 +29,6 @@ public record MailFolderResponse(
 
     @Override
     public String getId() {
-        return id();
+        return id != null ? id.toString() : null;
     }
 }
