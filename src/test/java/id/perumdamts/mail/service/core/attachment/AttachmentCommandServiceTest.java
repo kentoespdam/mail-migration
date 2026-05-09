@@ -69,7 +69,7 @@ class AttachmentCommandServiceTest {
     @Test
     void deleteAttachment_shouldMarkAsDeleted() {
         Long mailId = 123L;
-        Integer attachmentId = 456;
+        Long attachmentId = 456L;
         Attachment attachment = new Attachment();
         attachment.setId(attachmentId);
         attachment.setRefId(mailId);

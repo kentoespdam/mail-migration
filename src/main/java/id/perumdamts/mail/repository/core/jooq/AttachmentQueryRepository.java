@@ -1,7 +1,7 @@
 package id.perumdamts.mail.repository.core.jooq;
 
 import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
-import id.perumdamts.mail.entity.core.Attachment;
+import id.perumdamts.mail.dto.id.AttachmentId;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.enums.AttachmentRefType;
 import id.perumdamts.mail.util.SqidsEncoder;
@@ -33,7 +33,7 @@ public class AttachmentQueryRepository {
                 .fetch(this::toResponse);
     }
 
-    public Optional<AttachmentResponse> findById(Integer id) {
+    public Optional<AttachmentResponse> findById(long id) {
         return dsl.select()
                 .from(table("attachments"))
                 .where(field("id").eq(id))
@@ -42,12 +42,12 @@ public class AttachmentQueryRepository {
     }
 
     private AttachmentResponse toResponse(Record r) {
-        Integer id = r.get(field("id"), Integer.class);
+        Long id = r.get(field("id"), Long.class);
         Integer refType = r.get(field("ref_type"), Integer.class);
         Long refId = r.get(field("ref_id"), Long.class);
 
         return new AttachmentResponse(
-                id != null ? encoder.encode(Attachment.class, id.longValue()) : null,
+                id != null ? new AttachmentId(id) : null,
                 refType,
                 (refType != null && refType == AttachmentRefType.MAIL.getDbValue() && refId != null)
                         ? encoder.encode(Mail.class, refId)

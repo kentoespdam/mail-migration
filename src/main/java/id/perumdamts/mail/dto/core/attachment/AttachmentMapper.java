@@ -1,5 +1,6 @@
 package id.perumdamts.mail.dto.core.attachment;
 
+import id.perumdamts.mail.dto.id.AttachmentId;
 import id.perumdamts.mail.entity.core.Attachment;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.enums.AttachmentRefType;
@@ -26,10 +27,10 @@ public abstract class AttachmentMapper {
     public abstract AttachmentDetailResponse toDetailResponse(Attachment entity);
 
     @Named("mapAttachmentId")
-    protected String mapAttachmentId(Attachment entity) {
+    protected AttachmentId mapAttachmentId(Attachment entity) {
         if (entity.getId() == null)
             return null;
-        return encoder.encode(Attachment.class, entity.getId().longValue());
+        return new AttachmentId(entity.getId());
     }
 
     @Named("mapRefId")

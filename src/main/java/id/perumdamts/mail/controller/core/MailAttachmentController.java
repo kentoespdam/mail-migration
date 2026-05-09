@@ -3,6 +3,7 @@ package id.perumdamts.mail.controller.core;
 import id.perumdamts.mail.dto.core.attachment.AttachmentDetailResponse;
 import id.perumdamts.mail.dto.core.attachment.AttachmentMapper;
 import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
+import id.perumdamts.mail.dto.id.AttachmentId;
 import id.perumdamts.mail.entity.core.Attachment;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.security.MailPrincipal;
@@ -56,21 +57,19 @@ public class MailAttachmentController {
     @GetMapping("/{attachmentId}")
     public AttachmentDetailResponse getAttachmentDetail(
             @PathVariable String mailId,
-            @PathVariable String attachmentId,
+            @PathVariable AttachmentId attachmentId,
             @AuthenticationPrincipal MailPrincipal principal) {
         long mId = encoder.decode(Mail.class, mailId);
-        int aId = (int) encoder.decode(Attachment.class, attachmentId);
-        return queryService.getAttachmentDetail(aId, mId, principal);
+        return queryService.getAttachmentDetail(attachmentId.value(), mId, principal);
     }
 
     @GetMapping("/{attachmentId}/download")
     public ResponseEntity<Resource> downloadAttachment(
             @PathVariable String mailId,
-            @PathVariable String attachmentId,
+            @PathVariable AttachmentId attachmentId,
             @AuthenticationPrincipal MailPrincipal principal) {
         long mId = encoder.decode(Mail.class, mailId);
-        int aId = (int) encoder.decode(Attachment.class, attachmentId);
-        Resource resource = queryService.downloadAttachment(aId, mId, principal);
+        Resource resource = queryService.downloadAttachment(attachmentId.value(), mId, principal);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -82,10 +81,9 @@ public class MailAttachmentController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAttachment(
             @PathVariable String mailId,
-            @PathVariable String attachmentId,
+            @PathVariable AttachmentId attachmentId,
             @AuthenticationPrincipal MailPrincipal principal) {
         long mId = encoder.decode(Mail.class, mailId);
-        int aId = (int) encoder.decode(Attachment.class, attachmentId);
-        commandService.deleteAttachment(aId, mId, principal);
+        commandService.deleteAttachment(attachmentId.value(), mId, principal);
     }
 }

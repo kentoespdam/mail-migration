@@ -59,7 +59,7 @@ sebelum merge.
 
 | # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
-| 3a | `mail-service-2kn` | AFK · P2 ⚠️ | Migrasi **Attachment** + fix `MailAttachmentController:62` (int) cast bug. Service signature naik konsisten ke `long` | `mail-service-83t` (2a) | [ ] |
+| 3a | `mail-service-2kn` | AFK · P2 ⚠️ | Migrasi **Attachment** + fix `MailAttachmentController:62` (int) cast bug. Service signature naik konsisten ke `long` | `mail-service-83t` (2a) | [x] |
 | 3b | `mail-service-lsr` | AFK · P2 | Migrasi **Publication**. Pastikan cache hit `PublicationResponse` tetap deserialize benar (lihat memori `cache-redis-pada-cacheconfig`) — `SqidId` record harus masuk allow-list `id.perumdamts.mail` di Redis serializer | `mail-service-2kn` (3a) | [ ] |
 
 ⚠️ **Side effect 3a**: Truncation `BIGINT → int` lenyap struktural. Bukan

@@ -49,7 +49,7 @@ public class AttachmentCommandService {
     }
 
     @Transactional
-    public void deleteAttachment(Integer attachmentId, Long mailId, MailPrincipal principal) {
+    public void deleteAttachment(long attachmentId, Long mailId, MailPrincipal principal) {
         validateMailAccess(mailId, principal);
 
         Attachment attachment = attachmentRepository.findByIdAndRefIdAndRefType(
@@ -100,7 +100,7 @@ public class AttachmentCommandService {
     }
 
     @Transactional
-    public void delete(Integer attachmentId) {
+    public void delete(long attachmentId) {
         Attachment attachment = attachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new EntityNotFoundException("Attachment not found: " + attachmentId));
 

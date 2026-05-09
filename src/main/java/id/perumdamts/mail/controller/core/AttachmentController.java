@@ -1,6 +1,7 @@
 package id.perumdamts.mail.controller.core;
 
 import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
+import id.perumdamts.mail.dto.id.AttachmentId;
 import id.perumdamts.mail.enums.AttachmentRefType;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.dto.core.attachment.AttachmentMapper;
@@ -39,8 +40,8 @@ public class AttachmentController {
     }
 
     @GetMapping("/{id}")
-    public AttachmentResponse findById(@PathVariable Integer id) {
-        return queryService.findById(id);
+    public AttachmentResponse findById(@PathVariable AttachmentId id) {
+        return queryService.findById(id.value());
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -56,9 +57,9 @@ public class AttachmentController {
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> download(@PathVariable Integer id,
+    public ResponseEntity<Resource> download(@PathVariable AttachmentId id,
                                              @AuthenticationPrincipal MailPrincipal principal) {
-        Resource resource = queryService.download(id, principal);
+        Resource resource = queryService.download(id.value(), principal);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -68,7 +69,7 @@ public class AttachmentController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) {
-        commandService.delete(id);
+    public void delete(@PathVariable AttachmentId id) {
+        commandService.delete(id.value());
     }
 }
