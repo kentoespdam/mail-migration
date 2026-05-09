@@ -89,7 +89,7 @@ Fokus pada fondasi baca yang bersih dan integrasi `Mail` ↔ `UserTask`.
 | # | Beads | Tipe | Slice | 🔒 Blocked by | Status |
 |---|---|---|---|---|---|
 | 5a | `mail-service-tracking`| AFK | `GET /api/v1/mails/{id}/tracking` (Thread-based resolver) | 4d | [x] |
-| 5b | `mail-service-search` | AFK | FULLTEXT Search integration (Subject/Content/Metadata) | V10 | [ ] |
+| 5b | `mail-service-search` | AFK | FULLTEXT Search integration (Subject/Content/Metadata) | V10 | [x] |
 
 ---
 

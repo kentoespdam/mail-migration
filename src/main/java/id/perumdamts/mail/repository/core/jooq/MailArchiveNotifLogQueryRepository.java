@@ -1,4 +1,4 @@
-package id.perumdamts.mail.repository.archive.jooq;
+package id.perumdamts.mail.repository.core.jooq;
 
 import java.util.Optional;
 

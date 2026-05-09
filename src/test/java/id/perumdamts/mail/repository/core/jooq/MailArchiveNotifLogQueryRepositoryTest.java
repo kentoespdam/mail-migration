@@ -1,4 +1,4 @@
-package id.perumdamts.mail.repository.archive.jooq;
+package id.perumdamts.mail.repository.core.jooq;
 
 import id.perumdamts.mail.entity.core.MailArchiveNotifLog;
 import org.jooq.Condition;

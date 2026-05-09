@@ -1201,6 +1201,13 @@ diberi posisi plt sebagai satu-satunya posisi aktif.
      notif_date=NOW())`. Avg ~9 user/archive di legacy.
   d. UPSERT `mail_archive_notif (mail_archive_id, notif_flag=1,
      processed_date=NOW())` sebagai per-archive marker (1 row/archive).
+- Schema `mail_archive_notif` (selaras legacy): kolom `id`,
+  `mail_archive_id` (BIGINT, FK ke `mail_archive.ma_id`),
+  `notif_flag`, `insert_date`, `processed_date`, `updated_at`.
+  TIDAK ada kolom `user_id` / `notif_date` / `status` — kolom
+  `user_id` + `notif_date` hanya ada di `mail_archive_notif_log`
+  (fan-out per user). V1 baseline pre-2026-05-09 sempat keliru
+  menyalin bentuk `_log` ke tabel ini; sudah dikoreksi.
 - Implementasi saat ini (`ArchivePublishedEventListener.java`) BUGGY:
   insert ke `mail_archive_notif` dengan kolom `user_id` (kolom tidak
   ada di schema), pakai positionId langsung sebagai user_id, tidak

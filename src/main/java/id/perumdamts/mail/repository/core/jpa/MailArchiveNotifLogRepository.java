@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface MailArchiveNotifLogRepository extends JpaRepository<MailArchiveNotifLog, Long> {
-    List<MailArchiveNotifLog> findByArchiveId(Long archiveId);
+    List<MailArchiveNotifLog> findByMailArchiveId(Long mailArchiveId);
 }

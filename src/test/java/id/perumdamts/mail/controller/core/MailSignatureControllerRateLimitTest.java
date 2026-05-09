@@ -4,7 +4,6 @@ import id.perumdamts.mail.dto.core.mail.MailSignatureVerificationResponse;
 import id.perumdamts.mail.service.core.mail.MailSignatureService;
 import id.perumdamts.mail.service.security.RateLimitService;
 import id.perumdamts.mail.util.SqidsEncoder;
-import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,7 @@ public class MailSignatureControllerRateLimitTest {
     @Mock
     private HttpServletRequest request;
 
-    private RateLimitService actualRateLimitService = new RateLimitService();
+    private final RateLimitService actualRateLimitService = new RateLimitService();
 
     @BeforeEach
     public void setup() {
