@@ -3,6 +3,7 @@ package id.perumdamts.mail.service.core.attachment;
 import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.core.attachment.AttachmentDetailResponse;
 import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
+import id.perumdamts.mail.dto.id.AttachmentId;
 import id.perumdamts.mail.entity.core.Attachment;
 import id.perumdamts.mail.enums.AttachmentRefType;
 import id.perumdamts.mail.repository.core.jpa.AttachmentRepository;
@@ -10,7 +11,6 @@ import id.perumdamts.mail.repository.core.jpa.MailRepository;
 import id.perumdamts.mail.repository.core.jooq.AttachmentQueryRepository;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.usertask.UserTaskQueryService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -31,7 +31,6 @@ public class AttachmentQueryService {
     private final AttachmentFileStorageService storageService;
     private final UserTaskQueryService userTaskQueryService;
     private final id.perumdamts.mail.repository.core.jpa.AttachmentDownloadHistoryRepository historyRepository;
-    private final SqidsEncoder encoder;
 
     public List<AttachmentResponse> getAttachmentsByMailId(Long mailId, MailPrincipal principal) {
         validateMailAccess(mailId, principal);
@@ -39,7 +38,7 @@ public class AttachmentQueryService {
     }
 
     @Cacheable(value = CacheConfig.CacheNames.ATTACHMENTS, key = "'detail:' + #principal.userId() + ':' + #attachmentId + ':v1'")
-    public AttachmentDetailResponse getAttachmentDetail(Integer attachmentId, Long mailId, MailPrincipal principal) {
+    public AttachmentDetailResponse getAttachmentDetail(long attachmentId, Long mailId, MailPrincipal principal) {
         validateMailAccess(mailId, principal);
 
         Attachment attachment = attachmentRepository.findByIdAndRefIdAndRefType(
@@ -47,7 +46,7 @@ public class AttachmentQueryService {
                 .orElseThrow(() -> new EntityNotFoundException("Attachment not found: " + attachmentId));
 
         return new AttachmentDetailResponse(
-                attachment.getId() != null ? encoder.encode(Attachment.class, attachment.getId().longValue()) : null,
+                attachment.getId() != null ? new AttachmentId(attachment.getId()) : null,
                 attachment.getOriginalFilename(),
                 attachment.getFileExt(),
                 attachment.getFileSize(),
@@ -58,7 +57,7 @@ public class AttachmentQueryService {
     }
 
     @Transactional
-    public Resource downloadAttachment(Integer attachmentId, Long mailId, MailPrincipal principal) {
+    public Resource downloadAttachment(long attachmentId, Long mailId, MailPrincipal principal) {
         validateMailAccess(mailId, principal);
 
         Attachment attachment = attachmentRepository.findByIdAndRefIdAndRefType(
@@ -67,7 +66,7 @@ public class AttachmentQueryService {
 
         // Log download history
         historyRepository.save(new id.perumdamts.mail.entity.core.AttachmentDownloadHistory(
-                attachment.getId(),
+                attachment,
                 principal.userIdLong().intValue(),
                 principal.name(),
                 null));
@@ -82,5 +81,28 @@ public class AttachmentQueryService {
 
         userTaskQueryService.findUserTask(principal.userIdLong(), mailId)
                 .orElseThrow(() -> new EntityNotFoundException("Mail not found in your mailbox: " + mailId));
+    }
+
+    public List<AttachmentResponse> findByOwner(AttachmentRefType refType, Long refId) {
+        return queryRepository.findByRef(refType, refId);
+    }
+
+    public AttachmentResponse findById(long id) {
+        return queryRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Attachment not found: " + id));
+    }
+
+    @Transactional
+    public Resource download(long attachmentId, MailPrincipal principal) {
+        Attachment attachment = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new EntityNotFoundException("Attachment not found: " + attachmentId));
+
+        historyRepository.save(new id.perumdamts.mail.entity.core.AttachmentDownloadHistory(
+                attachment,
+                principal.userIdLong().intValue(),
+                principal.name(),
+                null));
+
+        return storageService.load(attachment.getSystemFilename(), attachment.getUploadDate());
     }
 }

@@ -9,6 +9,8 @@ public record ArchiveAccessRequest(
 ) {
     public record AccessEntry(
             Integer positionId,
-            Integer accessLevel
+            Boolean canAccess,
+            Boolean canDownload,
+            Boolean canViewHistory
     ) {}
 }

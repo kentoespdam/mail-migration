@@ -1,12 +1,11 @@
 package id.perumdamts.mail.controller.core;
 
 import id.perumdamts.mail.dto.core.recipient.*;
-import id.perumdamts.mail.entity.core.Mail;
-import id.perumdamts.mail.entity.core.MailRecipient;
+import id.perumdamts.mail.dto.id.MailId;
+import id.perumdamts.mail.dto.id.MailRecipientId;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.recipient.MailRecipientCommandService;
 import id.perumdamts.mail.service.core.recipient.MailRecipientQueryService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,95 +20,80 @@ public class MailRecipientController {
 
     private final MailRecipientQueryService queryService;
     private final MailRecipientCommandService commandService;
-    private final SqidsEncoder encoder;
 
     public MailRecipientController(MailRecipientQueryService queryService,
-            MailRecipientCommandService commandService,
-            SqidsEncoder encoder) {
+            MailRecipientCommandService commandService) {
         this.queryService = queryService;
         this.commandService = commandService;
-        this.encoder = encoder;
     }
 
     @GetMapping
-    public List<RecipientResponse> getRecipients(@PathVariable String mailId) {
-        long id = encoder.decode(Mail.class, mailId);
-        return queryService.findRecipients(id);
+    public List<RecipientResponse> getRecipients(@PathVariable MailId mailId) {
+        return queryService.findRecipients(mailId.value());
     }
 
     @PostMapping
     public ResponseEntity<RecipientResponse> addRecipient(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable String mailId,
+            @PathVariable MailId mailId,
             @Valid @RequestBody RecipientRequest request) {
-        long id = encoder.decode(Mail.class, mailId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(commandService.addRecipient(id, request, principal.userIdLong()));
+                .body(commandService.addRecipient(mailId.value(), request, principal.userIdLong()));
     }
 
     @DeleteMapping("/{rid}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteRecipient(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable String mailId,
-            @PathVariable String rid) {
-        long id = encoder.decode(Mail.class, mailId);
-        long recipientId = encoder.decode(MailRecipient.class, rid);
-        commandService.deleteRecipient(id, recipientId, principal.userIdLong());
+            @PathVariable MailId mailId,
+            @PathVariable MailRecipientId rid) {
+        commandService.deleteRecipient(mailId.value(), rid.value(), principal.userIdLong());
     }
 
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteBatch(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable String mailId,
+            @PathVariable MailId mailId,
             @RequestBody RecipientDeleteBatchRequest request) {
-        long id = encoder.decode(Mail.class, mailId);
         List<Long> recipientIds = request.ids().stream()
-                .map(sqid -> encoder.decode(MailRecipient.class, sqid))
+                .map(MailRecipientId::value)
                 .toList();
-        commandService.deleteBatch(id, recipientIds, principal.userIdLong());
+        commandService.deleteBatch(mailId.value(), recipientIds, principal.userIdLong());
     }
 
     @PostMapping("/batch")
     public ResponseEntity<BatchRecipientResponse> addBatch(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable String mailId,
+            @PathVariable MailId mailId,
             @Valid @RequestBody RecipientBatchRequest request) {
-        long id = encoder.decode(Mail.class, mailId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(commandService.addBatch(id, request, principal.userIdLong()));
+                .body(commandService.addBatch(mailId.value(), request, principal.userIdLong()));
     }
 
     @PatchMapping("/{rid}")
     public RecipientResponse updateNotifFlags(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable String mailId,
-            @PathVariable String rid,
+            @PathVariable MailId mailId,
+            @PathVariable MailRecipientId rid,
             @Valid @RequestBody RecipientNotifPatchRequest request) {
-        long id = encoder.decode(Mail.class, mailId);
-        long recipientId = encoder.decode(MailRecipient.class, rid);
-        return commandService.updateNotifFlags(id, recipientId, request, principal.userIdLong());
+        return commandService.updateNotifFlags(mailId.value(), rid.value(), request, principal.userIdLong());
     }
 
     @PostMapping("/copy-from/{refId}")
     public List<RecipientResponse> copyFrom(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable String mailId,
-            @PathVariable String refId) {
-        long id = encoder.decode(Mail.class, mailId);
-        long refMailId = encoder.decode(Mail.class, refId);
-        return commandService.copyFrom(id, refMailId, principal.userIdLong());
+            @PathVariable MailId mailId,
+            @PathVariable MailId refId) {
+        return commandService.copyFrom(mailId.value(), refId.value(), principal.userIdLong());
     }
 
     @PostMapping("/copy-thread/{refId}")
     public List<RecipientResponse> copyThread(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable String mailId,
-            @PathVariable String refId) {
-        long id = encoder.decode(Mail.class, mailId);
-        long refMailId = encoder.decode(Mail.class, refId);
-        return commandService.copyThread(id, refMailId, principal.userIdLong());
+            @PathVariable MailId mailId,
+            @PathVariable MailId refId) {
+        return commandService.copyThread(mailId.value(), refId.value(), principal.userIdLong());
     }
 
 }

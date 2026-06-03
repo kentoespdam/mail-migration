@@ -19,4 +19,9 @@ public interface PrintLogRepository extends JpaRepository<PrintLog, Long> {
      * Find all print logs untuk mail tertentu.
      */
     List<PrintLog> findByMailIdOrderByPrintDateDesc(Long mailId);
+
+    /**
+     * Check if auth code already exists.
+     */
+    boolean existsByAuthCode(String authCode);
 }

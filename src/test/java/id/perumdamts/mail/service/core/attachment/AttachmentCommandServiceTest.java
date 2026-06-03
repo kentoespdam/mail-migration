@@ -42,7 +42,7 @@ class AttachmentCommandServiceTest {
 
     @BeforeEach
     void setUp() {
-        principal = new MailPrincipal("1", "Test User", "test@mail.com",
+        principal = MailPrincipal.from("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
 
@@ -69,7 +69,7 @@ class AttachmentCommandServiceTest {
     @Test
     void deleteAttachment_shouldMarkAsDeleted() {
         Long mailId = 123L;
-        Integer attachmentId = 456;
+        Long attachmentId = 456L;
         Attachment attachment = new Attachment();
         attachment.setId(attachmentId);
         attachment.setRefId(mailId);

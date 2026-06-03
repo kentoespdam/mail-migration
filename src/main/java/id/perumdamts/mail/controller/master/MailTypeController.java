@@ -1,13 +1,12 @@
 package id.perumdamts.mail.controller.master;
 
+import id.perumdamts.mail.dto.id.MailTypeId;
 import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
 import id.perumdamts.mail.dto.master.mailType.MailTypeParams;
 import id.perumdamts.mail.dto.master.mailType.MailTypeRequest;
 import id.perumdamts.mail.dto.master.mailType.MailTypeResponse;
-import id.perumdamts.mail.entity.master.MailType;
 import id.perumdamts.mail.service.master.mailType.MailTypeCommandService;
 import id.perumdamts.mail.service.master.mailType.MailTypeQueryService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -25,7 +24,6 @@ public class MailTypeController {
 
     private final MailTypeCommandService commandService;
     private final MailTypeQueryService queryService;
-    private final SqidsEncoder encoder;
 
     @GetMapping
     public PagedModel<MailTypeResponse> findAll(@ParameterObject MailTypeParams params) {
@@ -38,9 +36,8 @@ public class MailTypeController {
     }
 
     @GetMapping("/{id}")
-    public MailTypeResponse findById(@PathVariable String id) {
-        long rawId = encoder.decode(MailType.class, id);
-        return queryService.findById(rawId);
+    public MailTypeResponse findById(@PathVariable MailTypeId id) {
+        return queryService.findById(id.value());
     }
 
     @PostMapping
@@ -49,21 +46,18 @@ public class MailTypeController {
     }
 
     @PutMapping("/{id}")
-    public MailTypeResponse update(@PathVariable String id, @Valid @RequestBody MailTypeRequest request) {
-        long rawId = encoder.decode(MailType.class, id);
-        return commandService.update(rawId, request);
+    public MailTypeResponse update(@PathVariable MailTypeId id, @Valid @RequestBody MailTypeRequest request) {
+        return commandService.update(id.value(), request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String id) {
-        long rawId = encoder.decode(MailType.class, id);
-        commandService.delete(rawId);
+    public void delete(@PathVariable MailTypeId id) {
+        commandService.delete(id.value());
     }
 
     @PatchMapping("/{id}/status")
-    public MailTypeResponse toggleStatus(@PathVariable String id) {
-        long rawId = encoder.decode(MailType.class, id);
-        return commandService.toggleStatus(rawId);
+    public MailTypeResponse toggleStatus(@PathVariable MailTypeId id) {
+        return commandService.toggleStatus(id.value());
     }
 }

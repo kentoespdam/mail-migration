@@ -5,14 +5,13 @@ import id.perumdamts.mail.dto.core.folder.MailFolderMapper;
 import id.perumdamts.mail.dto.core.folder.MailFolderRequest;
 import id.perumdamts.mail.dto.core.folder.MailFolderResponse;
 import id.perumdamts.mail.dto.core.folder.MoveMailRequest;
-import id.perumdamts.mail.entity.core.Mail;
-import id.perumdamts.mail.security.MailPrincipal;
+import id.perumdamts.mail.dto.id.MailId;
 import id.perumdamts.mail.entity.core.MailFolder;
 import id.perumdamts.mail.enums.SystemFolder;
 import id.perumdamts.mail.repository.core.jpa.MailFolderRepository;
+import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.usertask.UserTaskCommandService;
 import id.perumdamts.mail.service.core.usertask.UserTaskQueryService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -26,34 +25,30 @@ public class MailFolderCommandService {
     private final UserTaskCommandService userTaskCommandService;
     private final UserTaskQueryService userTaskQueryService;
     private final MailFolderMapper folderMapper;
-    private final SqidsEncoder encoder;
     private final id.perumdamts.mail.service.core.mail.AuditTrailService auditTrailService;
+    private final PersonalFolderValidator personalFolderValidator;
 
     public MailFolderCommandService(MailFolderRepository folderRepository,
             UserTaskCommandService userTaskCommandService,
             UserTaskQueryService userTaskQueryService,
             MailFolderMapper folderMapper,
-            SqidsEncoder encoder,
-            id.perumdamts.mail.service.core.mail.AuditTrailService auditTrailService) {
+            id.perumdamts.mail.service.core.mail.AuditTrailService auditTrailService,
+            PersonalFolderValidator personalFolderValidator) {
         this.folderRepository = folderRepository;
         this.userTaskCommandService = userTaskCommandService;
         this.userTaskQueryService = userTaskQueryService;
         this.folderMapper = folderMapper;
-        this.encoder = encoder;
         this.auditTrailService = auditTrailService;
+        this.personalFolderValidator = personalFolderValidator;
     }
 
     @Transactional
     @CacheEvict(value = CacheConfig.CacheNames.MAIL_FOLDER, key = "'tree:' + #userId")
     public MailFolderResponse createFolder(Long userId, MailFolderRequest request) {
         Long parentFolderId = request.parentFolderId() != null
-                ? encoder.decode(MailFolder.class, request.parentFolderId())
+                ? request.parentFolderId().value()
                 : SystemFolder.PERSONAL_ROOT.getId();
-        validateParentFolder(userId, parentFolderId);
-
-        if (folderRepository.existsByOwnerIdAndName(userId, request.name().trim())) {
-            throw new IllegalArgumentException("Folder with name '" + request.name() + "' already exists");
-        }
+        personalFolderValidator.validateCreate(userId, parentFolderId, request.name());
 
         var folder = new MailFolder(userId, parentFolderId, request.name().trim());
         return folderMapper.toResponse(folderRepository.save(folder));
@@ -75,16 +70,9 @@ public class MailFolderCommandService {
     @Transactional
     @CacheEvict(value = CacheConfig.CacheNames.MAIL_FOLDER, key = "'tree:' + #userId")
     public void deleteFolder(Long userId, Long folderId) {
+        personalFolderValidator.validateDelete(userId, folderId);
+
         MailFolder folder = getOwnedPersonalFolder(userId, folderId);
-
-        userTaskCommandService.relocateMails(userId, folderId, folder.getParentFolderId());
-
-        var children = folderRepository.findActiveChildren(folderId);
-        for (var child : children) {
-            userTaskCommandService.relocateMails(userId, child.getId(), folder.getParentFolderId());
-            child.softDelete();
-        }
-
         folder.softDelete();
         folderRepository.save(folder);
     }
@@ -92,13 +80,12 @@ public class MailFolderCommandService {
     @Transactional
     public void moveMails(MailPrincipal principal, MoveMailRequest request) {
         Long userId = principal.userIdLong();
-        Long toFolderId = encoder.decode(MailFolder.class, request.toFolderId());
-        Long fromFolderId = encoder.decode(MailFolder.class, request.fromFolderId());
+        Long toFolderId = request.toFolderId().value();
+        Long fromFolderId = request.fromFolderId().value();
         validateTargetFolder(userId, toFolderId);
-        for (String mailSqid : request.mailIds()) {
-            Long mailId = encoder.decode(Mail.class, mailSqid);
-            userTaskCommandService.updateFolder(userId, mailId, fromFolderId, toFolderId);
-            auditTrailService.logAction(mailId, "MOVE", principal.getUsername(), "Memindahkan surat ke folder lain");
+        for (MailId mailId : request.mailIds()) {
+            userTaskCommandService.updateFolder(userId, mailId.value(), fromFolderId, toFolderId);
+            auditTrailService.logAction(mailId.value(), "MOVE", principal.getUsername(), "Memindahkan surat ke folder lain");
         }
     }
 
@@ -130,6 +117,16 @@ public class MailFolderCommandService {
     @Transactional
     public void emptyTrash(Long userId) {
         userTaskCommandService.purgeTrash(userId);
+    }
+
+    @Transactional
+    @CacheEvict(value = CacheConfig.CacheNames.MAIL_FOLDER, key = "'tree:' + #userId")
+    public void ensureSystemFolders(Long userId) {
+        if (folderRepository.existsByOwnerIdAndStatus(userId, 1)) {
+            return;
+        }
+        var personalRoot = new MailFolder(userId, SystemFolder.PERSONAL_ROOT.getId(), "Personal Folder");
+        folderRepository.save(personalRoot);
     }
 
     private MailFolder getOwnedPersonalFolder(Long userId, Long folderId) {

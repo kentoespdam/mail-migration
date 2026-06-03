@@ -1,10 +1,9 @@
 package id.perumdamts.mail.repository.master.jooq;
 
+import id.perumdamts.mail.dto.id.MailTypeId;
 import id.perumdamts.mail.dto.master.mailType.MailTypeParams;
 import id.perumdamts.mail.dto.master.mailType.MailTypeResponse;
-import id.perumdamts.mail.entity.master.MailType;
 import id.perumdamts.mail.enums.RecordStatus;
-import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -23,7 +22,6 @@ import static org.jooq.impl.DSL.*;
 @RequiredArgsConstructor
 public class MailTypeQueryRepository {
     private final DSLContext dsl;
-    private final SqidsEncoder encoder;
 
     public Page<MailTypeResponse> findAll(MailTypeParams params) {
         Condition condition = field("mt.mail_type_status").ne(inline("DELETED"));
@@ -82,7 +80,7 @@ public class MailTypeQueryRepository {
     private MailTypeResponse mapRecordToResponse(Record r) {
         Long id = r.get(field("mt.mail_type_id"), Long.class);
         return new MailTypeResponse(
-                encoder.encode(MailType.class, id),
+                new MailTypeId(id),
                 r.get(field("mt.mail_type"), String.class),
                 RecordStatus.valueOf(r.get(field("mt.mail_type_status"), String.class)),
                 r.get(field("category_count"), Long.class));

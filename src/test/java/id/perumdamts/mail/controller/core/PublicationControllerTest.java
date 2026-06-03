@@ -3,11 +3,11 @@ package id.perumdamts.mail.controller.core;
 import id.perumdamts.mail.dto.core.publication.PublicationCommandResult;
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
-import id.perumdamts.mail.entity.core.Publication;
+import id.perumdamts.mail.dto.id.DocumentTypeId;
+import id.perumdamts.mail.dto.id.PublicationId;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.publication.PublicationCommandHandler;
 import id.perumdamts.mail.service.core.publication.PublicationQueryHandler;
-import id.perumdamts.mail.util.SqidsEncoder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,24 +31,21 @@ class PublicationControllerTest {
     @Mock
     private PublicationQueryHandler queryHandler;
 
-    @Mock
-    private SqidsEncoder encoder;
-
     private PublicationController controller;
 
     private MailPrincipal principal;
 
     @BeforeEach
     void setUp() {
-        controller = new PublicationController(commandHandler, queryHandler, encoder);
-        principal = new MailPrincipal("1", "Test User", "test@mail.com",
+        controller = new PublicationController(commandHandler, queryHandler);
+        principal = MailPrincipal.from("1", "Test User", "test@mail.com",
                 List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
 
     private PublicationResponse sampleResponse(String status) {
         return new PublicationResponse(
-                "1", "Test Publication", "Description",
-                new DocumentTypeLookup("1", "Internal"),
+                new PublicationId(1L), "Test Publication", "Description",
+                new DocumentTypeLookup(new DocumentTypeId(1L), "Internal"),
                 status, LocalDateTime.now(), "file.pdf", 1024,
                 "Test User", "Staff",
                 LocalDateTime.now(), LocalDateTime.now());
@@ -57,12 +54,11 @@ class PublicationControllerTest {
     @Test
     void publish_shouldReturnPublishedResponse() {
         var response = sampleResponse("PUBLISHED");
-        var resultMeta = new PublicationCommandResult("1", "PUBLISHED", LocalDateTime.now());
-        when(encoder.decode(Publication.class, "1")).thenReturn(1L);
+        var resultMeta = new PublicationCommandResult(new PublicationId(1L), "PUBLISHED", LocalDateTime.now());
         when(commandHandler.publish(1L, principal)).thenReturn(resultMeta);
         when(queryHandler.findById(1L)).thenReturn(response);
 
-        var result = controller.publish(principal, "1");
+        var result = controller.publish(principal, new PublicationId(1L));
 
         assertThat(result).isEqualTo(response);
         assertThat(result.getStatus()).isEqualTo("PUBLISHED");
@@ -70,10 +66,9 @@ class PublicationControllerTest {
 
     @Test
     void publish_shouldThrowException_whenServiceThrows() {
-        when(encoder.decode(Publication.class, "1")).thenReturn(1L);
         when(commandHandler.publish(1L, principal)).thenThrow(new IllegalStateException("Already published"));
 
-        assertThatThrownBy(() -> controller.publish(principal, "1"))
+        assertThatThrownBy(() -> controller.publish(principal, new PublicationId(1L)))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Already published");
     }

@@ -2,8 +2,6 @@ package id.perumdamts.mail.repository.master.jooq;
 
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageParams;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageResponse;
-import id.perumdamts.mail.entity.master.QuickMessage;
-import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.RequiredArgsConstructor;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
@@ -22,23 +20,22 @@ import static org.jooq.impl.DSL.*;
 @RequiredArgsConstructor
 public class QuickMessageQueryRepository {
     private final DSLContext dsl;
-    private final SqidsEncoder encoder;
 
     public Page<QuickMessageResponse> findAll(QuickMessageParams params) {
-        Condition condition = field("ps.status").ne(inline("DELETED"));
+        Condition condition = field("ps.is_deleted").eq(0);
 
         if (params.getSearch() != null && !params.getSearch().isBlank()) {
-            condition = condition.and(field("ps.pesan").likeIgnoreCase("%" + params.getSearch() + "%"));
+            condition = condition.and(condition("MATCH(ps.pesan) AGAINST(? IN BOOLEAN MODE)", params.getSearch()));
         }
 
         if (params.getStatus() != null) {
-            condition = condition.and(field("ps.status").eq(params.getStatus().name()));
+            condition = condition.and(field("ps.status_new").eq(params.getStatus().name()));
         }
 
         var records = dsl.select(
                         field("ps.id"),
                         field("ps.pesan"),
-                        field("ps.status"),
+                        field("ps.status_new"),
                         count().over().as("total_count"))
                 .from(table("pesan_singkat").as("ps"))
                 .where(condition)
@@ -57,10 +54,10 @@ public class QuickMessageQueryRepository {
         QuickMessageResponse response = dsl.select(
                         field("ps.id"),
                         field("ps.pesan"),
-                        field("ps.status"))
+                        field("ps.status_new"))
                 .from(table("pesan_singkat").as("ps"))
                 .where(field("ps.id").eq(id))
-                .and(field("ps.status").ne(inline("DELETED")))
+                .and(field("ps.is_deleted").eq(0))
                 .fetchOne(this::mapRecordToResponse);
 
         return Optional.ofNullable(response);
@@ -69,7 +66,7 @@ public class QuickMessageQueryRepository {
     private QuickMessageResponse mapRecordToResponse(Record r) {
         Long id = r.get(field("ps.id"), Long.class);
         return new QuickMessageResponse(
-                encoder.encode(QuickMessage.class, id),
+                new id.perumdamts.mail.dto.id.QuickMessageId(id),
                 r.get(field("ps.pesan"), String.class));
     }
 }

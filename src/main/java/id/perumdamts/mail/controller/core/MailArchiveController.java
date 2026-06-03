@@ -47,8 +47,9 @@ public class MailArchiveController {
     @PostMapping("/{id}/publish")
     public ArchiveResponse publish(
             @AuthenticationPrincipal MailPrincipal principal,
-            @PathVariable Long id) {
-        return commandService.publishArchive(id, principal);
+            @PathVariable Long id,
+            @Valid @RequestBody ArchivePublishRequest request) {
+        return commandService.publishArchive(id, request, principal);
     }
 
     @DeleteMapping("/{id}")

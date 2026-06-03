@@ -1,12 +1,11 @@
 package id.perumdamts.mail.entity.core;
 
+import id.perumdamts.mail.util.BooleanYesNoConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "mail_archive_access")
@@ -23,26 +22,29 @@ public class MailArchiveAccess {
     @Column(name = "mail_archive_id")
     private Long archiveId;
 
-    @Column(name = "position_id")
+    @Column(name = "pos_id")
     private Integer positionId;
 
-    @Column(name = "access_level")
-    private Integer accessLevel;
+    @Convert(converter = BooleanYesNoConverter.class)
+    @Column(name = "access", length = 1)
+    private Boolean canAccess = true;
 
-    @Column(name = "granted_date")
-    private LocalDateTime grantedDate;
+    @Convert(converter = BooleanYesNoConverter.class)
+    @Column(name = "download", length = 1)
+    private Boolean canDownload = true;
 
-    @Column(name = "granted_by")
-    private Integer grantedBy;
+    @Convert(converter = BooleanYesNoConverter.class)
+    @Column(name = "history", length = 1)
+    private Boolean canViewHistory = true;
 
     public static MailArchiveAccess create(Long archiveId, Integer positionId,
-                                            Integer accessLevel, Integer grantedBy) {
+                                            Boolean canAccess, Boolean canDownload, Boolean canViewHistory) {
         var access = new MailArchiveAccess();
         access.setArchiveId(archiveId);
         access.setPositionId(positionId);
-        access.setAccessLevel(accessLevel);
-        access.setGrantedBy(grantedBy);
-        access.setGrantedDate(LocalDateTime.now());
+        access.setCanAccess(canAccess);
+        access.setCanDownload(canDownload);
+        access.setCanViewHistory(canViewHistory);
         return access;
     }
 }

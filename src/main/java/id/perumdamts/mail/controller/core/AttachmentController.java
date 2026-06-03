@@ -1,9 +1,13 @@
 package id.perumdamts.mail.controller.core;
 
 import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
+import id.perumdamts.mail.dto.id.AttachmentId;
 import id.perumdamts.mail.enums.AttachmentRefType;
 import id.perumdamts.mail.security.MailPrincipal;
-import id.perumdamts.mail.service.core.attachment.AttachmentService;
+import id.perumdamts.mail.dto.core.attachment.AttachmentMapper;
+import id.perumdamts.mail.service.core.attachment.AttachmentCommandService;
+import id.perumdamts.mail.service.core.attachment.AttachmentQueryService;
+import id.perumdamts.mail.entity.core.Attachment;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,21 +23,25 @@ import java.util.List;
 @RequestMapping("/api/v1/attachments")
 public class AttachmentController {
 
-    private final AttachmentService service;
+    private final AttachmentQueryService queryService;
+    private final AttachmentCommandService commandService;
+    private final AttachmentMapper mapper;
 
-    public AttachmentController(AttachmentService service) {
-        this.service = service;
+    public AttachmentController(AttachmentQueryService queryService, AttachmentCommandService commandService, AttachmentMapper mapper) {
+        this.queryService = queryService;
+        this.commandService = commandService;
+        this.mapper = mapper;
     }
 
     @GetMapping
     public List<AttachmentResponse> findByOwner(@RequestParam AttachmentRefType refType,
                                                  @RequestParam Long refId) {
-        return service.findByOwner(refType, refId);
+        return queryService.findByOwner(refType, refId);
     }
 
     @GetMapping("/{id}")
-    public AttachmentResponse findById(@PathVariable Integer id) {
-        return service.findById(id);
+    public AttachmentResponse findById(@PathVariable AttachmentId id) {
+        return queryService.findById(id.value());
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -43,24 +51,25 @@ public class AttachmentController {
             @RequestParam Long refId,
             @RequestParam(required = false) String docNotes,
             @AuthenticationPrincipal MailPrincipal principal) {
+        Attachment attachment = commandService.upload(file, refType, refId, docNotes, principal);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(service.upload(file, refType, refId, docNotes, principal));
+                .body(mapper.toResponse(attachment));
     }
 
     @GetMapping("/{id}/download")
-    public ResponseEntity<Resource> download(@PathVariable Integer id,
+    public ResponseEntity<Resource> download(@PathVariable AttachmentId id,
                                              @AuthenticationPrincipal MailPrincipal principal) {
-        var result = service.download(id, principal);
+        Resource resource = queryService.download(id.value(), principal);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + result.filename() + "\"")
-                .body(result.resource());
+                        "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Integer id) {
-        service.delete(id);
+    public void delete(@PathVariable AttachmentId id) {
+        commandService.delete(id.value());
     }
 }

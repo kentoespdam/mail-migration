@@ -1,7 +1,9 @@
 package id.perumdamts.mail.dto.core.folder;
 
-import jakarta.validation.constraints.NotBlank;
+import id.perumdamts.mail.dto.id.MailFolderId;
+import id.perumdamts.mail.dto.id.MailId;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
@@ -13,7 +15,7 @@ import java.util.List;
  * @param toFolderId   SQID folder tujuan
  */
 public record MoveMailRequest(
-                @NotEmpty List<String> mailIds,
-                @NotBlank String fromFolderId,
-                @NotBlank String toFolderId) {
+                @NotEmpty List<MailId> mailIds,
+                @NotNull MailFolderId fromFolderId,
+                @NotNull MailFolderId toFolderId) {
 }

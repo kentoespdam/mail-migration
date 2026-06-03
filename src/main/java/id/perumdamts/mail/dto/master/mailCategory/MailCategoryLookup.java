@@ -1,10 +1,11 @@
 package id.perumdamts.mail.dto.master.mailCategory;
 
 import id.perumdamts.mail.dto.common.HasSqid;
-import lombok.Value;
+import id.perumdamts.mail.dto.id.MailCategoryId;
 
-@Value
-public class MailCategoryLookup implements HasSqid {
-    String id;
-    String name;
+public record MailCategoryLookup(MailCategoryId id, String name) implements HasSqid {
+    @Override
+    public MailCategoryId getId() {
+        return id;
+    }
 }

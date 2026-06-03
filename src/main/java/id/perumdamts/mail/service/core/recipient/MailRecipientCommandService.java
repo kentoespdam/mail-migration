@@ -1,6 +1,7 @@
 package id.perumdamts.mail.service.core.recipient;
 
 import id.perumdamts.mail.dto.core.recipient.*;
+import id.perumdamts.mail.dto.id.UserId;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.entity.core.MailRecipient;
 import id.perumdamts.mail.enums.CirculationType;
@@ -12,7 +13,6 @@ import id.perumdamts.mail.repository.core.jooq.RecipientQueryRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRecipientRepository;
 import id.perumdamts.mail.repository.core.jpa.MailRepository;
 import id.perumdamts.mail.service.core.usertask.UserTaskCommandService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -35,22 +35,19 @@ public class MailRecipientCommandService {
     private final RecipientMapper recipientMapper;
     private final RecipientQueryRepository recipientQueryRepository;
     private final UserTaskCommandService userTaskCommandService;
-    private final SqidsEncoder encoder;
 
     public MailRecipientCommandService(MailRecipientRepository recipientRepository,
-            MailRepository mailRepository,
-            HrServiceClient hrServiceClient,
-            RecipientMapper recipientMapper,
-            RecipientQueryRepository recipientQueryRepository,
-            UserTaskCommandService userTaskCommandService,
-            SqidsEncoder encoder) {
+                                       MailRepository mailRepository,
+                                       HrServiceClient hrServiceClient,
+                                       RecipientMapper recipientMapper,
+                                       RecipientQueryRepository recipientQueryRepository,
+                                       UserTaskCommandService userTaskCommandService) {
         this.recipientRepository = recipientRepository;
         this.mailRepository = mailRepository;
         this.hrServiceClient = hrServiceClient;
         this.recipientMapper = recipientMapper;
         this.recipientQueryRepository = recipientQueryRepository;
         this.userTaskCommandService = userTaskCommandService;
-        this.encoder = encoder;
     }
 
     @Transactional
@@ -58,10 +55,9 @@ public class MailRecipientCommandService {
         Mail mail = getMailOrThrow(mailId);
         assertCanManageRecipients(mail, currentUserId);
         CirculationType circulationType = CirculationType
-                .fromDbValue((int) encoder.decode(CirculationType.class, request.circulation()));
+                .fromDbValue((int) request.circulation().value());
 
-        long empId = encoder.decode(MailRecipient.class, request.empId());
-        EmployeeDto emp = hrServiceClient.getEmployee(empId)
+        EmployeeDto emp = hrServiceClient.getEmployee(request.empId().value())
                 .orElseThrow(() -> new IllegalArgumentException("Employee not found: " + request.empId()));
 
         Long userId = emp.id();
@@ -89,11 +85,11 @@ public class MailRecipientCommandService {
         Mail mail = getMailOrThrow(mailId);
         assertCanManageRecipients(mail, currentUserId);
         CirculationType circulationType = CirculationType
-                .fromDbValue((int) encoder.decode(CirculationType.class, request.circulation()));
+                .fromDbValue((int) request.circulation().value());
         Set<Long> existingUserIds = recipientRepository.findUserIdsByMailId(mailId);
 
         List<Long> empIdLongs = request.empIds().stream()
-                .map(sqid -> encoder.decode(MailRecipient.class, sqid))
+                .map(UserId::value)
                 .toList();
         EmployeeResponse response = hrServiceClient.getBatchEmployees(
                 new BatchIdsRequest(empIdLongs));
@@ -105,17 +101,17 @@ public class MailRecipientCommandService {
         List<MailRecipient> toSave = new ArrayList<>();
         List<BatchRecipientResponse.FailedRecipient> failed = new ArrayList<>();
 
-        for (String empSqid : request.empIds()) {
-            long empId = encoder.decode(MailRecipient.class, empSqid);
-            EmployeeDto emp = empMap.get(empId);
+        for (UserId empId : request.empIds()) {
+            Long empLongId = empId.value();
+            EmployeeDto emp = empMap.get(empLongId);
             if (emp == null) {
-                failed.add(new BatchRecipientResponse.FailedRecipient(empSqid, "Employee not found in HR Service"));
+                failed.add(new BatchRecipientResponse.FailedRecipient(empId.toString(), "Employee not found in HR Service"));
                 continue;
             }
 
             Long userId = emp.id();
             if (existingUserIds.contains(userId)) {
-                failed.add(new BatchRecipientResponse.FailedRecipient(empSqid, "Recipient already exists"));
+                failed.add(new BatchRecipientResponse.FailedRecipient(empId.toString(), "Recipient already exists"));
                 continue;
             }
 
@@ -154,8 +150,8 @@ public class MailRecipientCommandService {
 
     @Transactional
     public RecipientResponse updateNotifFlags(Long mailId, Long recipientId,
-            RecipientNotifPatchRequest request,
-            Long currentUserId) {
+                                              RecipientNotifPatchRequest request,
+                                              Long currentUserId) {
         assertCanManageRecipients(getMailOrThrow(mailId), currentUserId);
         var recipient = recipientRepository.findById(recipientId)
                 .orElseThrow(() -> new EntityNotFoundException("Recipient not found: " + recipientId));

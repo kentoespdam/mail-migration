@@ -1,7 +1,7 @@
 package id.perumdamts.mail.entity.master;
 
 import id.perumdamts.mail.entity.SqidEntity;
-import id.perumdamts.mail.enums.RecordStatus;
+import id.perumdamts.mail.enums.RecordStatusActive;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "pesan_singkat")
-@SQLRestriction("status != 'DELETED'")
+@SQLRestriction("is_deleted = 0")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -36,8 +36,11 @@ public class QuickMessage implements SqidEntity {
     private String message;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, length = 16)
-    private RecordStatus status = RecordStatus.ACTIVE;
+    @Column(name = "status_new", nullable = false)
+    private RecordStatusActive status = RecordStatusActive.ACTIVE;
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean deleted = false;
 
     @Column(name = "created_date", updatable = false)
     private LocalDateTime createdDate;
@@ -61,17 +64,17 @@ public class QuickMessage implements SqidEntity {
     }
 
     public boolean isActive() {
-        return status == RecordStatus.ACTIVE;
+        return !this.deleted && this.status == RecordStatusActive.ACTIVE;
     }
 
     public void markDeleted() {
-        this.status = RecordStatus.DELETED;
+        this.deleted = true;
     }
 
     public void toggleStatus() {
-        if (status == RecordStatus.DELETED) {
-            throw new IllegalStateException("Cannot toggle status of a DELETED record");
+        if (this.deleted) {
+            throw new IllegalStateException("Cannot toggle status of a deleted record");
         }
-        this.status = (status == RecordStatus.ACTIVE) ? RecordStatus.INACTIVE : RecordStatus.ACTIVE;
+        this.status = (status == RecordStatusActive.ACTIVE) ? RecordStatusActive.INACTIVE : RecordStatusActive.ACTIVE;
     }
 }

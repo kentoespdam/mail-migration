@@ -2,13 +2,13 @@ package id.perumdamts.mail.repository.core.jooq;
 
 import id.perumdamts.mail.dto.core.folder.MailFolderLookup;
 import id.perumdamts.mail.dto.core.mail.*;
+import id.perumdamts.mail.dto.id.MailCategoryId;
+import id.perumdamts.mail.dto.id.MailFolderId;
+import id.perumdamts.mail.dto.id.MailId;
+import id.perumdamts.mail.dto.id.MailTypeId;
+import id.perumdamts.mail.dto.id.UserId;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryLookup;
 import id.perumdamts.mail.dto.master.mailType.MailTypeLookup;
-import id.perumdamts.mail.entity.core.Mail;
-import id.perumdamts.mail.entity.core.MailRecipient;
-import id.perumdamts.mail.entity.master.MailCategory;
-import id.perumdamts.mail.entity.master.MailType;
-import id.perumdamts.mail.util.SqidsEncoder;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
 import org.jooq.SortField;
@@ -25,11 +25,9 @@ import static org.jooq.impl.DSL.*;
 public class MailQueryRepository {
 
         private final DSLContext dsl;
-        private final SqidsEncoder encoder;
 
-        public MailQueryRepository(DSLContext dsl, SqidsEncoder encoder) {
+        public MailQueryRepository(DSLContext dsl) {
                 this.dsl = dsl;
-                this.encoder = encoder;
         }
 
         public List<MailSummaryResponse> findMailsInFolder(Long userId, Long folderId,
@@ -99,14 +97,13 @@ public class MailQueryRepository {
                                                         .or(field("m.m_to_str").likeIgnoreCase(kw)));
                 }
 
-                if (request.getMailTypeId() != null && !request.getMailTypeId().isBlank()) {
+                if (request.getMailTypeId() != null) {
                         condition = condition.and(
-                                        field("m.m_type").eq(encoder.decode(MailType.class, request.getMailTypeId())));
+                                        field("m.m_type").eq(request.getMailTypeId().value()));
                 }
-                if (request.getMailCategoryId() != null && !request.getMailCategoryId().isBlank()) {
+                if (request.getMailCategoryId() != null) {
                         condition = condition
-                                        .and(field("m.m_category").eq(encoder.decode(MailCategory.class,
-                                                        request.getMailCategoryId())));
+                                        .and(field("m.m_category").eq(request.getMailCategoryId().value()));
                 }
                 if (request.getStartDate() != null && request.getEndDate() != null) {
                         condition = condition
@@ -115,10 +112,9 @@ public class MailQueryRepository {
                 if (request.getHasAttachment() != null && request.getHasAttachment()) {
                         condition = condition.and(field("m.m_attachment_qty").gt(0));
                 }
-                if (request.getSenderId() != null && !request.getSenderId().isBlank()) {
+                if (request.getSenderId() != null) {
                         condition = condition
-                                        .and(field("m.m_created_by").eq(
-                                                        encoder.decode(MailRecipient.class, request.getSenderId())));
+                                        .and(field("m.m_created_by").eq(request.getSenderId().value()));
                 }
 
                 return dsl.select(
@@ -200,14 +196,13 @@ public class MailQueryRepository {
         public List<MailReportResponse> getReport(MailReportRequest request) {
                 Condition condition = field("m.m_status").eq(1);
 
-                if (request.getMailTypeId() != null && !request.getMailTypeId().isBlank()) {
+                if (request.getMailTypeId() != null) {
                         condition = condition.and(
-                                        field("m.m_type").eq(encoder.decode(MailType.class, request.getMailTypeId())));
+                                        field("m.m_type").eq(request.getMailTypeId().value()));
                 }
-                if (request.getMailCategoryId() != null && !request.getMailCategoryId().isBlank()) {
+                if (request.getMailCategoryId() != null) {
                         condition = condition
-                                        .and(field("m.m_category").eq(encoder.decode(MailCategory.class,
-                                                        request.getMailCategoryId())));
+                                        .and(field("m.m_category").eq(request.getMailCategoryId().value()));
                 }
                 if (request.getStartDate() != null && request.getEndDate() != null) {
                         condition = condition
@@ -286,19 +281,17 @@ public class MailQueryRepository {
 
         private MailResponse mapToResponse(org.jooq.Record r) {
                 return new MailResponse(
-                                encoder.encode(Mail.class, r.get("id", Long.class)),
+                                new MailId(r.get("id", Long.class)),
                                 r.get("mailNumber", String.class),
                                 r.get("mailDate", LocalDate.class),
                                 new MailTypeLookup(
                                                 r.get("mailTypeId") != null
-                                                                ? encoder.encode(MailType.class,
-                                                                                r.get("mailTypeId", Long.class))
+                                                                ? new MailTypeId(r.get("mailTypeId", Long.class))
                                                                 : null,
                                                 r.get("mailTypeName", String.class)),
                                 new MailCategoryLookup(
                                                 r.get("mailCategoryId") != null
-                                                                ? encoder.encode(MailCategory.class,
-                                                                                r.get("mailCategoryId", Long.class))
+                                                                ? new MailCategoryId(r.get("mailCategoryId", Long.class))
                                                                 : null,
                                                 r.get("mailCategoryName", String.class)),
                                 r.get("subject", String.class),
@@ -308,27 +301,24 @@ public class MailQueryRepository {
                                 r.get("status", Integer.class),
                                 new MailComponentDto.MailThreadInfoDto(
                                                 r.get("rootMailId") != null
-                                                                ? encoder.encode(Mail.class,
-                                                                                r.get("rootMailId", Long.class))
+                                                                ? new MailId(r.get("rootMailId", Long.class))
                                                                 : null,
                                                 r.get("parentMailId") != null
-                                                                ? encoder.encode(Mail.class,
-                                                                                r.get("parentMailId", Long.class))
+                                                                ? new MailId(r.get("parentMailId", Long.class))
                                                                 : null),
                                 new MailComponentDto.MailSummaryInfoDto(
                                                 r.get("attachmentQty", Integer.class),
                                                 r.get("toStr", String.class)),
                                 new MailComponentDto.MailAuditInfoDto(
                                                 r.get("createdBy") != null
-                                                                ? encoder.encode(Mail.class,
-                                                                                r.get("createdBy", Long.class))
+                                                                ? new UserId(r.get("createdBy", Long.class))
                                                                 : null,
                                                 r.get("createdByName", String.class),
                                                 r.get("createdDate", LocalDateTime.class),
                                                 r.get("updatedDate", LocalDateTime.class)),
                                 r.get("noSuratMasuk", String.class),
                                 r.get("asalSuratMasuk", String.class),
-                                r.get("tglSuratMasuk", String.class),
+                                r.get("tglSuratMasuk", LocalDate.class),
                                 r.get("tujuanSuratKeluar", String.class),
                                 r.get("penerimaSuratKeluar", String.class),
                                 null // attachments to be filled by service
@@ -337,14 +327,13 @@ public class MailQueryRepository {
 
         private MailSummaryResponse mapToSummaryResponse(org.jooq.Record r) {
                 return new MailSummaryResponse(
-                                encoder.encode(Mail.class, r.get("id", Long.class)),
+                                new MailId(r.get("id", Long.class)),
                                 r.get("mailNumber", String.class),
                                 r.get("mailDate", LocalDate.class),
                                 r.get("subject", String.class),
                                 new MailComponentDto.MailAuditInfoDto(
                                                 r.get("createdBy") != null
-                                                                ? encoder.encode(Mail.class,
-                                                                                r.get("createdBy", Long.class))
+                                                                ? new UserId(r.get("createdBy", Long.class))
                                                                 : null,
                                                 r.get("createdByName", String.class),
                                                 r.get("createdDate", LocalDateTime.class),
@@ -353,25 +342,23 @@ public class MailQueryRepository {
                                                 r.get("attachmentQty", Integer.class),
                                                 r.get("toStr", String.class)),
                                 r.get("readStatus", Integer.class),
-                                r.get("folderId") != null ? String.valueOf(r.get("folderId")) : null,
+                                r.get("folderId") != null ? new MailFolderId(r.get("folderId", Long.class)) : null,
                                 new MailTypeLookup(null, r.get("mailTypeName", String.class)),
                                 new MailCategoryLookup(null, r.get("mailCategoryName", String.class)),
                                 r.get("circulationName") != null ? r.get("circulationName", String.class) : null,
                                 new MailFolderLookup(
                                                 r.get("restoreFolderId") != null
-                                                                ? String.valueOf(r.get("restoreFolderId"))
+                                                                ? new MailFolderId(r.get("restoreFolderId", Long.class))
                                                                 : null,
                                                 r.get("restoreFolderName") != null
                                                                 ? r.get("restoreFolderName", String.class)
                                                                 : null),
                                 new MailComponentDto.MailThreadInfoDto(
                                                 r.get("rootMailId") != null
-                                                                ? encoder.encode(Mail.class,
-                                                                                r.get("rootMailId", Long.class))
+                                                                ? new MailId(r.get("rootMailId", Long.class))
                                                                 : null,
                                                 r.get("parentMailId") != null
-                                                                ? encoder.encode(Mail.class,
-                                                                                r.get("parentMailId", Long.class))
+                                                                ? new MailId(r.get("parentMailId", Long.class))
                                                                 : null),
                                 r.get("totalCount") != null ? r.get("totalCount", Long.class) : null);
         }

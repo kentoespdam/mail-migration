@@ -26,6 +26,6 @@ public class BmsMailNumberGenerator extends AbstractMailNumberGenerator {
 
     @Override
     protected String getFormatRefCode() {
-        return "BMS_MAIL_NUMBER_FORMAT";
+        return "m_number_format_bms";
     }
 }

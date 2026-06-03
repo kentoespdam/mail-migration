@@ -18,12 +18,8 @@ public record ArchiveResponse(
         String rack,
         String shelf,
         String box,
-        String folderPosition,
         String keywordFlag,
-        Integer attachmentQty,
         LocalDateTime createdDate,
         LocalDateTime updatedDate,
-        LocalDateTime publishedAt,
-        Integer createdBy,
         String createdByName
 ) {}

@@ -1,11 +1,10 @@
 package id.perumdamts.mail.controller.master;
 
+import id.perumdamts.mail.dto.id.AllowedFileTypeId;
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeDto;
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeParams;
 import id.perumdamts.mail.dto.master.allowedFileType.AllowedFileTypeRequest;
-import id.perumdamts.mail.entity.master.AllowedFileType;
 import id.perumdamts.mail.service.master.allowedFileType.AllowedFileTypeService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -23,7 +22,6 @@ import java.util.List;
 public class AllowedFileTypeController {
 
     private final AllowedFileTypeService service;
-    private final SqidsEncoder encoder;
 
     @GetMapping
     public PagedModel<AllowedFileTypeDto> findAll(@ParameterObject AllowedFileTypeParams params) {
@@ -43,17 +41,15 @@ public class AllowedFileTypeController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public AllowedFileTypeDto update(@PathVariable String id,
+    public AllowedFileTypeDto update(@PathVariable AllowedFileTypeId id,
                                       @Valid @RequestBody AllowedFileTypeRequest request) {
-        long rawId = encoder.decode(AllowedFileType.class, id);
-        return service.update(rawId, request);
+        return service.update(id.value(), request);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String id) {
-        long rawId = encoder.decode(AllowedFileType.class, id);
-        service.delete(rawId);
+    public void delete(@PathVariable AllowedFileTypeId id) {
+        service.delete(id.value());
     }
 }

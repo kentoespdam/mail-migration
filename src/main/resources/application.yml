@@ -13,15 +13,10 @@ spring:
     import: optional:file:.env[.properties]
 
   # ── Flyway ──
+  # Disabled by default. Migrasi hanya dijalankan di profile=dev (lihat blok bawah).
+  # Production: schema dikelola manual / DBA, aplikasi tidak melakukan migrasi otomatis.
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    baseline-version: 0
-    locations: classpath:db/migration
-    validate-on-migrate: false
-    clean-disabled: true
-    out-of-order: false
-    encoding: UTF-8
+    enabled: false
 
   # ── DataSource ──
   datasource:
@@ -101,6 +96,11 @@ app:
     inbox-sort-ascending: false
     default-mail-type-id: 1
     default-mail-category-id: 1
+  # ── Rate Limit ──
+  rate-limit:
+    verify-sign:
+      capacity: ${RATE_LIMIT_VERIFY_CAPACITY:30}
+      duration: ${RATE_LIMIT_VERIFY_DURATION:1m}
   # ── Scheduler ──
   scheduler:
     publication-notif:
@@ -132,3 +132,18 @@ logging:
     id.perumdamts.mail: ${LOG_LEVEL:DEBUG}
     org.jooq: INFO
     org.springframework.security: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration,classpath:db/seeds
+    validate-on-migrate: false
+    clean-disabled: true
+    out-of-order: true
+    encoding: UTF-8

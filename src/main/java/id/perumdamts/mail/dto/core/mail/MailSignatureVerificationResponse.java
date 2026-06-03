@@ -9,20 +9,21 @@ public record MailSignatureVerificationResponse(
                 boolean valid,
                 String mailId,
                 String mailNumber,
-                String subject,
-                LocalDateTime printDate,
-                String printedBy,
-                String ipAddress,
+                LocalDateTime signedAt,
+                String signerName,
+                String signerPosition,
+                String archiveStatus,
                 String message) {
 
         /**
          * Create response untuk signature yang valid.
          */
         public static MailSignatureVerificationResponse valid(
-                        String mailId, String mailNumber, String subject,
-                        LocalDateTime printDate, String printedBy, String ipAddress) {
+                        String mailId, String mailNumber,
+                        LocalDateTime signedAt, String signerName, String signerPosition,
+                        String archiveStatus) {
                 return new MailSignatureVerificationResponse(
-                                true, mailId, mailNumber, subject, printDate, printedBy, ipAddress,
+                                true, mailId, mailNumber, signedAt, signerName, signerPosition, archiveStatus,
                                 "Dokumen valid - tercatat dalam sistem");
         }
 
@@ -32,6 +33,6 @@ public record MailSignatureVerificationResponse(
         public static MailSignatureVerificationResponse invalid(String message) {
                 return new MailSignatureVerificationResponse(
                                 false, null, null, null, null, null, null,
-                                message != null ? message : "Kode verifikasi tidak valid");
+                                message != null ? message : "INVALID_OR_DELETED");
         }
 }

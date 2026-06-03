@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "mail")
+@SQLRestriction("is_deleted = 0")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -27,7 +29,7 @@ public class Mail implements SqidEntity {
     @Column(name = "m_id")
     private Long id;
 
-    @Column(name = "m_no", length = 100)
+    @Column(name = "m_no", length = 64)
     private String mailNumber;
 
     @Column(name = "m_date")
@@ -41,7 +43,7 @@ public class Mail implements SqidEntity {
     @JoinColumn(name = "m_category")
     private MailCategory mailCategory;
 
-    @Column(name = "m_subject")
+    @Column(name = "m_subject", length = 256)
     private String subject;
 
     @Column(name = "m_content", columnDefinition = "TEXT")
@@ -79,23 +81,30 @@ public class Mail implements SqidEntity {
     @Column(name = "m_created_by")
     private Long createdBy;
 
-    @Column(name = "m_created_by_name", length = 100)
+    @Column(name = "m_created_by_name", length = 64)
     private String createdByName;
 
-    @Column(name = "m_no_surat_masuk", length = 100)
+    @Column(name = "m_no_surat_masuk", length = 64)
     private String noSuratMasuk;
 
-    @Column(name = "m_asal_surat_masuk", length = 200)
+    @Column(name = "m_asal_surat_masuk", length = 128)
     private String asalSuratMasuk;
 
-    @Column(name = "m_tgl_surat_masuk", length = 50)
-    private String tglSuratMasuk;
+    @Column(name = "m_tgl_surat_masuk")
+    private LocalDate tglSuratMasuk;
 
-    @Column(name = "m_tujuan_surat_keluar", length = 200)
+    @Column(name = "m_tujuan_surat_keluar", length = 128)
     private String tujuanSuratKeluar;
 
-    @Column(name = "m_penerima_surat_keluar", length = 200)
+    @Column(name = "m_penerima_surat_keluar", length = 128)
     private String penerimaSuratKeluar;
+
+    @Convert(converter = id.perumdamts.mail.util.MailSenderSnapshotConverter.class)
+    @Column(name = "m_sender_snapshot", columnDefinition = "JSON")
+    private id.perumdamts.mail.dto.core.mail.MailSenderSnapshotDto senderSnapshot;
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean deleted = false;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "ref_id", referencedColumnName = "m_id")
@@ -127,6 +136,18 @@ public class Mail implements SqidEntity {
         this.mailNumber = mailNumber;
         this.status = MailStatus.SENT.getDbValue();
         this.mailDate = LocalDate.now();
+        this.updatedDate = LocalDateTime.now();
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdDate == null) this.createdDate = LocalDateTime.now();
+        if (this.updatedDate == null) this.updatedDate = this.createdDate;
+        if (this.deleted == null) this.deleted = false;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
         this.updatedDate = LocalDateTime.now();
     }
 }

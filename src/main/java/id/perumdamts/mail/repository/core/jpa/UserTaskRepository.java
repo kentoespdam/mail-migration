@@ -62,4 +62,6 @@ public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
      */
     @Query("SELECT u FROM UserTask u WHERE u.mailId = :mailId AND u.folderId = 6")
     List<UserTask> findAllInTrashByMailId(@Param("mailId") Long mailId);
+
+    long countByUserIdAndFolderId(Long userId, Long folderId);
 }

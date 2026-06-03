@@ -1,0 +1,24 @@
+label	cnt
+attachments.id duplicates	0
+label	cnt
+mail_archive_access.position_id non-numeric	0
+label	cnt
+mail_recipient (mail_id,user_id) duplicates	0
+label	cnt
+mail.m_type orphan	0
+label	cnt
+mail.m_category orphan	0
+label	cnt
+mail.m_root_id orphan	0
+label	cnt
+mail.m_parent_id orphan	0
+label	cnt
+mail_recipient.mail_id orphan	0
+label	cnt
+sys_user_task.tm_id orphan	0
+label	cnt
+print_log.mail_id orphan	0
+label	cnt
+attachment_download_history.attachment_id orphan	0
+label	info
+pesan_singkat engine	InnoDB

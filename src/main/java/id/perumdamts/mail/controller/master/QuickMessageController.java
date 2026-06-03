@@ -1,12 +1,11 @@
 package id.perumdamts.mail.controller.master;
 
+import id.perumdamts.mail.dto.id.QuickMessageId;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageParams;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageRequest;
 import id.perumdamts.mail.dto.master.quickMessage.QuickMessageResponse;
-import id.perumdamts.mail.entity.master.QuickMessage;
 import id.perumdamts.mail.service.master.quickMessage.QuickMessageCommandService;
 import id.perumdamts.mail.service.master.quickMessage.QuickMessageQueryService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -24,7 +23,6 @@ public class QuickMessageController {
 
     private final QuickMessageCommandService commandService;
     private final QuickMessageQueryService queryService;
-    private final SqidsEncoder encoder;
 
     @GetMapping("/lookup")
     public List<QuickMessageResponse> lookup() {
@@ -37,9 +35,8 @@ public class QuickMessageController {
     }
 
     @GetMapping("/{id}")
-    public QuickMessageResponse findById(@PathVariable String id) {
-        long rawId = encoder.decode(QuickMessage.class, id);
-        return queryService.findById(rawId);
+    public QuickMessageResponse findById(@PathVariable QuickMessageId id) {
+        return queryService.findById(id.value());
     }
 
     @PostMapping
@@ -48,21 +45,18 @@ public class QuickMessageController {
     }
 
     @PutMapping("/{id}")
-    public QuickMessageResponse update(@PathVariable String id, @Valid @RequestBody QuickMessageRequest request) {
-        long rawId = encoder.decode(QuickMessage.class, id);
-        return commandService.update(rawId, request);
+    public QuickMessageResponse update(@PathVariable QuickMessageId id, @Valid @RequestBody QuickMessageRequest request) {
+        return commandService.update(id.value(), request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String id) {
-        long rawId = encoder.decode(QuickMessage.class, id);
-        commandService.delete(rawId);
+    public void delete(@PathVariable QuickMessageId id) {
+        commandService.delete(id.value());
     }
 
     @PatchMapping("/{id}/status")
-    public QuickMessageResponse toggleStatus(@PathVariable String id) {
-        long rawId = encoder.decode(QuickMessage.class, id);
-        return commandService.toggleStatus(rawId);
+    public QuickMessageResponse toggleStatus(@PathVariable QuickMessageId id) {
+        return commandService.toggleStatus(id.value());
     }
 }

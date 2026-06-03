@@ -31,17 +31,20 @@ public class PrintLog {
     @Column(name = "mail_id", nullable = false)
     private Long mailId;
 
-    @Column(name = "auth_code", length = 100, nullable = false, unique = true)
+    @Column(name = "auth_code", length = 32, nullable = false, unique = true)
     private String authCode;
 
-    @Column(name = "username", length = 100, nullable = false)
+    @Column(name = "username", length = 128, nullable = false)
     private String username;
 
     @Column(name = "date", nullable = false)
     private LocalDateTime printDate;
 
-    @Column(name = "ip_address", length = 50)
+    @Column(name = "ip_address", length = 32)
     private String ipAddress;
+
+    @Column(name = "verify_log", length = 64)
+    private String verifyLog;
 
     /**
      * Factory method untuk create print log dengan auth code.
@@ -60,5 +63,13 @@ public class PrintLog {
      */
     public String getVerificationUrl(String baseUrl) {
         return baseUrl + "/api/mails/verify-sign/" + authCode;
+    }
+
+    public void recordVerification(String ipAddress) {
+        if (this.verifyLog == null) {
+            this.verifyLog = ipAddress;
+        } else if (!this.verifyLog.contains(ipAddress)) {
+            this.verifyLog += "," + ipAddress;
+        }
     }
 }

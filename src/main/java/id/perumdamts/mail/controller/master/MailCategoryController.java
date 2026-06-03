@@ -1,12 +1,11 @@
 package id.perumdamts.mail.controller.master;
 
+import id.perumdamts.mail.dto.id.MailCategoryId;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryParams;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryRequest;
 import id.perumdamts.mail.dto.master.mailCategory.MailCategoryResponse;
-import id.perumdamts.mail.entity.master.MailCategory;
 import id.perumdamts.mail.service.master.mailCategory.MailCategoryCommandService;
 import id.perumdamts.mail.service.master.mailCategory.MailCategoryQueryService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -22,7 +21,6 @@ public class MailCategoryController {
 
     private final MailCategoryCommandService commandService;
     private final MailCategoryQueryService queryService;
-    private final SqidsEncoder encoder;
 
     @GetMapping
     public PagedModel<MailCategoryResponse> findAll(@ParameterObject MailCategoryParams params) {
@@ -30,9 +28,8 @@ public class MailCategoryController {
     }
 
     @GetMapping("/{id}")
-    public MailCategoryResponse findById(@PathVariable String id) {
-        long rawId = encoder.decode(MailCategory.class, id);
-        return queryService.findById(rawId);
+    public MailCategoryResponse findById(@PathVariable MailCategoryId id) {
+        return queryService.findById(id.value());
     }
 
     @PostMapping
@@ -41,16 +38,14 @@ public class MailCategoryController {
     }
 
     @PutMapping("/{id}")
-    public MailCategoryResponse update(@PathVariable String id, @Valid @RequestBody MailCategoryRequest request) {
-        long rawId = encoder.decode(MailCategory.class, id);
-        return commandService.update(rawId, request);
+    public MailCategoryResponse update(@PathVariable MailCategoryId id, @Valid @RequestBody MailCategoryRequest request) {
+        return commandService.update(id.value(), request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable String id) {
-        long rawId = encoder.decode(MailCategory.class, id);
-        commandService.delete(rawId);
+    public void delete(@PathVariable MailCategoryId id) {
+        commandService.delete(id.value());
     }
 }
 

@@ -60,3 +60,4 @@ graphify-out/manifest.json
 
 # local token tracking, not useful to share
 graphify-out/cost.json
+/dummy-improve-code-prompt.md

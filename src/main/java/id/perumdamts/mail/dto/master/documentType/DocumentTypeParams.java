@@ -1,7 +1,7 @@
 package id.perumdamts.mail.dto.master.documentType;
 
 import id.perumdamts.mail.dto.common.PagedRequest;
-import id.perumdamts.mail.enums.RecordStatus;
+import id.perumdamts.mail.enums.RecordStatusActive;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,10 +14,10 @@ public class DocumentTypeParams extends PagedRequest {
     private static final Map<String, String> ALLOWED = Map.of(
             "id", "jd.id",
             "name", "jd.jenis_dokumen",
-            "status", "jd.status");
+            "status", "jd.status_new");
 
     private String search;
-    private RecordStatus status;
+    private RecordStatusActive status;
 
     @Override
     protected Map<String, String> allowedSorts() {

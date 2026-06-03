@@ -20,14 +20,14 @@
 
 ## Architecture Principles
 
-- **CQRS-lite**: `CommandService` (JPA write) + `QueryService` (JOOQ read)
-- **Layered**: Controller → Service → Repository · Domain Events via `@TransactionalEventListener` + `@Async`
-- **Soft Delete**: `@SQLRestriction("status != 'DELETED'")` on all entities · `MailFolder`: `folder_status = 1` (1=Active, 3=Deleted)
-- **Security**: `AppWriteAuthFilter extends OncePerRequestFilter` — JWT validation per request
-- **Tenant**: Replace `CLIENT_CODE if-else` with `TenantConfig`
-- **Virtual Threads**: `spring.threads.virtual.enabled: true` — avoid `synchronized` (use `ReentrantLock`)
-- **CQRS Split**: All core modules now follow Command/Query separation (Folder, Recipient, Mail, Archive, Publication)
-- **Performance**: FULLTEXT index on `mail` (subject, content) for optimized global search via `MATCH ... AGAINST`
+- **IDs**: **Sqids** for external (String) in Controller/DTO → decode to internal Long/Integer in Service.
+- **CQRS-lite**: `CommandService` (JPA write) + `QueryService` (JOOQ read).
+- **Security**: `AppWriteAuthFilter` JWT validation + **UserTask** ownership check for all mail/attachment ops.
+- **Layered**: Controller → Service → Repository · Domain Events via `@TransactionalEventListener` + `@Async`.
+- **Soft Delete**: `@SQLRestriction("status != 'DELETED'")` on all entities · `MailFolder`: `folder_status = 1` (1=Active, 3=Deleted). Legacy folders with `status=3` are hard-deleted after rescuing orphan tasks to Trash (ADR 004).
+- **Tenant**: Replace `CLIENT_CODE if-else` with `TenantConfig`.
+- **Virtual Threads**: `spring.threads.virtual.enabled: true` — avoid `synchronized` (use `ReentrantLock`).
+- **Performance**: FULLTEXT index on `mail` (subject, content) for optimized global search via `MATCH ... AGAINST`.
 
 ---
 
@@ -368,6 +368,8 @@ app:
 ### Other Core Services
 | Service | Package | Purpose |
 |---------|---------|---------|
+| `UserTaskCommandService` | `service/core/usertask` | UserTask projection from domain events (send, delete, etc) |
+| `UserTaskQueryService` | `service/core/usertask` | Inbox lookup, unread count, thread ownership check |
 | `MailFolderCommandService` | `service/core/folder` | Folder CRUD, move/delete/restore mails, empty trash |
 | `MailFolderQueryService` | `service/core/folder` | Folder tree, counters, mails in folder search |
 | `MailRecipientCommandService` | `service/core/recipient` | Batch recipient management, copy from/thread, notif flags |
@@ -496,14 +498,6 @@ docker compose up -d
 ```bash
 # Run all tests
 ./gradlew test
-
-# Run specific test class
-./gradlew test --tests MailSendServiceTest
-
-# Run with coverage
-./gradlew clean build jacocoTestReport
-```
-t
 
 # Run specific test class
 ./gradlew test --tests MailSendServiceTest

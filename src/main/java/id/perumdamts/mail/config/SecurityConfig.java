@@ -1,6 +1,7 @@
 package id.perumdamts.mail.config;
 
 import id.perumdamts.mail.security.AppWriteAuthFilter;
+import id.perumdamts.mail.security.ActivePositionFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -28,7 +29,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           AppWriteAuthFilter appWriteAuthFilter) {
+                                           AppWriteAuthFilter appWriteAuthFilter,
+                                           ActivePositionFilter activePositionFilter) {
         http
             // Stateless — tidak ada session
             .sessionManagement(session ->
@@ -46,6 +48,10 @@ public class SecurityConfig {
                 // Public endpoints
                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                 .requestMatchers(HttpMethod.GET, "/actuator/info").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/mails/verify-sign/**").permitAll()
+
+                // Internal endpoints (should be restricted by firewall/VPN in production)
+                .requestMatchers("/api/internal/**").permitAll()
 
                 // Semua API endpoint membutuhkan autentikasi
                 .requestMatchers("/api/**").authenticated()
@@ -57,8 +63,9 @@ public class SecurityConfig {
                 .anyRequest().denyAll()
             )
 
-            // Tambahkan AppWrite filter sebelum default authentication filter
-            .addFilterBefore(appWriteAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            // Tambahkan AppWrite filter, lalu ActivePositionFilter setelahnya
+            .addFilterBefore(appWriteAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(activePositionFilter, AppWriteAuthFilter.class);
 
         return http.build();
     }

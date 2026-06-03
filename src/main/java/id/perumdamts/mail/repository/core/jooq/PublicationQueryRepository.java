@@ -3,7 +3,6 @@ package id.perumdamts.mail.repository.core.jooq;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeLookup;
-import id.perumdamts.mail.entity.core.Publication;
 import id.perumdamts.mail.entity.master.DocumentType;
 import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.extern.slf4j.Slf4j;
@@ -141,15 +140,15 @@ public class PublicationQueryRepository {
 
         Long docTypeId = r.get(field("p.type"), Long.class);
         String docTypeName = r.get(field("jd.jenis_dokumen"), String.class);
-        DocumentTypeLookup docType = docTypeId != null
-                ? new DocumentTypeLookup(encoder.encode(DocumentType.class, docTypeId), docTypeName)
+        DocumentTypeLookup documentTypeLookup = docTypeId != null
+                ? new DocumentTypeLookup(new id.perumdamts.mail.dto.id.DocumentTypeId(docTypeId), docTypeName)
                 : null;
 
         return new PublicationResponse(
-                encoder.encode(Publication.class, id),
+                new id.perumdamts.mail.dto.id.PublicationId(id),
                 r.get(field("p.title"), String.class),
                 r.get(field("p.description"), String.class),
-                docType,
+                documentTypeLookup,
                 r.get(field("p.status"), String.class),
                 r.get(field("p.published_date"), LocalDateTime.class),
                 r.get(field("p.original_file_name"), String.class),

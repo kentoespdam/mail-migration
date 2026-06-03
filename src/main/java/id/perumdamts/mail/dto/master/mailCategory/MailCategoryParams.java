@@ -1,6 +1,7 @@
 package id.perumdamts.mail.dto.master.mailCategory;
 
 import id.perumdamts.mail.dto.common.PagedRequest;
+import id.perumdamts.mail.dto.id.MailTypeId;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,7 +18,7 @@ public class MailCategoryParams extends PagedRequest {
     );
 
     private String search;
-    private String mailTypeId;
+    private MailTypeId mailTypeId;
 
     @Override
     protected Map<String, String> allowedSorts() {

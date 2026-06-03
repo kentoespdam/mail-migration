@@ -1,18 +1,16 @@
 package id.perumdamts.mail.service.core.folder;
 
 import id.perumdamts.mail.config.CacheConfig;
-import id.perumdamts.mail.dto.core.folder.FolderCountDto;
-import id.perumdamts.mail.dto.core.folder.FolderCounterResponse;
-import id.perumdamts.mail.dto.core.folder.MailFolderMailsParams;
-import id.perumdamts.mail.dto.core.folder.MailFolderResponse;
+import id.perumdamts.mail.dto.core.folder.*;
 import id.perumdamts.mail.dto.core.mail.MailComponentDto;
 import id.perumdamts.mail.dto.core.mail.MailSummaryResponse;
+import id.perumdamts.mail.dto.id.MailFolderId;
+import id.perumdamts.mail.dto.id.UserId;
 import id.perumdamts.mail.entity.core.MailFolder;
 import id.perumdamts.mail.enums.SystemFolder;
 import id.perumdamts.mail.repository.core.jooq.FolderCounterRepository;
 import id.perumdamts.mail.repository.core.jooq.MailQueryRepository;
 import id.perumdamts.mail.repository.core.jpa.MailFolderRepository;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -30,16 +28,13 @@ public class MailFolderQueryService {
     private final MailFolderRepository folderRepository;
     private final FolderCounterRepository counterRepository;
     private final MailQueryRepository mailQueryRepository;
-    private final SqidsEncoder encoder;
 
     public MailFolderQueryService(MailFolderRepository folderRepository,
             FolderCounterRepository counterRepository,
-            MailQueryRepository mailQueryRepository,
-            SqidsEncoder encoder) {
+            MailQueryRepository mailQueryRepository) {
         this.folderRepository = folderRepository;
         this.counterRepository = counterRepository;
         this.mailQueryRepository = mailQueryRepository;
-        this.encoder = encoder;
     }
 
     @Cacheable(value = CacheConfig.CacheNames.MAIL_FOLDER, key = "'tree:' + #userId")
@@ -70,7 +65,7 @@ public class MailFolderQueryService {
         Map<Long, FolderCountDto> countersMap = counterRepository.getCountersMap(userId);
         return countersMap.values().stream()
                 .map(c -> new FolderCounterResponse(
-                        encoder.encode(MailFolder.class, c.folderId()),
+                        new MailFolderId(c.folderId()).toString(),
                         c.folderName(),
                         c.unread(),
                         c.total()))
@@ -96,28 +91,28 @@ public class MailFolderQueryService {
                 java.util.regex.Pattern.CASE_INSENSITIVE);
         return results.stream().map(r -> {
             var newAudit = new MailComponentDto.MailAuditInfoDto(
-                    r.getAudit().createdBy(),
-                    wrapMark(r.getAudit().createdByName(), pattern),
-                    r.getAudit().createdDate(),
-                    r.getAudit().updatedDate());
+                    r.audit().createdBy(),
+                    wrapMark(r.audit().createdByName(), pattern),
+                    r.audit().createdDate(),
+                    r.audit().updatedDate());
             var newSummary = new MailComponentDto.MailSummaryInfoDto(
-                    r.getSummary().attachmentQty(),
-                    wrapMark(r.getSummary().toStr(), pattern));
+                    r.summary().attachmentQty(),
+                    wrapMark(r.summary().toStr(), pattern));
             return new MailSummaryResponse(
-                    r.getId(),
-                    r.getMailNumber(),
-                    r.getMailDate(),
-                    wrapMark(r.getSubject(), pattern),
+                    r.id(),
+                    r.mailNumber(),
+                    r.mailDate(),
+                    wrapMark(r.subject(), pattern),
                     newAudit,
                     newSummary,
-                    r.getReadStatus(),
-                    r.getFolderId(),
-                    r.getType(),
-                    r.getCategory(),
-                    r.getCirculationName(),
-                    r.getRestoreFolder(),
-                    r.getThread(),
-                    r.getTotalCount());
+                    r.readStatus(),
+                    r.folderId(),
+                    r.type(),
+                    r.category(),
+                    r.circulationName(),
+                    r.restoreFolder(),
+                    r.thread(),
+                    r.totalCount());
         }).toList();
     }
 
@@ -128,11 +123,11 @@ public class MailFolderQueryService {
     }
 
     private MailFolderResponse fromSystemFolder(SystemFolder sf, FolderCountDto counter) {
-        long parentFolderId = sf.getParent() != null ? sf.getParent().getId() : 0L;
+        MailFolderId parentId = sf.getParent() != null ? new MailFolderId(sf.getParent().getId()) : null;
         return new MailFolderResponse(
-                encoder.encode(MailFolder.class, sf.getId()),
-                parentFolderId > 0 ? encoder.encode(MailFolder.class, parentFolderId) : "0",
-                "0",
+                new MailFolderId(sf.getId()),
+                parentId,
+                null,
                 sf.getDisplayName(),
                 "email",
                 true,
@@ -141,10 +136,13 @@ public class MailFolderQueryService {
     }
 
     private MailFolderResponse toResponseWithCounter(MailFolder folder, FolderCountDto counter) {
+        MailFolderId parentId = folder.getParentFolderId() != null 
+                ? new MailFolderId(folder.getParentFolderId()) 
+                : null;
         return new MailFolderResponse(
-                encoder.encode(MailFolder.class, folder.getId()),
-                folder.getParentFolderId() > 0 ? encoder.encode(MailFolder.class, folder.getParentFolderId()) : "0",
-                encoder.encode(MailFolder.class, folder.getOwnerId()),
+                new MailFolderId(folder.getId()),
+                parentId,
+                folder.getOwnerId() != null ? new UserId(folder.getOwnerId()) : null,
                 folder.getName(),
                 folder.getIconClsFolder(),
                 false,

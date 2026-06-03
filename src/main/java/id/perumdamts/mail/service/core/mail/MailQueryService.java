@@ -15,6 +15,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 @Service
@@ -36,24 +38,24 @@ public class MailQueryService {
 
         var attachments = attachmentQueryRepository.findByRef(AttachmentRefType.MAIL, mailId);
         return new MailResponse(
-                mail.getId(),
-                mail.getMailNumber(),
-                mail.getMailDate(),
-                mail.getType(),
-                mail.getCategory(),
-                mail.getSubject(),
-                mail.getContent(),
-                mail.getNote(),
-                mail.getMaxResponseDate(),
-                mail.getStatus(),
-                mail.getThread(),
-                mail.getSummary(),
-                mail.getAudit(),
-                mail.getNoSuratMasuk(),
-                mail.getAsalSuratMasuk(),
-                mail.getTglSuratMasuk(),
-                mail.getTujuanSuratKeluar(),
-                mail.getPenerimaSuratKeluar(),
+                mail.id(),
+                mail.mailNumber(),
+                mail.mailDate(),
+                mail.type(),
+                mail.category(),
+                mail.subject(),
+                mail.content(),
+                mail.note(),
+                mail.maxResponseDate(),
+                mail.status(),
+                mail.thread(),
+                mail.summary(),
+                mail.audit(),
+                mail.noSuratMasuk(),
+                mail.asalSuratMasuk(),
+                mail.tglSuratMasuk(),
+                mail.tujuanSuratKeluar(),
+                mail.penerimaSuratKeluar(),
                 attachments
         );
     }
@@ -74,11 +76,16 @@ public class MailQueryService {
 
     public Page<MailSummaryResponse> search(MailSearchRequest request) {
         List<MailSummaryResponse> items = mailQueryRepository.searchMails(request);
-        long total = items.isEmpty() ? 0 : items.getFirst().getTotalCount();
+        long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
         return new PageImpl<>(items, PageRequest.of(request.getPage(), request.getSize()), total);
     }
 
     public Page<MailReportResponse> findReport(MailReportRequest request) {
+        if (request.getStartDate() == null || request.getEndDate() == null) {
+            LocalDate now = LocalDate.now();
+            request.setStartDate(now.with(TemporalAdjusters.firstDayOfMonth()));
+            request.setEndDate(now.with(TemporalAdjusters.lastDayOfMonth()));
+        }
         List<MailReportResponse> items = mailQueryRepository.getReport(request);
         long total = items.isEmpty() ? 0 : items.getFirst().totalCount();
         return new PageImpl<>(items, PageRequest.of(request.getPage(), request.getSize()), total);

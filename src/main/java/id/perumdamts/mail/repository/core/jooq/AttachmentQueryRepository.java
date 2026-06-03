@@ -1,10 +1,9 @@
 package id.perumdamts.mail.repository.core.jooq;
 
 import id.perumdamts.mail.dto.core.attachment.AttachmentResponse;
-import id.perumdamts.mail.entity.core.Attachment;
-import id.perumdamts.mail.entity.core.Mail;
+import id.perumdamts.mail.dto.id.AttachmentId;
+import id.perumdamts.mail.dto.id.MailId;
 import id.perumdamts.mail.enums.AttachmentRefType;
-import id.perumdamts.mail.util.SqidsEncoder;
 import lombok.RequiredArgsConstructor;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -22,7 +21,6 @@ import static org.jooq.impl.DSL.table;
 public class AttachmentQueryRepository {
 
     private final DSLContext dsl;
-    private final SqidsEncoder encoder;
 
     public List<AttachmentResponse> findByRef(AttachmentRefType refType, Long refId) {
         return dsl.select()
@@ -33,7 +31,7 @@ public class AttachmentQueryRepository {
                 .fetch(this::toResponse);
     }
 
-    public Optional<AttachmentResponse> findById(Integer id) {
+    public Optional<AttachmentResponse> findById(long id) {
         return dsl.select()
                 .from(table("attachments"))
                 .where(field("id").eq(id))
@@ -42,15 +40,15 @@ public class AttachmentQueryRepository {
     }
 
     private AttachmentResponse toResponse(Record r) {
-        Integer id = r.get(field("id"), Integer.class);
+        Long id = r.get(field("id"), Long.class);
         Integer refType = r.get(field("ref_type"), Integer.class);
         Long refId = r.get(field("ref_id"), Long.class);
 
         return new AttachmentResponse(
-                id != null ? encoder.encode(Attachment.class, id.longValue()) : null,
+                id != null ? new AttachmentId(id) : null,
                 refType,
                 (refType != null && refType == AttachmentRefType.MAIL.getDbValue() && refId != null)
-                        ? encoder.encode(Mail.class, refId)
+                        ? new MailId(refId).toString()
                         : (refId != null ? String.valueOf(refId) : null),
                 r.get(field("original_filename"), String.class),
                 r.get(field("file_ext"), String.class),

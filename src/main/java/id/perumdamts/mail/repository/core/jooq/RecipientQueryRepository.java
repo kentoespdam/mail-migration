@@ -4,9 +4,10 @@ import id.perumdamts.mail.dto.core.mail.MailTrackingResponse;
 import id.perumdamts.mail.dto.core.mail.RecipientReadStatusResponse;
 import id.perumdamts.mail.dto.core.recipient.RecipientComponentDto;
 import id.perumdamts.mail.dto.core.recipient.RecipientResponse;
-import id.perumdamts.mail.entity.core.MailRecipient;
+import id.perumdamts.mail.dto.id.EmployeeId;
+import id.perumdamts.mail.dto.id.MailRecipientId;
+import id.perumdamts.mail.dto.id.UserId;
 import id.perumdamts.mail.enums.CirculationType;
-import id.perumdamts.mail.util.SqidsEncoder;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
 
@@ -19,11 +20,9 @@ import static org.jooq.impl.DSL.*;
 public class RecipientQueryRepository {
 
     private final DSLContext dsl;
-    private final SqidsEncoder encoder;
 
-    public RecipientQueryRepository(DSLContext dsl, SqidsEncoder encoder) {
+    public RecipientQueryRepository(DSLContext dsl) {
         this.dsl = dsl;
-        this.encoder = encoder;
     }
 
     public List<RecipientResponse> findByMailId(Long mailId) {
@@ -37,13 +36,13 @@ public class RecipientQueryRepository {
     private RecipientResponse mapToRecipientResponse(org.jooq.Record r) {
         Integer circulation = r.get(field("r.circulation"), Integer.class);
         return new RecipientResponse(
-                encoder.encode(MailRecipient.class, r.get(field("r.id"), Long.class)),
+                new MailRecipientId(r.get(field("r.id"), Long.class)),
                 new RecipientComponentDto.EmployeeInfoDto(
                         r.get(field("r.user_id"), Long.class) != null
-                                ? encoder.encode(MailRecipient.class, r.get(field("r.user_id"), Long.class))
+                                ? new UserId(r.get(field("r.user_id"), Long.class))
                                 : null,
                         r.get(field("r.emp_id"), Long.class) != null
-                                ? encoder.encode(MailRecipient.class, r.get(field("r.emp_id"), Long.class))
+                                ? new EmployeeId(r.get(field("r.emp_id"), Long.class))
                                 : null,
                         r.get(field("r.emp_name"), String.class),
                         r.get(field("r.pos_name"), String.class)),
@@ -53,12 +52,29 @@ public class RecipientQueryRepository {
                 new RecipientComponentDto.NotificationInfoDto(
                         r.get(field("r.email"), Integer.class),
                         r.get(field("r.sms"), Integer.class),
-                        r.get(field("r.is_notified"), Boolean.class),
-                        r.get(field("r.is_read"), Boolean.class),
-                        r.get(field("r.folder_position"), Integer.class)));
+                        r.get(field("r.is_notified"), Boolean.class)));
     }
 
     public List<MailTrackingResponse> findTracking(Long mailId) {
+        Long rootId = resolveRootId(mailId);
+
+        var rootRecipients = fetchRecipientsForMail(mailId, 0, true);
+        var childRecipients = fetchChildMailRecipients(rootId, mailId);
+
+        return concatRecipients(rootRecipients, childRecipients);
+    }
+
+    private Long resolveRootId(Long mailId) {
+        return dsl.select(field("m_root_id"))
+                .from(table("mail"))
+                .where(field("m_id").eq(mailId))
+                .fetchOne(r -> {
+                    Long rootId = r.get(field("m_root_id"), Long.class);
+                    return (rootId == null || rootId == 0) ? mailId : rootId;
+                });
+    }
+
+    private List<MailTrackingResponse> fetchRecipientsForMail(Long targetMailId, int depth, boolean isRoot) {
         return dsl.select(
                 field("r.id").as("recipientId"),
                 field("r.emp_name").as("empName"),
@@ -72,21 +88,74 @@ public class RecipientQueryRepository {
                         .when(field("r.circulation").eq(6), inline("FORWARD"))
                         .otherwise(inline("UNKNOWN"))
                         .as("circulationName"),
-                field("r.is_read").as("isRead"),
+                field("ut.read_status").eq(1).as("isRead"),
                 field("ut.read_date").as("readDate"))
                 .from(table("mail_recipient").as("r"))
                 .leftJoin(table("sys_user_task").as("ut"))
                 .on(field("ut.user_id").eq(field("r.user_id"))
                         .and(field("ut.tm_id").eq(field("r.mail_id"))))
-                .where(field("r.mail_id").eq(mailId))
+                .where(field("r.mail_id").eq(targetMailId))
                 .orderBy(field("r.id").asc())
-                .fetch(r -> new MailTrackingResponse(
-                        encoder.encode(MailRecipient.class, r.get("recipientId", Long.class)),
+                .fetch(r -> isRoot
+                        ? MailTrackingResponse.root(
+                                new MailRecipientId(r.get("recipientId", Long.class)),
+                                r.get("empName", String.class),
+                                r.get("posName", String.class),
+                                r.get("circulationName", String.class),
+                                r.get("isRead", Boolean.class),
+                                r.get("readDate", LocalDateTime.class))
+                        : MailTrackingResponse.child(
+                                new MailRecipientId(r.get("recipientId", Long.class)),
+                                r.get("empName", String.class),
+                                r.get("posName", String.class),
+                                r.get("circulationName", String.class),
+                                r.get("isRead", Boolean.class),
+                                r.get("readDate", LocalDateTime.class),
+                                depth));
+    }
+
+    private List<MailTrackingResponse> fetchChildMailRecipients(Long rootMailId, Long excludeMailId) {
+        return dsl.select(
+                field("m.m_id"),
+                field("m.m_parent_id"),
+                field("r.id").as("recipientId"),
+                field("r.emp_name").as("empName"),
+                field("r.pos_name").as("posName"),
+                case_()
+                        .when(field("r.circulation").eq(1), inline("DISPOSISI"))
+                        .when(field("r.circulation").eq(2), inline("MEMO_MANDIRI"))
+                        .when(field("r.circulation").eq(3), inline("MEMO"))
+                        .when(field("r.circulation").eq(4), inline("CC"))
+                        .when(field("r.circulation").eq(5), inline("REPLY"))
+                        .when(field("r.circulation").eq(6), inline("FORWARD"))
+                        .otherwise(inline("UNKNOWN"))
+                        .as("circulationName"),
+                field("ut.read_status").eq(1).as("isRead"),
+                field("ut.read_date").as("readDate"))
+                .from(table("mail").as("m"))
+                .join(table("mail_recipient").as("r")).on(field("r.mail_id").eq(field("m.m_id")))
+                .leftJoin(table("sys_user_task").as("ut"))
+                .on(field("ut.user_id").eq(field("r.user_id"))
+                        .and(field("ut.tm_id").eq(field("m.m_id"))))
+                .where(field("m.m_root_id").eq(rootMailId))
+                .and(field("m.m_id").ne(excludeMailId))
+                .and(field("m.m_status").gt(0))
+                .orderBy(field("m.m_created_date").asc(), field("r.id").asc())
+                .fetch(r -> MailTrackingResponse.child(
+                        new MailRecipientId(r.get("recipientId", Long.class)),
                         r.get("empName", String.class),
                         r.get("posName", String.class),
                         r.get("circulationName", String.class),
                         r.get("isRead", Boolean.class),
-                        r.get("readDate", LocalDateTime.class)));
+                        r.get("readDate", LocalDateTime.class),
+                        1));
+    }
+
+    private List<MailTrackingResponse> concatRecipients(List<MailTrackingResponse> root, List<MailTrackingResponse> children) {
+        var result = new java.util.ArrayList<MailTrackingResponse>();
+        result.addAll(root);
+        result.addAll(children);
+        return result;
     }
 
     public List<RecipientReadStatusResponse> findReadStatus(Long mailId) {
@@ -113,8 +182,8 @@ public class RecipientQueryRepository {
                 .where(field("r.mail_id").eq(mailId))
                 .orderBy(field("r.id").asc())
                 .fetch(r -> new RecipientReadStatusResponse(
-                        encoder.encode(MailRecipient.class, r.get("recipientId", Long.class)),
-                        encoder.encode(MailRecipient.class, r.get("userId", Long.class)), // Placeholder
+                        new MailRecipientId(r.get("recipientId", Long.class)),
+                        new UserId(r.get("userId", Long.class)),
                         r.get("empName", String.class),
                         r.get("posName", String.class),
                         r.get("circulationName", String.class),
@@ -122,11 +191,6 @@ public class RecipientQueryRepository {
                         r.get("readDate", LocalDateTime.class)));
     }
 
-    /**
-     * Find distinct recipients across all mails in a thread (by root_mail_id).
-     * Returns unique (user_id, emp_id, emp_name, pos_name) tuples,
-     * picking the most recent record per user.
-     */
     public List<ThreadRecipientRow> findDistinctThreadRecipients(Long rootMailId) {
         return dsl.select(
                 field("r.user_id"),

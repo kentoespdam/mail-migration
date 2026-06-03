@@ -51,7 +51,6 @@ public class MailArchiveCommandService {
     public ArchiveResponse createDraft(ArchiveCreateRequest request, MailPrincipal principal) {
         var archive = new MailArchive();
         applyFields(archive, request);
-        archive.setCreatedBy(Integer.parseInt(principal.userId()));
         archive.setCreatedByName(principal.name());
         archive.setCreatedDate(LocalDateTime.now());
         archive.setOfficeCode(tenantConfig.officeCode());
@@ -70,19 +69,17 @@ public class MailArchiveCommandService {
         if (request.subject() != null) archive.setSubject(request.subject());
         if (request.content() != null) archive.setContent(request.content());
         if (request.archiveDate() != null) archive.setArchiveDate(request.archiveDate());
-        if (request.year() != null) archive.setYear(request.year());
         if (request.keywordFlag() != null) archive.setKeywordFlag(request.keywordFlag());
         if (request.mailId() != null) archive.setMailId(request.mailId());
         if (request.categoryId() != null) {
             archive.setCategory(categoryRepository.getReferenceById(request.categoryId().longValue()));
         }
         if (request.rack() != null || request.shelf() != null
-                || request.box() != null || request.folderPosition() != null) {
+                || request.box() != null) {
             var loc = archive.getLocation() != null ? archive.getLocation() : new ArchiveLocation();
             if (request.rack() != null) loc.setRack(request.rack());
             if (request.shelf() != null) loc.setShelf(request.shelf());
             if (request.box() != null) loc.setBox(request.box());
-            if (request.folderPosition() != null) loc.setFolderPosition(request.folderPosition());
             archive.setLocation(loc);
         }
 
@@ -91,19 +88,20 @@ public class MailArchiveCommandService {
     }
 
     @Transactional
-    public ArchiveResponse publishArchive(Long archiveId, MailPrincipal principal) {
+    public ArchiveResponse publishArchive(Long archiveId, id.perumdamts.mail.dto.core.archive.ArchivePublishRequest request, MailPrincipal principal) {
         var archive = getArchiveOrThrow(archiveId);
         if (!archive.isDraft()) {
             throw new IllegalStateException("Only draft archives can be published");
         }
 
-        String archiveNumber = archiveNumberGenerator.generate(archive);
+        String archiveNumber = archiveNumberGenerator.generate(archive, request.pattern());
         archive.publish(archiveNumber);
         archiveRepository.save(archive);
 
         // Publish event for notifications
         List<Integer> accessPositionIds = accessRepository.findByArchiveId(archiveId)
                 .stream()
+                .filter(MailArchiveAccess::getCanAccess)
                 .map(MailArchiveAccess::getPositionId)
                 .toList();
         eventPublisher.publishEvent(new ArchivePublishedEvent(
@@ -131,11 +129,10 @@ public class MailArchiveCommandService {
                                                    MailPrincipal principal) {
         getArchiveOrThrow(archiveId); // verify exists
 
-        Integer grantedBy = Integer.parseInt(principal.userId());
         accessRepository.deleteByArchiveId(archiveId);
 
         List<MailArchiveAccess> entries = request.entries().stream()
-                .map(e -> MailArchiveAccess.create(archiveId, e.positionId(), e.accessLevel(), grantedBy))
+                .map(e -> MailArchiveAccess.create(archiveId, e.positionId(), e.canAccess(), e.canDownload(), e.canViewHistory()))
                 .toList();
         accessRepository.saveAll(entries);
 
@@ -153,14 +150,13 @@ public class MailArchiveCommandService {
         archive.setSubject(request.subject());
         archive.setContent(request.content());
         archive.setArchiveDate(request.archiveDate());
-        archive.setYear(request.year());
         archive.setMailId(request.mailId());
         archive.setKeywordFlag(request.keywordFlag());
         if (request.categoryId() != null) {
             archive.setCategory(categoryRepository.getReferenceById(request.categoryId().longValue()));
         }
         archive.setLocation(new ArchiveLocation(
-                request.rack(), request.shelf(), request.box(), request.folderPosition()));
+                null, null, null, request.rack(), request.shelf(), request.box()));
     }
 
     private MailArchive getArchiveOrThrow(Long archiveId) {

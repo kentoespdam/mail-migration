@@ -1,14 +1,17 @@
 package id.perumdamts.mail.dto.core.mail;
 
+import id.perumdamts.mail.dto.id.MailId;
+import id.perumdamts.mail.dto.id.UserId;
+
 import java.time.LocalDateTime;
 
 public class MailComponentDto {
 
-    public record MailThreadInfoDto(String rootMailId, String parentMailId) {
+    public record MailThreadInfoDto(MailId rootMailId, MailId parentMailId) {
     }
 
     public record MailAuditInfoDto(
-            String createdBy,
+            UserId createdBy,
             String createdByName,
             LocalDateTime createdDate,
             LocalDateTime updatedDate) {

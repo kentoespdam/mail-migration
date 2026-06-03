@@ -2,6 +2,10 @@ package id.perumdamts.mail.service.core.mail;
 
 import id.perumdamts.mail.dto.core.mail.*;
 import id.perumdamts.mail.dto.core.recipient.RecipientBatchRequest;
+import id.perumdamts.mail.dto.id.MailCategoryId;
+import id.perumdamts.mail.dto.id.MailId;
+import id.perumdamts.mail.dto.id.MailTypeId;
+import id.perumdamts.mail.dto.id.UserId;
 import id.perumdamts.mail.entity.core.Mail;
 import id.perumdamts.mail.entity.core.MailRecipient;
 import id.perumdamts.mail.enums.CirculationType;
@@ -16,7 +20,6 @@ import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
 import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.service.core.usertask.UserTaskCommandService;
 import id.perumdamts.mail.service.core.usertask.UserTaskQueryService;
-import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,7 +49,6 @@ public class MailCommandService {
     private final MailMapper mailMapper;
     private final MailSendService mailSendService;
     private final HrServiceClient hrServiceClient;
-    private final SqidsEncoder encoder;
     private final AuditTrailService auditTrailService;
 
     public MailCommandService(MailRepository mailRepository,
@@ -58,7 +60,6 @@ public class MailCommandService {
             MailMapper mailMapper,
             MailSendService mailSendService,
             HrServiceClient hrServiceClient,
-            SqidsEncoder encoder,
             AuditTrailService auditTrailService) {
         this.mailRepository = mailRepository;
         this.mailTypeRepository = mailTypeRepository;
@@ -69,7 +70,6 @@ public class MailCommandService {
         this.mailMapper = mailMapper;
         this.mailSendService = mailSendService;
         this.hrServiceClient = hrServiceClient;
-        this.encoder = encoder;
         this.auditTrailService = auditTrailService;
     }
 
@@ -118,12 +118,10 @@ public class MailCommandService {
         if (request.maxResponseDate() != null)
             mail.setMaxResponseDate(request.maxResponseDate());
         if (request.mailTypeId() != null) {
-            Long typeId = encoder.decode(id.perumdamts.mail.entity.master.MailType.class, request.mailTypeId());
-            mail.setMailType(mailTypeRepository.getReferenceById(typeId));
+            mail.setMailType(mailTypeRepository.getReferenceById(request.mailTypeId().value()));
         }
         if (request.mailCategoryId() != null) {
-            Long catId = encoder.decode(id.perumdamts.mail.entity.master.MailCategory.class, request.mailCategoryId());
-            mail.setMailCategory(mailCategoryRepository.getReferenceById(catId));
+            mail.setMailCategory(mailCategoryRepository.getReferenceById(request.mailCategoryId().value()));
         }
         if (request.noSuratMasuk() != null)
             mail.setNoSuratMasuk(request.noSuratMasuk());
@@ -216,31 +214,30 @@ public class MailCommandService {
     private Mail createAndPersistMail(String subject,
             String content,
             String note,
-            String mailTypeId,
-            String mailCategoryId,
+            MailTypeId mailTypeId,
+            MailCategoryId mailCategoryId,
             LocalDate mailDate,
             LocalDate maxResponseDate,
             String noSuratMasuk,
             String asalSuratMasuk,
-            String tglSuratMasuk,
+            LocalDate tglSuratMasuk,
             String tujuanSuratKeluar,
             String penerimaSuratKeluar,
-            String rootMailSqid,
-            String parentMailSqid,
+            MailId rootMailId,
+            MailId parentMailId,
             MailPrincipal principal) {
         var mail = new Mail();
-        mail.setSubject(subject);
+        String finalSubject = prefixSubjectIfChild(subject, rootMailId, parentMailId);
+        mail.setSubject(finalSubject);
         mail.setContent(content);
         mail.setNote(note);
         mail.setMailDate(mailDate);
         mail.setMaxResponseDate(maxResponseDate);
         if (mailTypeId != null) {
-            Long typeId = encoder.decode(id.perumdamts.mail.entity.master.MailType.class, mailTypeId);
-            mail.setMailType(mailTypeRepository.getReferenceById(typeId));
+            mail.setMailType(mailTypeRepository.getReferenceById(mailTypeId.value()));
         }
         if (mailCategoryId != null) {
-            Long catId = encoder.decode(id.perumdamts.mail.entity.master.MailCategory.class, mailCategoryId);
-            mail.setMailCategory(mailCategoryRepository.getReferenceById(catId));
+            mail.setMailCategory(mailCategoryRepository.getReferenceById(mailCategoryId.value()));
         }
         mail.setNoSuratMasuk(noSuratMasuk);
         mail.setAsalSuratMasuk(asalSuratMasuk);
@@ -252,12 +249,10 @@ public class MailCommandService {
         mail.setCreatedByName(principal.name());
         mail.setCreatedDate(LocalDateTime.now());
 
-        if (rootMailSqid != null && !rootMailSqid.isBlank()) {
-            Long rootMailId = encoder.decode(Mail.class, rootMailSqid);
-            mail.setRootMail(mailRepository.getReferenceById(rootMailId));
-            if (parentMailSqid != null && !parentMailSqid.isBlank()) {
-                Long parentMailId = encoder.decode(Mail.class, parentMailSqid);
-                mail.setParentMail(mailRepository.getReferenceById(parentMailId));
+        if (rootMailId != null) {
+            mail.setRootMail(mailRepository.getReferenceById(rootMailId.value()));
+            if (parentMailId != null) {
+                mail.setParentMail(mailRepository.getReferenceById(parentMailId.value()));
             }
         }
 
@@ -277,8 +272,8 @@ public class MailCommandService {
 
         for (RecipientBatchRequest batchRequest : recipientRequests) {
             CirculationType circulationType = CirculationType.fromDbValue(
-                    (int) encoder.decode(CirculationType.class, batchRequest.circulation()));
-            List<Long> empIdLongs = batchRequest.empIds().stream().map(Long::parseLong).toList();
+                    (int) batchRequest.circulation().value());
+            List<Long> empIdLongs = batchRequest.empIds().stream().map(UserId::value).toList();
 
             EmployeeResponse response = hrServiceClient.getBatchEmployees(
                     new BatchIdsRequest(empIdLongs));
@@ -287,8 +282,8 @@ public class MailCommandService {
             Map<Long, EmployeeDto> empMap = employees.stream()
                     .collect(Collectors.toMap(EmployeeDto::id, Function.identity()));
 
-            for (String empSqid : batchRequest.empIds()) {
-                Long empLongId = Long.parseLong(empSqid);
+            for (UserId empId : batchRequest.empIds()) {
+                Long empLongId = empId.value();
                 EmployeeDto emp = empMap.get(empLongId);
                 if (emp == null) {
                     continue; // Skip not found employees
@@ -322,6 +317,17 @@ public class MailCommandService {
             recipient.setPosName(emp.jabatanNama());
         }
         return recipient;
+    }
+
+    private String prefixSubjectIfChild(String subject, MailId rootMailId, MailId parentMailId) {
+        boolean isChildMail = rootMailId != null && parentMailId != null;
+        if (!isChildMail) {
+            return subject;
+        }
+        if (subject != null && subject.toLowerCase().startsWith("fwd:")) {
+            return subject;
+        }
+        return "Fwd: " + subject;
     }
 
     private Mail getMailOrThrow(Long mailId) {

@@ -121,7 +121,7 @@ class PublicationQueryServiceTest {
 
     private static PublicationResponse publicationResponse(String id) {
         return new PublicationResponse(
-                id,
+                new id.perumdamts.mail.dto.id.PublicationId(Long.parseLong(id.replace("pub-", ""))),
                 "title",
                 "description",
                 null,

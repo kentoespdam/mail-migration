@@ -1,9 +1,11 @@
 package id.perumdamts.mail.dto.core.mail;
 
+import id.perumdamts.mail.dto.id.MailId;
+
 import java.time.LocalDate;
 
 public record MailLookupResponse(
-        String id,
+        MailId id,
         LocalDate mailDate,
         String createdByName,
         String subject,

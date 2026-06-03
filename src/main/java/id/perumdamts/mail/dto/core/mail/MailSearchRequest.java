@@ -1,6 +1,9 @@
 package id.perumdamts.mail.dto.core.mail;
 
 import id.perumdamts.mail.dto.common.PagedRequest;
+import id.perumdamts.mail.dto.id.MailCategoryId;
+import id.perumdamts.mail.dto.id.MailTypeId;
+import id.perumdamts.mail.dto.id.UserId;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,12 +27,12 @@ public class MailSearchRequest extends PagedRequest {
     // ── Filter fields ─────────────────────────────────────────────────────────
 
     private String keyword;
-    private String mailTypeId;
-    private String mailCategoryId;
+    private MailTypeId mailTypeId;
+    private MailCategoryId mailCategoryId;
     private LocalDate startDate;
     private LocalDate endDate;
     private Boolean hasAttachment;
-    private String senderId;
+    private UserId senderId;
 
     // ── Constructors ──────────────────────────────────────────────────────────
 

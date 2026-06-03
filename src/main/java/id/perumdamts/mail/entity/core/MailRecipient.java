@@ -32,13 +32,13 @@ public class MailRecipient implements SqidEntity {
     @Column(name = "emp_id", nullable = false)
     private Long empId;
 
-    @Column(name = "emp_name", length = 100)
+    @Column(name = "emp_name", length = 64)
     private String empName;
 
     @Column(name = "pos_id")
     private Long posId;
 
-    @Column(name = "pos_name", length = 100)
+    @Column(name = "pos_name", length = 64)
     private String posName;
 
     @Column(name = "circulation", nullable = false)
@@ -52,12 +52,6 @@ public class MailRecipient implements SqidEntity {
 
     @Column(name = "is_notified", nullable = false)
     private Boolean notified = false;
-
-    @Column(name = "is_read", nullable = false)
-    private Boolean read = false;
-
-    @Column(name = "folder_position")
-    private Integer folderPosition;
 
     public MailRecipient(Mail mail, Long userId, Long empId, CirculationType circulationType) {
         this.mail = mail;
@@ -76,15 +70,7 @@ public class MailRecipient implements SqidEntity {
         return notified;
     }
 
-    public Boolean isRead() {
-        return read;
-    }
-
     public void markNotified() {
         this.notified = true;
-    }
-
-    public void markRead() {
-        this.read = true;
     }
 }

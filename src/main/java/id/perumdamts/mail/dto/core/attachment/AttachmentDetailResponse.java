@@ -1,9 +1,10 @@
 package id.perumdamts.mail.dto.core.attachment;
 
+import id.perumdamts.mail.dto.id.AttachmentId;
 import java.time.LocalDateTime;
 
 public record AttachmentDetailResponse(
-        String id,
+        AttachmentId id,
         String originalFilename,
         String fileExt,
         Integer fileSize,

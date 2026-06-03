@@ -1,7 +1,7 @@
 package id.perumdamts.mail.repository.master.jpa;
 
 import id.perumdamts.mail.entity.master.DocumentType;
-import id.perumdamts.mail.enums.RecordStatus;
+import id.perumdamts.mail.enums.RecordStatusActive;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -13,5 +13,5 @@ public interface DocumentTypeRepository extends JpaRepository<DocumentType, Long
 
     boolean existsByNameAndIdNot(String name, Long id);
 
-    List<DocumentType> findAllByStatusOrderByIdAsc(RecordStatus status);
+    List<DocumentType> findAllByStatusOrderByIdAsc(RecordStatusActive status);
 }

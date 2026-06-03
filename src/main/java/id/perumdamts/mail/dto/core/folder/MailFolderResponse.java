@@ -1,14 +1,16 @@
 package id.perumdamts.mail.dto.core.folder;
 
 import id.perumdamts.mail.dto.common.HasSqid;
+import id.perumdamts.mail.dto.id.MailFolderId;
+import id.perumdamts.mail.dto.id.UserId;
 
 /**
  * Response DTO untuk folder tree.
  * Include counter badge (unread, total) untuk menampilkan jumlah mail.
  *
  * @param id             SQID dari Mail folder
- * @param parentFolderId SQID dari parent folder (0 jika root)
- * @param ownerId        SQID dari owner user (0 jika system)
+ * @param parentFolderId SQID dari parent folder (null jika root)
+ * @param ownerId        SQID dari owner user (null jika system)
  * @param name           Nama folder
  * @param iconCls        CSS class untuk icon folder
  * @param system         Flag jika ini adalah system folder
@@ -16,9 +18,9 @@ import id.perumdamts.mail.dto.common.HasSqid;
  * @param total          Total jumlah mail
  */
 public record MailFolderResponse(
-        String id,
-        String parentFolderId,
-        String ownerId,
+        MailFolderId id,
+        MailFolderId parentFolderId,
+        UserId ownerId,
         String name,
         String iconCls,
         boolean system,
@@ -27,6 +29,6 @@ public record MailFolderResponse(
 
     @Override
     public String getId() {
-        return id();
+        return id != null ? id.toString() : null;
     }
 }
