@@ -1,5 +1,6 @@
 package id.perumdamts.mail.service.master.mailType;
 
+import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.master.mailType.MailTypeRequest;
 import id.perumdamts.mail.dto.master.mailType.MailTypeResponse;
 import id.perumdamts.mail.entity.master.MailType;
@@ -9,6 +10,7 @@ import id.perumdamts.mail.repository.master.jpa.MailCategoryRepository;
 import id.perumdamts.mail.repository.master.jpa.MailTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ public class MailTypeCommandService {
     private final MailCategoryRepository categoryRepository;
     private final MailTypeQueryRepository queryRepository;
 
+    @CacheEvict(value = CacheConfig.CacheNames.MAIL_TYPES, allEntries = true)
     public MailTypeResponse create(MailTypeRequest request) {
         if (repository.existsByName(request.name())) {
             throw new IllegalArgumentException("Duplikasi Jenis Surat: " + request.name());
@@ -30,6 +33,7 @@ public class MailTypeCommandService {
         return queryRepository.findById(saved.getId()).orElseThrow();
     }
 
+    @CacheEvict(value = CacheConfig.CacheNames.MAIL_TYPES, allEntries = true)
     public MailTypeResponse update(Long id, MailTypeRequest request) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MailType not found: " + id));
@@ -41,6 +45,7 @@ public class MailTypeCommandService {
         return queryRepository.findById(id).orElseThrow();
     }
 
+    @CacheEvict(value = CacheConfig.CacheNames.MAIL_TYPES, allEntries = true)
     public void delete(Long id) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MailType not found: " + id));
@@ -55,6 +60,7 @@ public class MailTypeCommandService {
         repository.save(entity);
     }
 
+    @CacheEvict(value = CacheConfig.CacheNames.MAIL_TYPES, allEntries = true)
     public MailTypeResponse toggleStatus(Long id) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("MailType not found: " + id));

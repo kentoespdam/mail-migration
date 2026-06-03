@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import id.perumdamts.mail.config.AppWriteProperties;
 import id.perumdamts.mail.config.CacheConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -38,11 +38,11 @@ public class AppWriteTokenValidator {
 
     private final WebClient appWriteClient;
     private final AppWriteProperties props;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     public AppWriteTokenValidator(AppWriteProperties props,
                                   WebClient.Builder webClientBuilder,
-                                  RedisTemplate<String, Object> redisTemplate) {
+                                  StringRedisTemplate redisTemplate) {
         this.props = props;
         this.appWriteClient = webClientBuilder.baseUrl(props.endpoint()).build();
         this.redisTemplate = redisTemplate;
@@ -63,10 +63,14 @@ public class AppWriteTokenValidator {
         String cacheKey = buildCacheKey(token);
 
         // Cek cache dulu
-        Object cached = redisTemplate.opsForValue().get(cacheKey);
+        String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
             log.debug("Token cache hit for key: {}...", cacheKey);
-            return MAPPER.convertValue(cached, CachedUserInfo.class);
+            try {
+                return MAPPER.readValue(cached, CachedUserInfo.class);
+            } catch (Exception e) {
+                log.warn("Gagal deserialize CachedUserInfo dari Redis: {}", e.getMessage());
+            }
         }
 
         // Cache miss — validasi ke AppWrite
@@ -87,8 +91,12 @@ public class AppWriteTokenValidator {
 
         // Simpan ke cache dengan TTL dari exp token
         Duration ttl = extractTtlFromToken(token);
-        redisTemplate.opsForValue().set(cacheKey, info, ttl);
-        log.debug("Token cached with TTL: {}", ttl);
+        try {
+            redisTemplate.opsForValue().set(cacheKey, MAPPER.writeValueAsString(info), ttl);
+            log.debug("Token cached with TTL: {}", ttl);
+        } catch (Exception e) {
+            log.warn("Gagal serialize CachedUserInfo ke Redis: {}", e.getMessage());
+        }
 
         return info;
     }

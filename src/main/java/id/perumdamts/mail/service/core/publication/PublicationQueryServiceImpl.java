@@ -1,7 +1,6 @@
 package id.perumdamts.mail.service.core.publication;
 
 import id.perumdamts.mail.config.CacheConfig;
-import id.perumdamts.mail.dto.common.PagedResponse;
 import id.perumdamts.mail.dto.core.publication.PublicationDownloadResult;
 import id.perumdamts.mail.dto.core.publication.PublicationParams;
 import id.perumdamts.mail.dto.core.publication.PublicationResponse;
@@ -10,6 +9,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -23,14 +23,8 @@ public class PublicationQueryServiceImpl implements PublicationQueryHandler {
 
     @Override
     @Cacheable(key = "T(id.perumdamts.mail.util.CacheKeyUtil).publicationKey(#params)")
-    public PagedResponse<PublicationResponse> findAll(PublicationParams params) {
-        var page = queryRepository.findAll(params);
-        return PagedResponse.of(
-                page.getContent(),
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements()
-        );
+    public Page<PublicationResponse> findAll(PublicationParams params) {
+        return queryRepository.findAll(params);
     }
 
     @Override

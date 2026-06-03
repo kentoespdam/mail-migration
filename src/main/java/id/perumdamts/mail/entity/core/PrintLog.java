@@ -25,10 +25,10 @@ public class PrintLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "print_log_id")
+    @Column(name = "id")
     private Long id;
 
-    @Column(name = "m_id", nullable = false)
+    @Column(name = "mail_id", nullable = false)
     private Long mailId;
 
     @Column(name = "auth_code", length = 100, nullable = false, unique = true)
@@ -37,25 +37,21 @@ public class PrintLog {
     @Column(name = "username", length = 100, nullable = false)
     private String username;
 
-    @Column(name = "print_date", nullable = false)
+    @Column(name = "date", nullable = false)
     private LocalDateTime printDate;
 
     @Column(name = "ip_address", length = 50)
     private String ipAddress;
 
-    @Column(name = "user_agent", length = 500)
-    private String userAgent;
-
     /**
      * Factory method untuk create print log dengan auth code.
      */
-    public static PrintLog create(Long mailId, String username, String ipAddress, String userAgent) {
+    public static PrintLog create(Long mailId, String username, String ipAddress) {
         PrintLog printLog = new PrintLog();
         printLog.mailId = mailId;
         printLog.username = username;
         printLog.printDate = LocalDateTime.now();
         printLog.ipAddress = ipAddress;
-        printLog.userAgent = userAgent;
         return printLog;
     }
 

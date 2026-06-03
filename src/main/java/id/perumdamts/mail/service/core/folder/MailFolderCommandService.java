@@ -6,11 +6,12 @@ import id.perumdamts.mail.dto.core.folder.MailFolderRequest;
 import id.perumdamts.mail.dto.core.folder.MailFolderResponse;
 import id.perumdamts.mail.dto.core.folder.MoveMailRequest;
 import id.perumdamts.mail.entity.core.Mail;
+import id.perumdamts.mail.security.MailPrincipal;
 import id.perumdamts.mail.entity.core.MailFolder;
-import id.perumdamts.mail.entity.core.UserTask;
 import id.perumdamts.mail.enums.SystemFolder;
 import id.perumdamts.mail.repository.core.jpa.MailFolderRepository;
-import id.perumdamts.mail.repository.core.jpa.UserTaskRepository;
+import id.perumdamts.mail.service.core.usertask.UserTaskCommandService;
+import id.perumdamts.mail.service.core.usertask.UserTaskQueryService;
 import id.perumdamts.mail.util.SqidsEncoder;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.cache.annotation.CacheEvict;
@@ -22,18 +23,24 @@ import org.springframework.transaction.annotation.Transactional;
 public class MailFolderCommandService {
 
     private final MailFolderRepository folderRepository;
-    private final UserTaskRepository userTaskRepository;
+    private final UserTaskCommandService userTaskCommandService;
+    private final UserTaskQueryService userTaskQueryService;
     private final MailFolderMapper folderMapper;
     private final SqidsEncoder encoder;
+    private final id.perumdamts.mail.service.core.mail.AuditTrailService auditTrailService;
 
     public MailFolderCommandService(MailFolderRepository folderRepository,
-            UserTaskRepository userTaskRepository,
+            UserTaskCommandService userTaskCommandService,
+            UserTaskQueryService userTaskQueryService,
             MailFolderMapper folderMapper,
-            SqidsEncoder encoder) {
+            SqidsEncoder encoder,
+            id.perumdamts.mail.service.core.mail.AuditTrailService auditTrailService) {
         this.folderRepository = folderRepository;
-        this.userTaskRepository = userTaskRepository;
+        this.userTaskCommandService = userTaskCommandService;
+        this.userTaskQueryService = userTaskQueryService;
         this.folderMapper = folderMapper;
         this.encoder = encoder;
+        this.auditTrailService = auditTrailService;
     }
 
     @Transactional
@@ -70,11 +77,11 @@ public class MailFolderCommandService {
     public void deleteFolder(Long userId, Long folderId) {
         MailFolder folder = getOwnedPersonalFolder(userId, folderId);
 
-        userTaskRepository.relocateMails(userId, folderId, folder.getParentFolderId());
+        userTaskCommandService.relocateMails(userId, folderId, folder.getParentFolderId());
 
         var children = folderRepository.findActiveChildren(folderId);
         for (var child : children) {
-            userTaskRepository.relocateMails(userId, child.getId(), folder.getParentFolderId());
+            userTaskCommandService.relocateMails(userId, child.getId(), folder.getParentFolderId());
             child.softDelete();
         }
 
@@ -83,49 +90,46 @@ public class MailFolderCommandService {
     }
 
     @Transactional
-    public void moveMails(Long userId, MoveMailRequest request) {
+    public void moveMails(MailPrincipal principal, MoveMailRequest request) {
+        Long userId = principal.userIdLong();
         Long toFolderId = encoder.decode(MailFolder.class, request.toFolderId());
         Long fromFolderId = encoder.decode(MailFolder.class, request.fromFolderId());
         validateTargetFolder(userId, toFolderId);
         for (String mailSqid : request.mailIds()) {
             Long mailId = encoder.decode(Mail.class, mailSqid);
-            userTaskRepository.updateFolder(userId, mailId, fromFolderId, toFolderId);
+            userTaskCommandService.updateFolder(userId, mailId, fromFolderId, toFolderId);
+            auditTrailService.logAction(mailId, "MOVE", principal.getUsername(), "Memindahkan surat ke folder lain");
         }
     }
 
     @Transactional
-    public void deleteMail(Long userId, Long mailId) {
-        UserTask userTask = userTaskRepository.findByUserIdAndMailIdAnyFolder(userId, mailId)
-                .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
-
-        if (userTask.getFolderId().equals(SystemFolder.DELETED.getId())) {
-            userTask.purge();
-        } else {
-            userTask.softDelete();
-        }
-        userTaskRepository.save(userTask);
+    public void deleteMail(MailPrincipal principal, Long mailId) {
+        Long userId = principal.userIdLong();
+        userTaskQueryService.findUserTask(userId, mailId)
+                .ifPresentOrElse(
+                        ut -> {
+                            if (ut.isInTrash()) {
+                                userTaskCommandService.purge(userId, mailId);
+                                auditTrailService.logAction(mailId, "PURGE", principal.getUsername(), "Menghapus surat secara permanen");
+                            } else {
+                                userTaskCommandService.softDelete(userId, mailId);
+                                auditTrailService.logAction(mailId, "DELETE", principal.getUsername(), "Memindahkan surat ke kotak sampah");
+                            }
+                        },
+                        () -> {
+                            throw new EntityNotFoundException("Mail not found: " + mailId);
+                        });
     }
 
     @Transactional
-    public void restoreMail(Long userId, Long mailId) {
-        UserTask userTask = userTaskRepository.findByUserIdAndMailIdAnyFolder(userId, mailId)
-                .orElseThrow(() -> new EntityNotFoundException("Mail not found: " + mailId));
-
-        if (!userTask.getFolderId().equals(SystemFolder.DELETED.getId())) {
-            throw new IllegalStateException("Mail is not in trash");
-        }
-
-        if (userTask.getRestoreFolderId() == null) {
-            throw new IllegalStateException("No restore folder recorded for this mail");
-        }
-
-        userTask.restore();
-        userTaskRepository.save(userTask);
+    public void restoreMail(MailPrincipal principal, Long mailId) {
+        userTaskCommandService.restore(principal.userIdLong(), mailId);
+        auditTrailService.logAction(mailId, "RESTORE", principal.getUsername(), "Mengembalikan surat dari kotak sampah");
     }
 
     @Transactional
     public void emptyTrash(Long userId) {
-        userTaskRepository.purgeTrash(userId);
+        userTaskCommandService.purgeTrash(userId);
     }
 
     private MailFolder getOwnedPersonalFolder(Long userId, Long folderId) {

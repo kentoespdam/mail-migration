@@ -1,5 +1,6 @@
 package id.perumdamts.mail.service.master.documentType;
 
+import id.perumdamts.mail.config.CacheConfig;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeRequest;
 import id.perumdamts.mail.dto.master.documentType.DocumentTypeResponse;
 import id.perumdamts.mail.entity.master.DocumentType;
@@ -7,6 +8,7 @@ import id.perumdamts.mail.repository.master.jooq.DocumentTypeQueryRepository;
 import id.perumdamts.mail.repository.master.jpa.DocumentTypeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +20,7 @@ public class DocumentTypeCommandService {
     private final DocumentTypeRepository repository;
     private final DocumentTypeQueryRepository queryRepository; // To return Response after create/update
 
+    @CacheEvict(value = CacheConfig.CacheNames.DOCUMENT_TYPES, allEntries = true)
     public DocumentTypeResponse create(DocumentTypeRequest request) {
         if (repository.existsByName(request.name())) {
             throw new IllegalArgumentException("Duplikasi Jenis Dokumen: " + request.name());
@@ -27,6 +30,7 @@ public class DocumentTypeCommandService {
         return queryRepository.findById(saved.getId()).orElseThrow();
     }
 
+    @CacheEvict(value = CacheConfig.CacheNames.DOCUMENT_TYPES, allEntries = true)
     public DocumentTypeResponse update(Long id, DocumentTypeRequest request) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("DocumentType not found: " + id));
@@ -40,6 +44,7 @@ public class DocumentTypeCommandService {
         return queryRepository.findById(id).orElseThrow();
     }
 
+    @CacheEvict(value = CacheConfig.CacheNames.DOCUMENT_TYPES, allEntries = true)
     public void delete(Long id) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("DocumentType not found: " + id));
@@ -54,6 +59,7 @@ public class DocumentTypeCommandService {
         repository.save(entity);
     }
 
+    @CacheEvict(value = CacheConfig.CacheNames.DOCUMENT_TYPES, allEntries = true)
     public DocumentTypeResponse toggleStatus(Long id) {
         var entity = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("DocumentType not found: " + id));

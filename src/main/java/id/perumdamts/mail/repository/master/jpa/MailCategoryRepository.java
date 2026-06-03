@@ -10,4 +10,6 @@ public interface MailCategoryRepository extends JpaRepository<MailCategory, Long
     boolean existsByMailTypeIdAndCode(Long mailTypeId, String code);
 
     long countByMailTypeAndStatusNot(MailType mailType, CategoryStatus status);
+
+    java.util.List<MailCategory> findAllByStatusOrderByIdAsc(CategoryStatus status);
 }

@@ -40,7 +40,7 @@ public class SqidsEncoder {
             throw new IllegalArgumentException("Cannot decode sqid: " + sqid);
         }
 
-        long id = numbers.get(0);
+        long id = numbers.getFirst();
 
         // Canonical check
         String reEncoded = encodeId(modelClass, id);

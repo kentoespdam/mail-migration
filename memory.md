@@ -252,10 +252,11 @@ id.perumdamts.mail/
 ### Attachment Endpoints
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/v1/attachments` | Upload attachment |
-| GET | `/api/v1/attachments/{id}` | Get attachment info |
-| GET | `/api/v1/attachments/{id}/download` | Download file |
-| DELETE | `/api/v1/attachments/{id}` | Soft delete |
+| POST | `/api/v1/mails/{mailId}/attachments` | Upload attachment |
+| GET | `/api/v1/mails/{mailId}/attachments` | List attachments |
+| GET | `/api/v1/mails/{mailId}/attachments/{id}` | Get attachment detail |
+| GET | `/api/v1/mails/{mailId}/attachments/{id}/download` | Download file |
+| DELETE | `/api/v1/mails/{mailId}/attachments/{id}` | Soft delete |
 
 ### Publication Endpoints
 | Method | Endpoint | Description |
@@ -394,6 +395,7 @@ app:
 | `tenantConfig:v2` | `tenantConfig::tenant:{code}` | 6 hours |
 | `mailStats:v2` | `mailStats::user:{userId}` | 5 min |
 | `appwrite-tokens:v2` | `appwrite-tokens::{tokenPrefix}` | 5 min |
+| `attachments:v2` | `attachments::detail:{userId}:{id}:v1` | 10 min |
 | `publications:v2` | `publications::pub:{id}` | 10 min |
 
 > **Note**: All caches use `GenericJacksonJsonRedisSerializer` with `PolymorphicTypeValidator` (type-aware) restricted to `id.perumdamts.mail`. Cache version `:v2` ensures compatibility.
@@ -494,6 +496,14 @@ docker compose up -d
 ```bash
 # Run all tests
 ./gradlew test
+
+# Run specific test class
+./gradlew test --tests MailSendServiceTest
+
+# Run with coverage
+./gradlew clean build jacocoTestReport
+```
+t
 
 # Run specific test class
 ./gradlew test --tests MailSendServiceTest

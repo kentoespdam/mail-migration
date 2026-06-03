@@ -52,18 +52,38 @@ bd close <id>         # Complete work
 
 ## Build & Test
 
-_Add your build and test commands here_
-
 ```bash
-# Example:
-# npm install
-# npm test
+# Build
+./gradlew clean build
+
+# Test
+./gradlew test
+
+# Specific test
+./gradlew test --tests AttachmentCommandServiceTest
 ```
 
 ## Architecture Overview
 
-_Add a brief overview of your project architecture_
+Arsitektur **CQRS-lite** dengan pemisahan Command (JPA) dan Query (JOOQ).
+Penyimpanan file menggunakan **AttachmentFileStorageService** dengan struktur folder `mail/{yyyyMM}/`.
+Akses data divalidasi melalui **UserTaskQueryService** untuk memastikan hak akses user.
 
 ## Conventions & Patterns
 
-_Add your project-specific conventions here_
+- **IDs**: Gunakan **Sqids** untuk ID eksternal (String) di Controller/DTO. Decode ke internal Long/Integer di Service.
+- **CQRS**: Pisahkan logic write ke `CommandService` dan logic read ke `QueryService`.
+- **Soft Delete**: Gunakan `status = 2` atau `DELETED` string dengan `@SQLRestriction`.
+- **Caching**: Gunakan Redis cache untuk detail data yang sering diakses (misal: attachment detail).
+- **Storage**: Semua file baru masuk ke folder `mail/` bukan `publik/`.
+- **Validation**: Selalu validasi akses mail melalui UserTask sebelum mengizinkan operasi pada attachment.
+
+## graphify
+
+This project has a graphify knowledge graph at graphify-out/.
+
+Rules:
+- Before answering architecture or codebase questions, read graphify-out/GRAPH_REPORT.md for god nodes and community structure
+- If graphify-out/wiki/index.md exists, navigate it instead of reading raw files
+- For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"`, `graphify path "<A>" "<B>"`, or `graphify explain "<concept>"` over grep — these traverse the graph's EXTRACTED + INFERRED edges instead of scanning files
+- After modifying code files in this session, run `graphify update .` to keep the graph current (AST-only, no API cost)

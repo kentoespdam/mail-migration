@@ -1,5 +1,7 @@
 package id.perumdamts.mail.dto.common;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 
 /**
@@ -21,7 +23,11 @@ public abstract class PageRequest {
     private static final int DEFAULT_SIZE = 20;
     private static final int MAX_SIZE = 100;
 
+    @Min(0)
     private int page;
+
+    @Min(1)
+    @Max(MAX_SIZE)
     private int size;
 
     public PageRequest() {

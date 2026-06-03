@@ -25,7 +25,7 @@ public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
 
     @Modifying
     @Query("UPDATE UserTask u SET u.folderId = :toFolder WHERE u.userId = :userId AND u.mailId = :mailId AND u.folderId = :fromFolder")
-    int updateFolder(@Param("userId") Long userId,
+    void updateFolder(@Param("userId") Long userId,
             @Param("mailId") Long mailId,
             @Param("fromFolder") Long fromFolder,
             @Param("toFolder") Long toFolder);
@@ -36,7 +36,7 @@ public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
 
     @Modifying
     @Query("UPDATE UserTask u SET u.folderId = :targetFolderId WHERE u.userId = :userId AND u.folderId = :sourceFolderId")
-    int relocateMails(@Param("userId") Long userId,
+    void relocateMails(@Param("userId") Long userId,
             @Param("sourceFolderId") Long sourceFolderId,
             @Param("targetFolderId") Long targetFolderId);
 
@@ -46,7 +46,7 @@ public interface UserTaskRepository extends JpaRepository<UserTask, Long> {
      */
     @Modifying
     @Query("UPDATE UserTask u SET u.folderId = -1, u.restoreFolderId = null WHERE u.userId = :userId AND u.folderId = 6")
-    int purgeTrash(@Param("userId") Long userId);
+    void purgeTrash(@Param("userId") Long userId);
 
     /**
      * Restore mail dari trash ke folder asal.

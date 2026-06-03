@@ -7,6 +7,8 @@ import lombok.Value;
 import java.time.LocalDateTime;
 
 @Value
+@lombok.AllArgsConstructor
+@lombok.NoArgsConstructor(force = true, access = lombok.AccessLevel.PRIVATE)
 public class PublicationResponse implements HasSqid {
     String id;
     String title;
