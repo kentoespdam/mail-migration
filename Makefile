@@ -5,8 +5,8 @@ IMAGE_TAG  := latest
 
 ## Build JAR inside Docker (no local JDK needed)
 jar:
-	docker compose -f docker/compose.yml build builder
-	UID=$$(id -u) GID=$$(id -g) docker compose -f docker/compose.yml run --rm builder
+	docker compose -f compose.yml build builder
+	UID=$$(id -u) GID=$$(id -g) docker compose -f compose.yml run --rm builder
 
 ## Build runtime image (requires JAR in build/libs/)
 image:
@@ -17,7 +17,7 @@ build: jar image
 
 ## Start full stack (app + db + redis)
 run:
-	docker compose -f docker/compose.yml up -d mail-be mariadb redis
+	docker compose -f compose.yml up -d mail-be mariadb redis
 
 ## Stop and clean up
 clean:

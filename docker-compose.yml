@@ -7,7 +7,7 @@ services:
     container_name: mail-backend
     ports:
       - "8081:8080"
-    env_file: .env
+    env_file: .env.docker
     depends_on:
       mariadb:
         condition: service_healthy
